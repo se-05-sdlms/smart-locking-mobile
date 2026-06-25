@@ -1,0 +1,97 @@
+###############################################################################
+# Auto detect text files and perform LF normalization
+###############################################################################
+
+* text=auto
+
+###############################################################################
+# Flutter and Dart source files
+###############################################################################
+
+*.dart      text eol=lf
+*.arb       text eol=lf
+*.yaml      text eol=lf
+*.yml       text eol=lf
+*.json      text eol=lf
+*.jsonc     text eol=lf
+
+###############################################################################
+# Platform source files
+###############################################################################
+
+*.java      text eol=lf
+*.kt        text eol=lf
+*.kts       text eol=lf
+*.gradle    text eol=lf
+*.swift     text eol=lf
+*.m         text eol=lf
+*.mm        text eol=lf
+*.h         text eol=lf
+*.plist     text eol=lf
+*.xml       text eol=lf
+*.pbxproj   text eol=lf
+
+###############################################################################
+# Web, config, and documentation
+###############################################################################
+
+*.html      text eol=lf
+*.css       text eol=lf
+*.js        text eol=lf
+*.ts        text eol=lf
+*.md        text eol=lf
+*.txt       text eol=lf
+*.properties text eol=lf
+*.editorconfig text eol=lf
+*.gitignore    text eol=lf
+*.gitattributes text eol=lf
+
+###############################################################################
+# Scripts
+###############################################################################
+
+*.ps1       text eol=crlf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.sh        text eol=lf
+
+###############################################################################
+# Lock files
+###############################################################################
+
+pubspec.lock text eol=lf
+Podfile.lock text eol=lf
+gradle.lockfile text eol=lf
+
+###############################################################################
+# Binary assets
+###############################################################################
+
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.webp      binary
+*.avif      binary
+*.pdf       binary
+*.zip       binary
+*.7z        binary
+*.rar       binary
+*.gz        binary
+*.tar       binary
+*.mp4       binary
+*.mov       binary
+*.avi       binary
+*.mkv       binary
+*.mp3       binary
+*.wav       binary
+*.aac       binary
+*.ttf       binary
+*.otf       binary
+*.woff      binary
+*.woff2     binary
+*.jks       binary
+*.keystore  binary
+*.p8        binary
+*.p12       binary

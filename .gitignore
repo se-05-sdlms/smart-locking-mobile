@@ -1,76 +1,55 @@
-## Flutter and Dart
-.dart_tool/
-.packages
-.flutter-plugins
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-build/
-coverage/
-coverage.*
-*.coverage
-lcov.info
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
 
-## Generated Flutter artifacts
-**/Flutter/ephemeral/
-**/Pods/
-**/.symlinks/
-**/GeneratedPluginRegistrant.*
-
-## Android
-android/.gradle/
-android/local.properties
-android/app/debug/
-android/app/profile/
-android/app/release/
-*.jks
-*.keystore
-key.properties
-
-## iOS and macOS
-ios/Flutter/App.framework
-ios/Flutter/Flutter.framework
-ios/Flutter/Flutter.podspec
-ios/Flutter/Generated.xcconfig
-ios/Flutter/flutter_export_environment.sh
-ios/Runner/GeneratedPluginRegistrant.*
-macos/Flutter/ephemeral/
-DerivedData/
-*.xcuserstate
-*.xcworkspace/xcuserdata/
-*.xcodeproj/xcuserdata/
-*.xcodeproj/project.xcworkspace/xcuserdata/
-
-## Web
-web/.dart_tool/
-
-## Local configuration and secrets
-.env
-.env.*
-!.env.example
-!.env.*.example
-firebase_options.local.dart
-google-services.json
-GoogleService-Info.plist
-*.p8
-*.p12
-*.mobileprovision
-*.provisionprofile
-
-## Editor and IDE files
-.vscode/
-.idea/
+# IntelliJ related
 *.iml
 *.ipr
 *.iws
-*.suo
-*.sw?
+.idea/
 
-## Logs
-logs/
-*.log
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
 
-## OS files
-.DS_Store
-Thumbs.db
-Desktop.ini
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+*.jks
+*.keystore
+key.properties

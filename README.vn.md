@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./docs/images/readme-header.png" alt="Ứng dụng Mobile tủ khóa thông minh Boxora" width="100%" />
+  <img src="./docs/images/readme-header.png" alt="Ung dung Mobile tu khoa thong minh Boxora" width="100%" />
 </p>
 
 <p align="center">
@@ -11,86 +11,94 @@
 </p>
 
 <p align="center">
-  <strong>Ngôn ngữ:</strong>
-  <a href="./README.vn.md">🇻🇳 Tiếng Việt</a>
+  <strong>Ngon ngu:</strong>
+  <a href="./README.vn.md">Tieng Viet</a>
   &nbsp;|&nbsp;
-  <a href="./README.md">🇬🇧 English</a>
+  <a href="./README.md">English</a>
 </p>
 
 <h3 align="center">
-  📱 Resident Mobile App của SDLMS
+  Resident Mobile App cua SDLMS
 </h3>
 
 <p align="center">
-  Nền tảng quản lý giao nhận bưu kiện thông minh, kết nối thời gian thực và tích hợp IoT.
+  Ung dung Flutter cho cu dan su dung tu khoa thong minh Boxora, ket noi voi backend SDLMS.
 </p>
 
 <p align="center">
-  <img
-    src="https://img.shields.io/badge/Mobile-Flutter_3.22-02569B?style=flat-square&logo=flutter&logoColor=white"
-    alt="Mobile Flutter 3.22"
-  />
-  <img
-    src="https://img.shields.io/badge/Language-Dart_3.4-0175C2?style=flat-square&logo=dart&logoColor=white"
-    alt="Language Dart 3.4"
-  />
-  <img
-    src="https://img.shields.io/badge/Backend-.NET_8-512BD4?style=flat-square&logo=dotnet&logoColor=white"
-    alt="Backend .NET 8"
-  />
-  <img
-    src="https://img.shields.io/badge/Realtime-SignalR-512BD4?style=flat-square"
-    alt="Realtime SignalR"
-  />
-  <img
-    src="https://img.shields.io/badge/Notifications-Firebase_FCM-FFCA28?style=flat-square&logo=firebase&logoColor=black"
-    alt="Firebase Cloud Messaging"
-  />
-  <img
-    src="https://img.shields.io/badge/State-BLoC-40B5A4?style=flat-square"
-    alt="BLoC State Management"
-  />
+  <img src="https://img.shields.io/badge/Mobile-Flutter_3.44.4-02569B?style=flat-square&logo=flutter&logoColor=white" alt="Mobile Flutter 3.44.4" />
+  <img src="https://img.shields.io/badge/Language-Dart_3.12.2-0175C2?style=flat-square&logo=dart&logoColor=white" alt="Language Dart 3.12.2" />
+  <img src="https://img.shields.io/badge/Backend-.NET_8-512BD4?style=flat-square&logo=dotnet&logoColor=white" alt="Backend .NET 8" />
+  <img src="https://img.shields.io/badge/Android-Java_17-ED8B00?style=flat-square" alt="Android Java 17" />
+  <img src="https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white" alt="GitHub Actions CI" />
 </p>
 
 <p align="center">
-  <a href="#quick-start"><img src="https://img.shields.io/badge/B%E1%BA%AFt_%C4%91%E1%BA%A7u_nhanh-Xem-2ea44f?style=for-the-badge" alt="Bắt đầu nhanh" /></a>
-  <a href="#tech-stack"><img src="https://img.shields.io/badge/C%C3%B4ng_ngh%E1%BB%87-Xem-0969da?style=for-the-badge" alt="Công nghệ" /></a>
-  <a href="#architecture"><img src="https://img.shields.io/badge/Ki%E1%BA%BFn_tr%C3%BAc-Xem-8250df?style=for-the-badge" alt="Kiến trúc" /></a>
-  <a href="#related-repositories"><img src="https://img.shields.io/badge/Repo_li%C3%AAn_quan-Xem-e85d04?style=for-the-badge" alt="Repo liên quan" /></a>
-  <a href="#development-team"><img src="https://img.shields.io/badge/Nh%C3%B3m_ph%C3%A1t_tri%E1%BB%83n-Xem-DB2777?style=for-the-badge" alt="Nhóm phát triển" /></a>
+  <a href="#quick-start"><img src="https://img.shields.io/badge/Bat_dau_nhanh-Xem-2ea44f?style=for-the-badge" alt="Bat dau nhanh" /></a>
+  <a href="#tech-stack"><img src="https://img.shields.io/badge/Cong_nghe-Xem-0969da?style=for-the-badge" alt="Cong nghe" /></a>
+  <a href="#architecture"><img src="https://img.shields.io/badge/Kien_truc-Xem-8250df?style=for-the-badge" alt="Kien truc" /></a>
+  <a href="#related-repositories"><img src="https://img.shields.io/badge/Repo_lien_quan-Xem-e85d04?style=for-the-badge" alt="Repo lien quan" /></a>
+  <a href="#development-team"><img src="https://img.shields.io/badge/Nhom_phat_trien-Xem-DB2777?style=for-the-badge" alt="Nhom phat trien" /></a>
 </p>
 
-## Tổng quan
+## Tong quan
 
-`smart-locking-mobile` là Resident Mobile App của hệ thống Boxora, cho phép cư dân và người dùng văn phòng quản lý việc giao nhận bưu kiện, nhận thông báo, lấy hàng và tương tác từ xa với tủ thông minh được chỉ định.
+`smart-locking-mobile` la ung dung Flutter danh cho cu dan trong he thong tu khoa thong minh Boxora. Project da duoc scaffold theo chuan Flutter cho Android va iOS, va se ho tro thong bao buu kien, nhan buu kien, tuy chon giao hang cua cu dan, cung cac thao tac tu xa voi tu thong qua backend `smart-locking-be`.
 
-### Các màn hình chính
+### Cac man hinh du kien
 
-* **Authentication** — đăng ký và đăng nhập cư dân bằng số điện thoại và OTP.
-* **Home Dashboard** — hiển thị tổng quan bưu kiện, thông báo và các cập nhật quan trọng của tủ.
-* **Danh sách bưu kiện** — hiển thị bưu kiện đang hoạt động, đã hoàn thành, quá hạn và lịch sử.
-* **Chi tiết bưu kiện** — hiển thị thông tin bưu kiện, trạng thái lưu trữ, ngăn tủ và phương thức nhận hàng.
-* **Nhận bưu kiện** — hỗ trợ Personal QR Code, One-Time Password và Remote App Unlock.
-* **Thông báo** — nhận cập nhật bưu kiện và trạng thái tủ qua Firebase Cloud Messaging.
-* **Tùy chọn giao hàng** — cho phép cư dân cấu hình chế độ phê duyệt giao hàng Auto hoặc Manual.
-* **Hồ sơ & Cài đặt** — quản lý thông tin cư dân, thiết lập bảo mật và tùy chọn ứng dụng.
+- **Authentication** - dang nhap cu dan va cac luong tai khoan bang OTP.
+- **Home Dashboard** - tong quan buu kien, thong bao va trang thai tu quan trong.
+- **Danh sach buu kien** - buu kien dang xu ly, da hoan thanh, qua han va lich su.
+- **Chi tiet buu kien** - trang thai buu kien, thong tin ngan tu va phuong thuc nhan hang.
+- **Nhan buu kien** - QR code, OTP mot lan va mo tu tu xa.
+- **Thong bao** - tich hop Firebase Cloud Messaging cho cap nhat buu kien va tu.
+- **Tuy chon giao hang** - phe duyet giao hang tu dong hoac thu cong.
+- **Ho so & Cai dat** - ho so cu dan, bao mat va tuy chon ung dung.
 
 ---
 
 <a id="quick-start"></a>
 
 <details open>
-<summary><strong>🚀 Bắt đầu nhanh</strong></summary>
+<summary><strong>Bat dau nhanh</strong></summary>
 
-### Yêu cầu
+### Yeu cau
 
-* Flutter SDK 3.22
-* Dart SDK 3.4+
-* Android Studio hoặc Visual Studio Code
-* Android emulator, iOS simulator hoặc thiết bị thật
-* Xcode để phát triển iOS trên macOS
+Cai cac cong cu sau truoc khi chay project:
 
-### Cài đặt
+- Flutter SDK 3.44.4 stable. Project duoc tao bang Flutter 3.44.4.
+- Dart SDK 3.12.2. Rang buoc SDK cua project la `^3.12.2`.
+- Android Studio hoac Visual Studio Code kem plugin Flutter/Dart.
+- JDK 17 de build Android.
+- Android emulator, iOS simulator hoac thiet bi that.
+- Xcode de phat trien iOS tren macOS.
+
+```bash
+flutter --version
+dart --version
+java -version
+flutter doctor
+```
+
+Cac version package va tool hien dang dung trong repository:
+
+| Nhom               | Package hoac tool      | Version                      |
+| ------------------ | ---------------------- | ---------------------------- |
+| Flutter SDK        | `flutter`              | `3.44.4`                     |
+| Dart SDK           | `dart`                 | `3.12.2`                     |
+| Pub SDK constraint | `environment.sdk`      | `^3.12.2`                    |
+| App package        | `smart_locking_mobile` | `1.0.0+1`                    |
+| Runtime dependency | `cupertino_icons`      | `1.0.9` resolved tu `^1.0.8` |
+| Dev dependency     | `flutter_lints`        | `6.0.0`                      |
+| Android toolchain  | Android Gradle Plugin  | `9.0.1`                      |
+| Android toolchain  | Kotlin Gradle Plugin   | `2.3.20`                     |
+| Android toolchain  | Gradle Wrapper         | `9.1.0`                      |
+| Android toolchain  | Java                   | `17`                         |
+
+Cac version nay tuong thich voi Flutter project hien tai. Khong nang Flutter, Dart, Android Gradle Plugin, Kotlin hoac Gradle len major version moi tru khi project duoc migrate va verify co chu dich.
+
+### Cai dat
 
 ```bash
 git clone https://github.com/se-05-sdlms/smart-locking-mobile
@@ -98,181 +106,166 @@ cd smart-locking-mobile
 flutter pub get
 ```
 
-### Cấu hình
+### Cau hinh
 
-Cấu hình URL của Backend API và SignalR Hub theo phương thức cấu hình được sử dụng trong source code.
+Scaffold ban dau khong commit secret local. Cau hinh backend, SignalR va Firebase thong qua lop cau hinh se duoc trien khai trong source code cua app.
 
 ```env
-# NGƯỜI DÙNG CẦN ĐIỀN đúng tên biến từ source code
 API_BASE_URL=
 SIGNALR_HUB_URL=
 ```
 
-Thêm file cấu hình Firebase cho các nền tảng cần sử dụng:
+Chi them file cau hinh Firebase tren may local hoac thong qua CI secrets an toan:
 
 ```text
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
 ```
 
-### Chạy môi trường phát triển
+### Chay moi truong phat trien
 
 ```bash
 flutter run
 ```
 
-Hoặc chọn thiết bị cụ thể:
+Hoac chon thiet bi cu the:
 
 ```bash
 flutter devices
 flutter run -d <DEVICE_ID>
 ```
 
-* App target: Android, iOS, emulator, simulator hoặc thiết bị thật
-* Backend URL: cập nhật theo môi trường Backend local hoặc đã deploy
+- Android application ID: `vn.edu.fpt.sdlms.smart_locking_mobile`
+- Android namespace: `vn.edu.fpt.sdlms.smart_locking_mobile`
+- Nen tang scaffold hien co: Android va iOS
 
 </details>
 
 <a id="tech-stack"></a>
 
 <details open>
-<summary><strong>🧰 Công nghệ</strong></summary>
+<summary><strong>Cong nghe</strong></summary>
 
-| Nhóm                    | Công nghệ                            |
-| ----------------------- | ------------------------------------ |
-| Framework               | Flutter 3.22                         |
-| Language                | Dart 3.4+                            |
-| Architecture            | Clean Architecture                   |
-| State management        | BLoC                                 |
-| Networking              | Dio                                  |
-| Realtime                | SignalR Client cho Flutter           |
-| Push notification       | Firebase Cloud Messaging             |
-| Local storage           | Theo implementation của project      |
-| Testing                 | Flutter Test, BLoC Test, Mockito      |
-| Nền tảng hỗ trợ         | Android, iOS                         |
+| Nhom                      | Cong nghe                                                         |
+| ------------------------- | ----------------------------------------------------------------- |
+| Framework                 | Flutter 3.44.4                                                    |
+| Language                  | Dart 3.12.2                                                       |
+| Nen tang scaffold         | Android, iOS                                                      |
+| Android build             | Java 17, Android Gradle Plugin 9.0.1, Kotlin 2.3.20, Gradle 9.1.0 |
+| Dependency ban dau        | cupertino_icons                                                   |
+| Linting                   | flutter_lints 6.0.0                                               |
+| Testing                   | Flutter Test                                                      |
+| CI                        | GitHub Actions                                                    |
+| Backend integration       | ASP.NET Core Web API, .NET 8                                      |
+| Realtime du kien          | SignalR                                                           |
+| Push notification du kien | Firebase Cloud Messaging                                          |
 
 </details>
 
 <a id="architecture"></a>
 
 <details open>
-<summary><strong>🏗️ Kiến trúc</strong></summary>
+<summary><strong>Kien truc</strong></summary>
 
 ```mermaid
 flowchart TD
-    subgraph Mobile["📱 Resident Mobile App"]
-        P["Presentation Layer<br/>Screens · Widgets · BLoC"]
-        D["Domain Layer<br/>Entities · Use Cases · Repository Interfaces"]
-        I["Data Layer<br/>Dio · SignalR Client · Data Sources"]
-        N["Notification Layer<br/>Firebase Cloud Messaging"]
+    subgraph Mobile["Resident Mobile App"]
+        UI["Presentation Layer<br/>Screens and Widgets"]
+        State["State Layer<br/>Controllers / BLoC khi duoc them"]
+        Data["Data Layer<br/>API clients va local data sources"]
+        Notify["Notification Layer<br/>Firebase Cloud Messaging"]
     end
 
-    B["⚙️ ASP.NET Core Web API<br/>.NET 8 · JWT · SignalR"]
-    DB[("🗄️ PostgreSQL Database<br/>Supabase · Audit Logs")]
-    E["📡 EMQX MQTT Broker<br/>MQTT v5.0"]
-    F["🔌 ESP32 Locker Controller<br/>ESP32 WROOM 32D"]
-    G["🔒 Phần cứng tủ<br/>Khóa điện tử · Relay · Cảm biến cửa"]
-    FCM["🔔 Firebase Cloud Messaging"]
+    API["ASP.NET Core Web API<br/>.NET 8 / JWT / SignalR"]
+    DB[("PostgreSQL Database<br/>Supabase / Audit Logs")]
+    MQTT["EMQX MQTT Broker<br/>MQTT v5.0"]
+    ESP["ESP32 Locker Controller"]
+    Locker["Locker Hardware"]
+    FCM["Firebase Cloud Messaging"]
 
-    P --> D
-    D --> I
-
-    I -->|"(1) HTTPS / REST API / JWT"| B
-    B -.->|"(2) SignalR thời gian thực"| I
-    B -->|"(3) Push Notification"| FCM
-    FCM --> N
-
-    B <-->|"(4) Entity Framework Core"| DB
-    B <-->|"(5) MQTT Publish / Subscribe<br/>Server-side"| E
-    E <-->|"(6) MQTT qua Wi-Fi / Internet"| F
-    F -->|"(7) Điều khiển và đọc trạng thái"| G
-
-    style P fill:#dbeafe,stroke:#2563eb,stroke-width:2px
-    style D fill:#fef3c7,stroke:#d97706,stroke-width:2px
-    style I fill:#dcfce7,stroke:#16a34a,stroke-width:2px
-    style N fill:#fffbeb,stroke:#f59e0b,stroke-width:2px
-    style B fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
-    style DB fill:#f3e8ff,stroke:#9333ea,stroke-width:2px
-    style E fill:#ccfbf1,stroke:#0f766e,stroke-width:2px
-    style F fill:#ffedd5,stroke:#ea580c,stroke-width:2px
-    style G fill:#fee2e2,stroke:#dc2626,stroke-width:2px
-    style FCM fill:#fef9c3,stroke:#ca8a04,stroke-width:2px
+    UI --> State
+    State --> Data
+    Data -->|"HTTPS / REST / JWT"| API
+    API -.->|"SignalR realtime"| Data
+    API -->|"Push notifications"| FCM
+    FCM --> Notify
+    API <-->|"Entity Framework Core"| DB
+    API <-->|"MQTT publish / subscribe"| MQTT
+    MQTT <-->|"MQTT over Wi-Fi / Internet"| ESP
+    ESP -->|"Control and status"| Locker
 ```
 
-Mobile App giao tiếp với Backend thông qua REST API, JWT và SignalR. Ứng dụng nhận push notification qua Firebase Cloud Messaging, không kết nối trực tiếp đến PostgreSQL, MQTT Broker hoặc thiết bị ESP32.
+Mobile app giao tiep voi backend thong qua REST API, JWT va kenh SignalR du kien. Ung dung khong ket noi truc tiep den PostgreSQL, MQTT hoac ESP32.
 
 </details>
 
 <details open>
-<summary><strong>🔐 Biến môi trường</strong></summary>
+<summary><strong>Bien moi truong</strong></summary>
 
-Cấu hình ứng dụng theo phương thức quản lý môi trường được triển khai trong source code.
+Cau hinh cac gia tri runtime thong qua cach quan ly cau hinh duoc trien khai trong source code.
 
 ```env
-# NGƯỜI DÙNG CẦN ĐIỀN đúng tên biến từ source code
 API_BASE_URL=
 SIGNALR_HUB_URL=
 ```
 
-Cấu hình Firebase theo từng nền tảng:
-
-```text
-android/app/google-services.json
-ios/Runner/GoogleService-Info.plist
-```
-
-Không commit production credential, signing file, private key hoặc cấu hình môi trường nhạy cảm lên Git.
+Khong commit production credential, signing file, private key, cau hinh Firebase hoac file moi truong nhay cam.
 
 </details>
 
 <details>
-<summary><strong>🧪 Build, test và format</strong></summary>
+<summary><strong>Build, test va format</strong></summary>
 
 ```bash
-# Cài đặt dependency
+# Cai dependency
 flutter pub get
 
-# Phân tích source code
-flutter analyze
-
-# Chạy toàn bộ test
-flutter test
-
-# Kiểm tra format
+# Kiem tra format
 dart format --output=none --set-exit-if-changed .
 
-# Build Android APK
+# Phan tich source code
+flutter analyze
+
+# Chay toan bo test
+flutter test
+
+# Build Android debug APK, cung target voi CI
+flutter build apk --debug
+
+# Build Android release APK
 flutter build apk --release
 
 # Build Android App Bundle
 flutter build appbundle --release
 
-# Build iOS trên macOS
+# Build iOS tren macOS
 flutter build ios --release
 ```
+
+GitHub Actions chay restore, format, analyze, test va build Android debug APK khi push hoac tao pull request vao `main` hoac `dev`.
 
 </details>
 
 <details>
-<summary><strong>📁 Cấu trúc dự án</strong></summary>
+<summary><strong>Cau truc du an</strong></summary>
 
 ```text
 smart-locking-mobile/
-├── docs/
-│   └── images/
-│       └── readme-header.png
-├── android/
-├── ios/
-├── assets/
-├── lib/
-│   ├── core/
-│   ├── features/
-│   ├── shared/
-│   └── main.dart
-├── test/
-├── pubspec.yaml
-├── README.vn.md
-└── README.md
+|-- .github/
+|   `-- workflows/
+|       `-- ci.yml
+|-- android/
+|-- docs/
+|   `-- images/
+|-- ios/
+|-- lib/
+|   `-- main.dart
+|-- test/
+|   `-- widget_test.dart
+|-- analysis_options.yaml
+|-- pubspec.yaml
+|-- README.vn.md
+`-- README.md
 ```
 
 </details>
@@ -280,39 +273,39 @@ smart-locking-mobile/
 <a id="related-repositories"></a>
 
 <details open>
-<summary><strong>🔗 Repo và tài liệu liên quan</strong></summary>
+<summary><strong>Repo va tai lieu lien quan</strong></summary>
 
-| Thành phần           | Liên kết                                                                                             |
-| -------------------- | ---------------------------------------------------------------------------------------------------- |
-| GitHub Organization  | [se-05-sdlms](https://github.com/se-05-sdlms)                                                        |
-| Frontend             | [smart-locking-fe](https://github.com/se-05-sdlms/smart-locking-fe)                                  |
-| Backend              | [smart-locking-be](https://github.com/se-05-sdlms/smart-locking-be)                                  |
-| Tài liệu dự án       | [Google Drive](https://drive.google.com/drive/folders/1M3OPsm2NxAi7WnAfsKgV4MQEMRy5rOsa?usp=sharing) |
+| Thanh phan          | Link                                                                                                 |
+| ------------------- | ---------------------------------------------------------------------------------------------------- |
+| GitHub Organization | [se-05-sdlms](https://github.com/se-05-sdlms)                                                        |
+| Frontend            | [smart-locking-fe](https://github.com/se-05-sdlms/smart-locking-fe)                                  |
+| Backend             | [smart-locking-be](https://github.com/se-05-sdlms/smart-locking-be)                                  |
+| Tai lieu du an      | [Google Drive](https://drive.google.com/drive/folders/1M3OPsm2NxAi7WnAfsKgV4MQEMRy5rOsa?usp=sharing) |
 
 </details>
 
 <a id="development-team"></a>
 
 <details open>
-<summary><strong>👥 Nhóm phát triển</strong></summary>
+<summary><strong>Nhom phat trien</strong></summary>
 
-* **Mã dự án:** `SDLMS`
-* **Nhóm:** `SE_05`
+- **Ma du an:** `SDLMS`
+- **Nhom:** `SE_05`
 
-### Giảng viên hướng dẫn
+### Giang vien huong dan
 
-| Họ và tên            | Vai trò              | Email                                       |
+| Ho va ten            | Vai tro              | Email                                       |
 | -------------------- | -------------------- | ------------------------------------------- |
-| ThS. Lê Thị Bích Tra | Giảng viên hướng dẫn | [traltb@fe.edu.vn](mailto:traltb@fe.edu.vn) |
+| ThS. Le Thi Bich Tra | Giang vien huong dan | [traltb@fe.edu.vn](mailto:traltb@fe.edu.vn) |
 
-### Thành viên
+### Thanh vien
 
-| MSSV     | Họ và tên            | Vai trò     | Email                                                             |
+| MSSV     | Ho va ten            | Vai tro     | Email                                                             |
 | -------- | -------------------- | ----------- | ----------------------------------------------------------------- |
-| DE180519 | Nguyễn Phan Huy      | Trưởng nhóm | [huynpde180519@fpt.edu.vn](mailto:huynpde180519@fpt.edu.vn)       |
-| DE180405 | Phan Thành Vương     | Thành viên  | [vuongptde180405@fpt.edu.vn](mailto:vuongptde180405@fpt.edu.vn)   |
-| DE180313 | Võ Văn Hài           | Thành viên  | [haivvde180313@fpt.edu.vn](mailto:haivvde180313@fpt.edu.vn)       |
-| DE180393 | Trần Minh Cường      | Thành viên  | [cuongtmde180393@fpt.edu.vn](mailto:cuongtmde180393@fpt.edu.vn)   |
-| DE181072 | Trương Hà Thùy Trang | Thành viên  | [trangthtde181072@fpt.edu.vn](mailto:trangthtde181072@fpt.edu.vn) |
+| DE180519 | Nguyen Phan Huy      | Truong nhom | [huynpde180519@fpt.edu.vn](mailto:huynpde180519@fpt.edu.vn)       |
+| DE180405 | Phan Thanh Vuong     | Thanh vien  | [vuongptde180405@fpt.edu.vn](mailto:vuongptde180405@fpt.edu.vn)   |
+| DE180313 | Vo Van Hai           | Thanh vien  | [haivvde180313@fpt.edu.vn](mailto:haivvde180313@fpt.edu.vn)       |
+| DE180393 | Tran Minh Cuong      | Thanh vien  | [cuongtmde180393@fpt.edu.vn](mailto:cuongtmde180393@fpt.edu.vn)   |
+| DE181072 | Truong Ha Thuy Trang | Thanh vien  | [trangthtde181072@fpt.edu.vn](mailto:trangthtde181072@fpt.edu.vn) |
 
 </details>

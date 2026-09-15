@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "smart-locking-mobile-init",
-    "slug": "smart-locking-mobile-init",
+    "name": "Boxora",
+    "slug": "boxora",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "heroui-native-app",
+    "scheme": "boxora",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true

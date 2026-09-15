@@ -1,76 +1,46 @@
-## Flutter and Dart
-.dart_tool/
-.packages
-.flutter-plugins
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-build/
-coverage/
-coverage.*
-*.coverage
-lcov.info
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-## Generated Flutter artifacts
-**/Flutter/ephemeral/
-**/Pods/
-**/.symlinks/
-**/GeneratedPluginRegistrant.*
+# Dependencies
+node_modules/
 
-## Android
-android/.gradle/
-android/local.properties
-android/app/debug/
-android/app/profile/
-android/app/release/
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Uniwind (generated on first `expo start`)
+uniwind-types.d.ts
+
+# Native
+.kotlin/
+*.orig.*
 *.jks
-*.keystore
-key.properties
+*.p8
+*.p12
+*.key
+*.mobileprovision
 
-## iOS and macOS
-ios/Flutter/App.framework
-ios/Flutter/Flutter.framework
-ios/Flutter/Flutter.podspec
-ios/Flutter/Generated.xcconfig
-ios/Flutter/flutter_export_environment.sh
-ios/Runner/GeneratedPluginRegistrant.*
-macos/Flutter/ephemeral/
-DerivedData/
-*.xcuserstate
-*.xcworkspace/xcuserdata/
-*.xcodeproj/xcuserdata/
-*.xcodeproj/project.xcworkspace/xcuserdata/
+# Metro
+.metro-health-check*
 
-## Web
-web/.dart_tool/
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
 
-## Local configuration and secrets
+# macOS
+.DS_Store
+*.pem
+
+# Local env files
 .env
 .env.*
 !.env.example
-!.env.*.example
-firebase_options.local.dart
-google-services.json
-GoogleService-Info.plist
-*.p8
-*.p12
-*.mobileprovision
-*.provisionprofile
 
-## Editor and IDE files
-.vscode/
-.idea/
-*.iml
-*.ipr
-*.iws
-*.suo
-*.sw?
+# TypeScript
+*.tsbuildinfo
 
-## Logs
-logs/
-*.log
-
-## OS files
-.DS_Store
-Thumbs.db
-Desktop.ini
+# Generated native folders
+/ios
+/android

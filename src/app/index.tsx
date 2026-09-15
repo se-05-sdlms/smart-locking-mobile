@@ -1,50 +1,152 @@
-import { Button, Card, Typography, useThemeColor } from "heroui-native";
-import type { JSX } from "react";
-import { View } from "react-native";
-import Svg, { Path } from "react-native-svg";
+import { Button, Card, Chip, Typography, useThemeColor } from "heroui-native";
+import type { JSX, ReactNode } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import Svg, { Circle, Path, Rect } from "react-native-svg";
 
-function HeroUILogo({ tintColor }: { tintColor: string }): JSX.Element {
+import { AppScreen } from "@/components/ui/app-screen";
+import { StatusBadge } from "@/components/ui/status-badge";
+
+type IconName = "bell" | "box" | "chevron" | "history" | "qr" | "settings";
+
+function Icon({
+  name,
+  muted = false,
+  size = 22,
+}: {
+  name: IconName;
+  muted?: boolean;
+  size?: number;
+}): JSX.Element {
+  const foreground = useThemeColor(muted ? "muted" : "foreground");
+  const paths: Record<IconName, ReactNode> = {
+    bell: (
+      <>
+        <Path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+        <Path d="M10 21h4" />
+      </>
+    ),
+    box: (
+      <>
+        <Path d="m21 8-9 5-9-5 9-5 9 5Z" />
+        <Path d="m3 8 9 5 9-5v9l-9 5-9-5V8Z" />
+        <Path d="M12 13v9" />
+      </>
+    ),
+    chevron: <Path d="m9 18 6-6-6-6" />,
+    history: (
+      <>
+        <Path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+        <Path d="M3 3v5h5M12 7v5l3 2" />
+      </>
+    ),
+    qr: (
+      <>
+        <Rect x="3" y="3" width="7" height="7" rx="1" />
+        <Rect x="14" y="3" width="7" height="7" rx="1" />
+        <Rect x="3" y="14" width="7" height="7" rx="1" />
+        <Path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 20h2M20 14h1" />
+      </>
+    ),
+    settings: (
+      <>
+        <Circle cx="12" cy="12" r="3" />
+        <Path d="M19 15a2 2 0 0 0 .4 2l-2.8 2.8a2 2 0 0 0-2-.4A2 2 0 0 0 13 21h-2a2 2 0 0 0-1.3-1.6 2 2 0 0 0-2 .4L4.9 17a2 2 0 0 0 .4-2A2 2 0 0 0 3 13v-2a2 2 0 0 0 2.3-2 2 2 0 0 0-.4-2l2.8-2.8a2 2 0 0 0 2 .4A2 2 0 0 0 11 3h2a2 2 0 0 0 1.3 1.6 2 2 0 0 0 2-.4L19.1 7a2 2 0 0 0-.4 2A2 2 0 0 0 21 11v2a2 2 0 0 0-2 2Z" />
+      </>
+    ),
+  };
   return (
-    <Svg width={90} height={30} viewBox="0 0 140 44" fill="none">
-      <Path
-        d="M0.677734 11.3847V24.0405C0.677734 24.6387 0.985209 25.1946 1.49107 25.5109L10.1195 30.9067C11.2693 31.6257 12.7586 30.796 12.7586 29.4363V18.7981C12.7586 18.186 13.0803 17.6194 13.605 17.3074L18.8683 14.1785V41.4437C18.8683 42.7988 20.3486 43.6293 21.4988 42.9195L30.4044 37.4229C30.9152 37.1076 31.2264 36.549 31.2264 35.9471V9.76484C31.2264 8.41634 29.759 7.58483 28.6085 8.28139L18.8683 14.1785V2.55643C18.8683 1.21158 17.408 0.379537 16.2574 1.06878L1.51927 9.89703C0.997365 10.2097 0.677734 10.7747 0.677734 11.3847Z"
-        fill={tintColor}
-      />
-      <Path
-        d="M63.8763 24.0707C63.8763 20.4817 62.4078 18.8253 59.4709 18.8253C56.1076 18.8253 53.7391 21.0799 53.7391 26.1412V37.7363H47.6756V5.52769H53.7391V17.3069C55.2075 14.9142 57.6234 13.7179 60.9394 13.7179C66.5764 13.7179 69.8924 17.1688 69.8924 22.9664V37.7363H63.8763V24.0707Z"
-        fill={tintColor}
-      />
-      <Path
-        d="M84.8996 38.4725C77.3677 38.4725 72.5832 33.5952 72.5832 26.0952C72.5832 18.6872 77.3203 13.7179 84.8996 13.7179C93.0947 13.7179 97.5475 19.5154 96.3158 27.6596H78.6467C78.9783 31.5247 81.252 33.7333 84.8996 33.7333C87.8839 33.7333 89.684 32.2149 90.1577 30.6964H96.1737C95.2263 35.2057 91.0577 38.4725 84.8996 38.4725ZM78.7888 23.6566H90.4419C90.3945 20.4817 88.3102 18.3191 84.7574 18.3191C81.5836 18.3191 79.3572 20.1596 78.7888 23.6566Z"
-        fill={tintColor}
-      />
-      <Path
-        d="M99.6225 20.3437C99.6225 16.5246 101.754 14.4541 105.828 14.4541H113.597V19.4234H105.686V37.7363H99.6225V20.3437Z"
-        fill={tintColor}
-      />
-      <Path
-        d="M126.863 38.4725C119.189 38.4725 114.31 33.5492 114.31 26.0952C114.31 18.6412 119.189 13.7179 126.863 13.7179C134.442 13.7179 139.322 18.6412 139.322 26.0952C139.322 33.5492 134.442 38.4725 126.863 38.4725ZM126.863 33.4572C130.653 33.4572 133.163 30.5584 133.163 26.0952C133.163 21.632 130.653 18.6872 126.863 18.6872C123.026 18.6872 120.515 21.632 120.515 26.0952C120.515 30.5584 123.026 33.4572 126.863 33.4572Z"
-        fill={tintColor}
-      />
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={foreground}
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {paths[name]}
     </Svg>
   );
 }
 
-export default function HomeScreen(): JSX.Element {
-  const themeColorForeground = useThemeColor("foreground");
+const quickActions: { icon: IconName; label: string }[] = [
+  { icon: "qr", label: "Mã nhận hàng" },
+  { icon: "history", label: "Lịch sử" },
+  { icon: "settings", label: "Cài đặt" },
+];
 
+export default function HomeScreen(): JSX.Element {
   return (
-    <View className="flex-1 bg-background justify-center px-6">
-      <Card className="items-center gap-8">
-        <HeroUILogo tintColor={themeColorForeground} />
-        <Typography.Paragraph className="text-center">
-          A modern starter for React Native, preconfigured with HeroUI Native, Uniwind, and Expo
-          Router. Edit{" "}
-          <Typography.Paragraph className="font-semibold">app/index.tsx</Typography.Paragraph> and
-          watch it reload.
-        </Typography.Paragraph>
-        <Button className="w-full">Get started</Button>
-      </Card>
-    </View>
+    <AppScreen>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-10">
+        <View className="mb-7 flex-row items-center justify-between">
+          <View>
+            <Typography.Paragraph className="text-muted">Xin chào,</Typography.Paragraph>
+            <Typography.Heading>Nguyễn Minh Anh</Typography.Heading>
+          </View>
+          <Button isIconOnly variant="tertiary" accessibilityLabel="Mở thông báo">
+            <Icon name="bell" />
+          </Button>
+        </View>
+
+        <Card>
+          <Card.Header>
+            <StatusBadge label="Sẵn sàng nhận" />
+          </Card.Header>
+          <Card.Body className="gap-2 py-5">
+            <Card.Title className="text-xl">Bạn có 2 bưu kiện đang chờ</Card.Title>
+            <Card.Description>Tủ Boxora · Sảnh A</Card.Description>
+          </Card.Body>
+          <Card.Footer>
+            <Button className="w-full">
+              <Icon name="qr" size={20} />
+              <Button.Label>Mở mã nhận hàng</Button.Label>
+            </Button>
+          </Card.Footer>
+        </Card>
+
+        <Typography.Heading className="mb-4 mt-8">Truy cập nhanh</Typography.Heading>
+        <View className="flex-row gap-3">
+          {quickActions.map((action) => (
+            <Card key={action.label} className="flex-1 items-center p-3">
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={action.label}
+                className="w-full items-center gap-3 py-2"
+              >
+                <Chip
+                  color="default"
+                  variant="soft"
+                  className="h-11 w-11 items-center justify-center"
+                >
+                  <Icon name={action.icon} size={21} />
+                </Chip>
+                <Text className="text-center text-sm font-semibold text-foreground">
+                  {action.label}
+                </Text>
+              </Pressable>
+            </Card>
+          ))}
+        </View>
+
+        <View className="mb-4 mt-8 flex-row items-center justify-between">
+          <Typography.Heading>Bưu kiện gần đây</Typography.Heading>
+          <Button variant="ghost" size="sm">
+            <Button.Label>Xem tất cả</Button.Label>
+          </Button>
+        </View>
+        <Card className="flex-row items-center p-4">
+          <Chip color="warning" variant="soft" className="h-12 w-12 items-center justify-center">
+            <Icon name="box" />
+          </Chip>
+          <View className="ml-4 flex-1 gap-1">
+            <Card.Title>SPXVN23890152</Card.Title>
+            <Card.Description>Ngăn A12 · Hôm nay, 09:24</Card.Description>
+          </View>
+          <Icon name="chevron" muted size={19} />
+        </Card>
+      </ScrollView>
+    </AppScreen>
   );
 }

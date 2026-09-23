@@ -3,11 +3,7 @@
 </p>
 
 <p align="center">
-  <img
-    src="./docs/images/boxora-header.gif"
-    alt="Boxora"
-    width="560"
-  />
+  <img src="./docs/images/boxora-header.gif" alt="Boxora" width="560" />
 </p>
 
 <p align="center">
@@ -17,287 +13,176 @@
   <a href="./README.md">🇬🇧 English</a>
 </p>
 
-<h3 align="center">
-  📱 Resident Mobile App for SDLMS
-</h3>
+<h3 align="center">📱 Boxora Resident Mobile App</h3>
 
 <p align="center">
-  A smart parcel delivery management platform with real-time connectivity and IoT integration.
+  A React Native application for residents to manage parcels and interact with the Boxora smart-locker system.
 </p>
 
 <p align="center">
-  <img
-    src="https://img.shields.io/badge/Mobile-Flutter_3.22-02569B?style=flat-square&logo=flutter&logoColor=white"
-    alt="Mobile Flutter 3.22"
-  />
-  <img
-    src="https://img.shields.io/badge/Language-Dart_3.4-0175C2?style=flat-square&logo=dart&logoColor=white"
-    alt="Language Dart 3.4"
-  />
-  <img
-    src="https://img.shields.io/badge/Backend-.NET_8-512BD4?style=flat-square&logo=dotnet&logoColor=white"
-    alt="Backend .NET 8"
-  />
-  <img
-    src="https://img.shields.io/badge/Realtime-SignalR-512BD4?style=flat-square"
-    alt="Realtime SignalR"
-  />
-  <img
-    src="https://img.shields.io/badge/Notifications-Firebase_FCM-FFCA28?style=flat-square&logo=firebase&logoColor=black"
-    alt="Firebase Cloud Messaging"
-  />
-  <img
-    src="https://img.shields.io/badge/State-BLoC-40B5A4?style=flat-square"
-    alt="BLoC State Management"
-  />
-</p>
-
-<p align="center">
-  <a href="#quick-start"><img src="https://img.shields.io/badge/Quick_Start-View-2ea44f?style=for-the-badge" alt="Quick Start" /></a>
-  <a href="#tech-stack"><img src="https://img.shields.io/badge/Tech_Stack-View-0969da?style=for-the-badge" alt="Tech Stack" /></a>
-  <a href="#architecture"><img src="https://img.shields.io/badge/Architecture-View-8250df?style=for-the-badge" alt="Architecture" /></a>
-  <a href="#related-repositories"><img src="https://img.shields.io/badge/Related_Repos-View-e85d04?style=for-the-badge" alt="Related Repositories" /></a>
-  <a href="#development-team"><img src="https://img.shields.io/badge/Development_Team-View-DB2777?style=for-the-badge" alt="Development Team" /></a>
+  <img src="https://img.shields.io/badge/React_Native-0.86-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React Native 0.86" />
+  <img src="https://img.shields.io/badge/Expo_SDK-57-000020?style=flat-square&logo=expo&logoColor=white" alt="Expo SDK 57" />
+  <img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 6" />
+  <img src="https://img.shields.io/badge/Backend-.NET_8-512BD4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 8 backend" />
+  <img src="https://img.shields.io/badge/Push-Expo_%2B_FCM-FFCA28?style=flat-square&logo=firebase&logoColor=black" alt="Expo and Firebase Cloud Messaging" />
 </p>
 
 ## Overview
 
-`smart-locking-mobile` is the Resident Mobile App of the Boxora system, allowing residents and office users to manage parcel deliveries, receive notifications, retrieve parcels, and remotely interact with assigned smart lockers.
+`smart-locking-mobile` is the resident-facing mobile client for Boxora. It uses Expo Router for navigation, a .NET REST API for authenticated operations, SecureStore for local sessions, and Expo Push Notifications with Firebase Cloud Messaging V1 on Android.
 
-### Main Screens
+Implemented application areas include:
 
-* **Authentication** — registers and signs in residents using a phone number and OTP.
-* **Home Dashboard** — displays parcel summaries, notifications, and important locker status updates.
-* **Parcel List** — shows active, completed, overdue, and historical parcels.
-* **Parcel Details** — displays parcel information, storage status, assigned compartment, and retrieval methods.
-* **Package Retrieval** — supports Personal QR Code, One-Time Password, and Remote App Unlock.
-* **Notifications** — receives parcel and locker updates through Firebase Cloud Messaging.
-* **Delivery Preferences** — allows residents to configure Auto or Manual delivery approval.
-* **Profile & Settings** — manages resident information, security settings, and application preferences.
+- Resident authentication, token refresh, logout, and profile loading.
+- Android push permission, Expo push-token registration, and notification display.
+- Parcel dashboard, history, notification, account, delivery approval, overdue-payment, and compartment-unlock screens.
+- Responsive UI built with HeroUI Native and Uniwind/Tailwind CSS.
 
----
+Authentication, resident profiles, and device registration use the backend API. Parcel and delivery workflow screens currently contain prototype/mock data and should be connected to their backend endpoints before production use.
 
-<a id="quick-start"></a>
-
-<details open>
-<summary><strong>🚀 Quick Start</strong></summary>
+## Quick start
 
 ### Requirements
 
-* Flutter SDK 3.22
-* Dart SDK 3.4+
-* Android Studio or Visual Studio Code
-* Android emulator, iOS simulator, or physical device
-* Xcode for iOS development on macOS
+- Node.js 20 or newer and npm.
+- JDK 17.
+- Android Studio with Android SDK Platform Tools.
+- A physical Android device with USB debugging enabled, or an Android emulator.
+- For the provided Windows Android script: CMake `3.30.5` and Ninja `1.12.0` or newer.
+- Xcode on macOS for iOS development.
 
-### Installation
+### Install
 
-```bash
+```powershell
 git clone https://github.com/se-05-sdlms/smart-locking-mobile
 cd smart-locking-mobile
-flutter pub get
+npm install
+Copy-Item .env.example .env
 ```
 
-### Configuration
+### Configure the API
 
-Configure the Backend API and SignalR Hub URLs according to the configuration method used by the source code.
+The default development configuration expects the backend on port `5005`:
 
 ```env
-# TO BE FILLED IN using the exact variable names from the source code
-API_BASE_URL=
-SIGNALR_HUB_URL=
+EXPO_PUBLIC_API_URL=http://localhost:5005/api
+EXPO_PUBLIC_API_TIMEOUT=15000
 ```
 
-Add the Firebase configuration files for the required platforms:
+When a physical Android device is connected by USB, `npm run android` forwards ports `5005` and `8081` through ADB. This allows the device to reach the local backend and Metro through `localhost`.
 
-```text
-android/app/google-services.json
-ios/Runner/GoogleService-Info.plist
+### Configure Android push notifications
+
+1. Register `com.wykowjbu.boxora` as an Android app in Firebase.
+2. Place its public `google-services.json` at the repository root.
+3. Upload the Firebase service-account JSON to the Expo project's FCM V1 credentials.
+4. Never commit the Firebase service-account JSON or Android signing keys.
+
+The app uses Expo project ID `535b5783-6307-4982-a796-1aa71e988fef` and notification channel `default`.
+
+### Run on Android
+
+Start the .NET backend first, connect and authorize the phone, then run:
+
+```powershell
+npm run android
 ```
 
-### Run the Development Environment
+The script validates the local Android toolchain, selects the connected device, configures ADB reverse ports, and builds/launches the native development app.
 
-```bash
-flutter run
+Other development commands:
+
+```powershell
+npm start          # Start the Expo development server
+npm run ios        # Build and run iOS on macOS
+npm run lint       # Run ESLint
+npm run typecheck  # Run TypeScript checks
+npm run format     # Format supported files
+npm run format:check
 ```
 
-Or select a specific device:
+## Tech stack
 
-```bash
-flutter devices
-flutter run -d <DEVICE_ID>
-```
+| Area                | Technology                                             |
+| ------------------- | ------------------------------------------------------ |
+| Mobile framework    | React Native 0.86, Expo SDK 57                         |
+| Language            | TypeScript 6, React 19                                 |
+| Navigation          | Expo Router                                            |
+| UI and styling      | HeroUI Native, Uniwind, Tailwind CSS 4                 |
+| API                 | Fetch-based REST client, JWT access/refresh tokens     |
+| Secure storage      | Expo SecureStore                                       |
+| Push notifications  | Expo Notifications, Expo Push Service, Firebase FCM V1 |
+| Backend             | ASP.NET Core Web API on .NET 8                         |
+| Supported platforms | Android and iOS                                        |
 
-* App target: Android, iOS, emulator, simulator, or physical device
-* Backend URL: update according to the local or deployed Backend environment
-
-</details>
-
-<a id="tech-stack"></a>
-
-<details open>
-<summary><strong>🧰 Tech Stack</strong></summary>
-
-| Category                | Technology                           |
-| ----------------------- | ------------------------------------ |
-| Framework               | Flutter 3.22                         |
-| Language                | Dart 3.4+                            |
-| Architecture            | Clean Architecture                   |
-| State management        | BLoC                                 |
-| Networking              | Dio                                  |
-| Realtime                | SignalR Client for Flutter           |
-| Push notifications      | Firebase Cloud Messaging             |
-| Local storage           | Project-specific implementation      |
-| Testing                 | Flutter Test, BLoC Test, Mockito      |
-| Supported platforms     | Android, iOS                         |
-
-</details>
-
-<a id="architecture"></a>
-
-<details open>
-<summary><strong>🏗️ Architecture</strong></summary>
+## Architecture
 
 ```mermaid
-flowchart TD
-    subgraph Mobile["📱 Resident Mobile App"]
-        P["Presentation Layer<br/>Screens · Widgets · BLoC"]
-        D["Domain Layer<br/>Entities · Use Cases · Repository Interfaces"]
-        I["Data Layer<br/>Dio · SignalR Client · Data Sources"]
-        N["Notification Layer<br/>Firebase Cloud Messaging"]
-    end
+flowchart LR
+    UI["React Native screens<br/>Expo Router · HeroUI Native"]
+    AUTH["Auth provider<br/>JWT · SecureStore"]
+    API["REST API client"]
+    BE["ASP.NET Core API<br/>.NET 8"]
+    DB[("PostgreSQL")]
+    PUSH["Expo Push Service"]
+    FCM["Firebase FCM V1"]
+    APP["Android notification channel"]
 
-    B["⚙️ ASP.NET Core Web API<br/>.NET 8 · JWT · SignalR"]
-    DB[("🗄️ PostgreSQL Database<br/>Supabase · Audit Logs")]
-    E["📡 EMQX MQTT Broker<br/>MQTT v5.0"]
-    F["🔌 ESP32 Locker Controller<br/>ESP32 WROOM 32D"]
-    G["🔒 Locker Hardware<br/>Electronic Lock · Relay · Door Sensor"]
-    FCM["🔔 Firebase Cloud Messaging"]
-
-    P --> D
-    D --> I
-
-    I -->|"(1) HTTPS / REST API / JWT"| B
-    B -.->|"(2) SignalR Realtime"| I
-    B -->|"(3) Push Notification"| FCM
-    FCM --> N
-
-    B <-->|"(4) Entity Framework Core"| DB
-    B <-->|"(5) MQTT Publish / Subscribe<br/>Server-side"| E
-    E <-->|"(6) MQTT over Wi-Fi / Internet"| F
-    F -->|"(7) Control and read status"| G
-
-    style P fill:#dbeafe,stroke:#2563eb,stroke-width:2px
-    style D fill:#fef3c7,stroke:#d97706,stroke-width:2px
-    style I fill:#dcfce7,stroke:#16a34a,stroke-width:2px
-    style N fill:#fffbeb,stroke:#f59e0b,stroke-width:2px
-    style B fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
-    style DB fill:#f3e8ff,stroke:#9333ea,stroke-width:2px
-    style E fill:#ccfbf1,stroke:#0f766e,stroke-width:2px
-    style F fill:#ffedd5,stroke:#ea580c,stroke-width:2px
-    style G fill:#fee2e2,stroke:#dc2626,stroke-width:2px
-    style FCM fill:#fef9c3,stroke:#ca8a04,stroke-width:2px
+    UI --> AUTH
+    UI --> API
+    AUTH --> API
+    API -->|HTTPS / JSON| BE
+    BE --> DB
+    BE --> PUSH
+    PUSH --> FCM
+    FCM --> APP
 ```
 
-The Mobile App communicates with the Backend through REST APIs, JWT, and SignalR. It receives push notifications through Firebase Cloud Messaging and does not connect directly to PostgreSQL, the MQTT Broker, or ESP32 devices.
+The mobile app never connects directly to PostgreSQL or locker hardware. All protected operations go through the backend API.
 
-</details>
-
-<details open>
-<summary><strong>🔐 Environment Variables</strong></summary>
-
-Configure the application using the environment management approach implemented by the source code.
-
-```env
-# TO BE FILLED IN using the exact variable names from the source code
-API_BASE_URL=
-SIGNALR_HUB_URL=
-```
-
-Platform-specific Firebase configuration:
-
-```text
-android/app/google-services.json
-ios/Runner/GoogleService-Info.plist
-```
-
-Do not commit production credentials, signing files, private keys, or sensitive environment configuration to Git.
-
-</details>
-
-<details>
-<summary><strong>🧪 Build, Test, and Format</strong></summary>
-
-```bash
-# Install dependencies
-flutter pub get
-
-# Analyze the source code
-flutter analyze
-
-# Run all tests
-flutter test
-
-# Verify code formatting
-dart format --output=none --set-exit-if-changed .
-
-# Build Android APK
-flutter build apk --release
-
-# Build Android App Bundle
-flutter build appbundle --release
-
-# Build iOS on macOS
-flutter build ios --release
-```
-
-</details>
-
-<details>
-<summary><strong>📁 Project Structure</strong></summary>
+## Project structure
 
 ```text
 smart-locking-mobile/
-├── docs/
-│   └── images/
-│       └── readme-header.png
-├── android/
-├── ios/
-├── assets/
-├── lib/
-│   ├── core/
-│   ├── features/
-│   ├── shared/
-│   └── main.dart
-├── test/
-├── pubspec.yaml
+├── assets/                  # App icons and splash assets
+├── docs/images/             # README artwork
+├── scripts/
+│   └── run-android.ps1      # Windows Android build/run helper
+├── src/
+│   ├── app/                 # Expo Router screens and tab routes
+│   ├── components/          # Shared UI and icons
+│   ├── config/              # Environment configuration
+│   ├── data/                # Prototype parcel data
+│   ├── lib/                 # REST API client
+│   ├── providers/           # Authentication and push registration
+│   └── global.css           # Uniwind/Tailwind and HeroUI styles
+├── app.json                 # Expo and native plugin configuration
+├── eas.json                 # EAS build profiles
+├── google-services.json     # Public Firebase Android client config
+├── package.json
 ├── README.vn.md
 └── README.md
 ```
 
-</details>
+## Security notes
 
-<a id="related-repositories"></a>
+- `.env` is local-only; commit `.env.example` instead.
+- `google-services.json` identifies the Firebase client but does not contain the FCM service-account private key.
+- Never commit files matching `*-firebase-adminsdk-*.json`, keystores, signing keys, or production secrets.
 
-<details open>
-<summary><strong>🔗 Related Repositories and Documentation</strong></summary>
+## Related repositories
 
 | Component             | Link                                                                                                 |
 | --------------------- | ---------------------------------------------------------------------------------------------------- |
-| GitHub Organization   | [se-05-sdlms](https://github.com/se-05-sdlms)                                                        |
-| Frontend              | [smart-locking-fe](https://github.com/se-05-sdlms/smart-locking-fe)                                  |
+| GitHub organization   | [se-05-sdlms](https://github.com/se-05-sdlms)                                                        |
+| Web frontend          | [smart-locking-fe](https://github.com/se-05-sdlms/smart-locking-fe)                                  |
 | Backend               | [smart-locking-be](https://github.com/se-05-sdlms/smart-locking-be)                                  |
-| Project Documentation | [Google Drive](https://drive.google.com/drive/folders/1M3OPsm2NxAi7WnAfsKgV4MQEMRy5rOsa?usp=sharing) |
+| Project documentation | [Google Drive](https://drive.google.com/drive/folders/1M3OPsm2NxAi7WnAfsKgV4MQEMRy5rOsa?usp=sharing) |
 
-</details>
+## Development team
 
-<a id="development-team"></a>
-
-<details open>
-<summary><strong>👥 Development Team</strong></summary>
-
-* **Project code:** `SDLMS`
-* **Group:** `SE_05`
+- **Project code:** `SDLMS`
+- **Group:** `SE_05`
 
 ### Supervisor
 
@@ -314,5 +199,3 @@ smart-locking-mobile/
 | DE180313   | Võ Văn Hài           | Member      | [haivvde180313@fpt.edu.vn](mailto:haivvde180313@fpt.edu.vn)       |
 | DE180393   | Trần Minh Cường      | Member      | [cuongtmde180393@fpt.edu.vn](mailto:cuongtmde180393@fpt.edu.vn)   |
 | DE181072   | Trương Hà Thùy Trang | Member      | [trangthtde181072@fpt.edu.vn](mailto:trangthtde181072@fpt.edu.vn) |
-
-</details>

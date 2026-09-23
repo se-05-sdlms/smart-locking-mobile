@@ -3,11 +3,7 @@
 </p>
 
 <p align="center">
-  <img
-    src="./docs/images/boxora-header.gif"
-    alt="Boxora"
-    width="560"
-  />
+  <img src="./docs/images/boxora-header.gif" alt="Boxora" width="560" />
 </p>
 
 <p align="center">
@@ -17,287 +13,176 @@
   <a href="./README.md">🇬🇧 English</a>
 </p>
 
-<h3 align="center">
-  📱 Resident Mobile App của SDLMS
-</h3>
+<h3 align="center">📱 Ứng dụng cư dân Boxora</h3>
 
 <p align="center">
-  Nền tảng quản lý giao nhận bưu kiện thông minh, kết nối thời gian thực và tích hợp IoT.
+  Ứng dụng React Native giúp cư dân quản lý bưu kiện và tương tác với hệ thống tủ thông minh Boxora.
 </p>
 
 <p align="center">
-  <img
-    src="https://img.shields.io/badge/Mobile-Flutter_3.22-02569B?style=flat-square&logo=flutter&logoColor=white"
-    alt="Mobile Flutter 3.22"
-  />
-  <img
-    src="https://img.shields.io/badge/Language-Dart_3.4-0175C2?style=flat-square&logo=dart&logoColor=white"
-    alt="Language Dart 3.4"
-  />
-  <img
-    src="https://img.shields.io/badge/Backend-.NET_8-512BD4?style=flat-square&logo=dotnet&logoColor=white"
-    alt="Backend .NET 8"
-  />
-  <img
-    src="https://img.shields.io/badge/Realtime-SignalR-512BD4?style=flat-square"
-    alt="Realtime SignalR"
-  />
-  <img
-    src="https://img.shields.io/badge/Notifications-Firebase_FCM-FFCA28?style=flat-square&logo=firebase&logoColor=black"
-    alt="Firebase Cloud Messaging"
-  />
-  <img
-    src="https://img.shields.io/badge/State-BLoC-40B5A4?style=flat-square"
-    alt="BLoC State Management"
-  />
-</p>
-
-<p align="center">
-  <a href="#quick-start"><img src="https://img.shields.io/badge/B%E1%BA%AFt_%C4%91%E1%BA%A7u_nhanh-Xem-2ea44f?style=for-the-badge" alt="Bắt đầu nhanh" /></a>
-  <a href="#tech-stack"><img src="https://img.shields.io/badge/C%C3%B4ng_ngh%E1%BB%87-Xem-0969da?style=for-the-badge" alt="Công nghệ" /></a>
-  <a href="#architecture"><img src="https://img.shields.io/badge/Ki%E1%BA%BFn_tr%C3%BAc-Xem-8250df?style=for-the-badge" alt="Kiến trúc" /></a>
-  <a href="#related-repositories"><img src="https://img.shields.io/badge/Repo_li%C3%AAn_quan-Xem-e85d04?style=for-the-badge" alt="Repo liên quan" /></a>
-  <a href="#development-team"><img src="https://img.shields.io/badge/Nh%C3%B3m_ph%C3%A1t_tri%E1%BB%83n-Xem-DB2777?style=for-the-badge" alt="Nhóm phát triển" /></a>
+  <img src="https://img.shields.io/badge/React_Native-0.86-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React Native 0.86" />
+  <img src="https://img.shields.io/badge/Expo_SDK-57-000020?style=flat-square&logo=expo&logoColor=white" alt="Expo SDK 57" />
+  <img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 6" />
+  <img src="https://img.shields.io/badge/Backend-.NET_8-512BD4?style=flat-square&logo=dotnet&logoColor=white" alt="Backend .NET 8" />
+  <img src="https://img.shields.io/badge/Push-Expo_%2B_FCM-FFCA28?style=flat-square&logo=firebase&logoColor=black" alt="Expo và Firebase Cloud Messaging" />
 </p>
 
 ## Tổng quan
 
-`smart-locking-mobile` là Resident Mobile App của hệ thống Boxora, cho phép cư dân và người dùng văn phòng quản lý việc giao nhận bưu kiện, nhận thông báo, lấy hàng và tương tác từ xa với tủ thông minh được chỉ định.
+`smart-locking-mobile` là ứng dụng dành cho cư dân trong hệ thống Boxora. Ứng dụng sử dụng Expo Router để điều hướng, REST API .NET cho các thao tác xác thực, SecureStore để lưu phiên đăng nhập và Expo Push Notifications kết hợp Firebase Cloud Messaging V1 trên Android.
 
-### Các màn hình chính
+Các khu vực đã được triển khai gồm:
 
-* **Authentication** — đăng ký và đăng nhập cư dân bằng số điện thoại và OTP.
-* **Home Dashboard** — hiển thị tổng quan bưu kiện, thông báo và các cập nhật quan trọng của tủ.
-* **Danh sách bưu kiện** — hiển thị bưu kiện đang hoạt động, đã hoàn thành, quá hạn và lịch sử.
-* **Chi tiết bưu kiện** — hiển thị thông tin bưu kiện, trạng thái lưu trữ, ngăn tủ và phương thức nhận hàng.
-* **Nhận bưu kiện** — hỗ trợ Personal QR Code, One-Time Password và Remote App Unlock.
-* **Thông báo** — nhận cập nhật bưu kiện và trạng thái tủ qua Firebase Cloud Messaging.
-* **Tùy chọn giao hàng** — cho phép cư dân cấu hình chế độ phê duyệt giao hàng Auto hoặc Manual.
-* **Hồ sơ & Cài đặt** — quản lý thông tin cư dân, thiết lập bảo mật và tùy chọn ứng dụng.
+- Đăng nhập cư dân, refresh token, đăng xuất và tải hồ sơ.
+- Xin quyền thông báo Android, đăng ký Expo push token và hiển thị thông báo.
+- Màn hình đơn hàng, lịch sử, thông báo, tài khoản, duyệt yêu cầu giao hàng, thanh toán quá hạn và mở ngăn tủ.
+- Giao diện responsive bằng HeroUI Native và Uniwind/Tailwind CSS.
 
----
+Đăng nhập, hồ sơ cư dân và đăng ký thiết bị đã kết nối với backend. Các màn hình bưu kiện và quy trình giao hàng hiện vẫn dùng dữ liệu prototype/mock và cần nối endpoint backend trước khi dùng production.
 
-<a id="quick-start"></a>
-
-<details open>
-<summary><strong>🚀 Bắt đầu nhanh</strong></summary>
+## Bắt đầu nhanh
 
 ### Yêu cầu
 
-* Flutter SDK 3.22
-* Dart SDK 3.4+
-* Android Studio hoặc Visual Studio Code
-* Android emulator, iOS simulator hoặc thiết bị thật
-* Xcode để phát triển iOS trên macOS
+- Node.js 20 trở lên và npm.
+- JDK 17.
+- Android Studio cùng Android SDK Platform Tools.
+- Điện thoại Android đã bật USB debugging hoặc Android emulator.
+- Với script Android trên Windows: CMake `3.30.5` và Ninja `1.12.0` trở lên.
+- Xcode trên macOS nếu phát triển iOS.
 
 ### Cài đặt
 
-```bash
+```powershell
 git clone https://github.com/se-05-sdlms/smart-locking-mobile
 cd smart-locking-mobile
-flutter pub get
+npm install
+Copy-Item .env.example .env
 ```
 
-### Cấu hình
+### Cấu hình API
 
-Cấu hình URL của Backend API và SignalR Hub theo phương thức cấu hình được sử dụng trong source code.
+Cấu hình development mặc định sử dụng backend tại cổng `5005`:
 
 ```env
-# NGƯỜI DÙNG CẦN ĐIỀN đúng tên biến từ source code
-API_BASE_URL=
-SIGNALR_HUB_URL=
+EXPO_PUBLIC_API_URL=http://localhost:5005/api
+EXPO_PUBLIC_API_TIMEOUT=15000
 ```
 
-Thêm file cấu hình Firebase cho các nền tảng cần sử dụng:
+Khi điện thoại Android kết nối qua USB, `npm run android` chuyển tiếp cổng `5005` và `8081` bằng ADB. Vì vậy điện thoại có thể truy cập backend local và Metro qua `localhost`.
 
-```text
-android/app/google-services.json
-ios/Runner/GoogleService-Info.plist
+### Cấu hình push notification Android
+
+1. Đăng ký `com.wykowjbu.boxora` làm Android app trong Firebase.
+2. Đặt file public `google-services.json` tại thư mục gốc của repository.
+3. Upload Firebase service-account JSON vào FCM V1 credentials của Expo project.
+4. Không commit Firebase service-account JSON hoặc khóa ký Android.
+
+Ứng dụng sử dụng Expo project ID `535b5783-6307-4982-a796-1aa71e988fef` và notification channel `default`.
+
+### Chạy trên Android
+
+Khởi động backend .NET trước, kết nối và cấp quyền cho điện thoại, sau đó chạy:
+
+```powershell
+npm run android
 ```
 
-### Chạy môi trường phát triển
+Script sẽ kiểm tra Android toolchain, chọn thiết bị đang kết nối, cấu hình ADB reverse và build/chạy native development app.
 
-```bash
-flutter run
+Các lệnh development khác:
+
+```powershell
+npm start          # Chạy Expo development server
+npm run ios        # Build và chạy iOS trên macOS
+npm run lint       # Chạy ESLint
+npm run typecheck  # Kiểm tra TypeScript
+npm run format     # Format các file được hỗ trợ
+npm run format:check
 ```
 
-Hoặc chọn thiết bị cụ thể:
+## Công nghệ
 
-```bash
-flutter devices
-flutter run -d <DEVICE_ID>
-```
+| Nhóm              | Công nghệ                                              |
+| ----------------- | ------------------------------------------------------ |
+| Mobile framework  | React Native 0.86, Expo SDK 57                         |
+| Ngôn ngữ          | TypeScript 6, React 19                                 |
+| Điều hướng        | Expo Router                                            |
+| UI và styling     | HeroUI Native, Uniwind, Tailwind CSS 4                 |
+| API               | REST client dùng Fetch, JWT access/refresh token       |
+| Lưu trữ bảo mật   | Expo SecureStore                                       |
+| Push notification | Expo Notifications, Expo Push Service, Firebase FCM V1 |
+| Backend           | ASP.NET Core Web API trên .NET 8                       |
+| Nền tảng          | Android và iOS                                         |
 
-* App target: Android, iOS, emulator, simulator hoặc thiết bị thật
-* Backend URL: cập nhật theo môi trường Backend local hoặc đã deploy
-
-</details>
-
-<a id="tech-stack"></a>
-
-<details open>
-<summary><strong>🧰 Công nghệ</strong></summary>
-
-| Nhóm                    | Công nghệ                            |
-| ----------------------- | ------------------------------------ |
-| Framework               | Flutter 3.22                         |
-| Language                | Dart 3.4+                            |
-| Architecture            | Clean Architecture                   |
-| State management        | BLoC                                 |
-| Networking              | Dio                                  |
-| Realtime                | SignalR Client cho Flutter           |
-| Push notification       | Firebase Cloud Messaging             |
-| Local storage           | Theo implementation của project      |
-| Testing                 | Flutter Test, BLoC Test, Mockito      |
-| Nền tảng hỗ trợ         | Android, iOS                         |
-
-</details>
-
-<a id="architecture"></a>
-
-<details open>
-<summary><strong>🏗️ Kiến trúc</strong></summary>
+## Kiến trúc
 
 ```mermaid
-flowchart TD
-    subgraph Mobile["📱 Resident Mobile App"]
-        P["Presentation Layer<br/>Screens · Widgets · BLoC"]
-        D["Domain Layer<br/>Entities · Use Cases · Repository Interfaces"]
-        I["Data Layer<br/>Dio · SignalR Client · Data Sources"]
-        N["Notification Layer<br/>Firebase Cloud Messaging"]
-    end
+flowchart LR
+    UI["Màn hình React Native<br/>Expo Router · HeroUI Native"]
+    AUTH["Auth provider<br/>JWT · SecureStore"]
+    API["REST API client"]
+    BE["ASP.NET Core API<br/>.NET 8"]
+    DB[("PostgreSQL")]
+    PUSH["Expo Push Service"]
+    FCM["Firebase FCM V1"]
+    APP["Android notification channel"]
 
-    B["⚙️ ASP.NET Core Web API<br/>.NET 8 · JWT · SignalR"]
-    DB[("🗄️ PostgreSQL Database<br/>Supabase · Audit Logs")]
-    E["📡 EMQX MQTT Broker<br/>MQTT v5.0"]
-    F["🔌 ESP32 Locker Controller<br/>ESP32 WROOM 32D"]
-    G["🔒 Phần cứng tủ<br/>Khóa điện tử · Relay · Cảm biến cửa"]
-    FCM["🔔 Firebase Cloud Messaging"]
-
-    P --> D
-    D --> I
-
-    I -->|"(1) HTTPS / REST API / JWT"| B
-    B -.->|"(2) SignalR thời gian thực"| I
-    B -->|"(3) Push Notification"| FCM
-    FCM --> N
-
-    B <-->|"(4) Entity Framework Core"| DB
-    B <-->|"(5) MQTT Publish / Subscribe<br/>Server-side"| E
-    E <-->|"(6) MQTT qua Wi-Fi / Internet"| F
-    F -->|"(7) Điều khiển và đọc trạng thái"| G
-
-    style P fill:#dbeafe,stroke:#2563eb,stroke-width:2px
-    style D fill:#fef3c7,stroke:#d97706,stroke-width:2px
-    style I fill:#dcfce7,stroke:#16a34a,stroke-width:2px
-    style N fill:#fffbeb,stroke:#f59e0b,stroke-width:2px
-    style B fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
-    style DB fill:#f3e8ff,stroke:#9333ea,stroke-width:2px
-    style E fill:#ccfbf1,stroke:#0f766e,stroke-width:2px
-    style F fill:#ffedd5,stroke:#ea580c,stroke-width:2px
-    style G fill:#fee2e2,stroke:#dc2626,stroke-width:2px
-    style FCM fill:#fef9c3,stroke:#ca8a04,stroke-width:2px
+    UI --> AUTH
+    UI --> API
+    AUTH --> API
+    API -->|HTTPS / JSON| BE
+    BE --> DB
+    BE --> PUSH
+    PUSH --> FCM
+    FCM --> APP
 ```
 
-Mobile App giao tiếp với Backend thông qua REST API, JWT và SignalR. Ứng dụng nhận push notification qua Firebase Cloud Messaging, không kết nối trực tiếp đến PostgreSQL, MQTT Broker hoặc thiết bị ESP32.
+Ứng dụng mobile không kết nối trực tiếp đến PostgreSQL hoặc phần cứng tủ. Mọi thao tác được bảo vệ đều đi qua backend API.
 
-</details>
-
-<details open>
-<summary><strong>🔐 Biến môi trường</strong></summary>
-
-Cấu hình ứng dụng theo phương thức quản lý môi trường được triển khai trong source code.
-
-```env
-# NGƯỜI DÙNG CẦN ĐIỀN đúng tên biến từ source code
-API_BASE_URL=
-SIGNALR_HUB_URL=
-```
-
-Cấu hình Firebase theo từng nền tảng:
-
-```text
-android/app/google-services.json
-ios/Runner/GoogleService-Info.plist
-```
-
-Không commit production credential, signing file, private key hoặc cấu hình môi trường nhạy cảm lên Git.
-
-</details>
-
-<details>
-<summary><strong>🧪 Build, test và format</strong></summary>
-
-```bash
-# Cài đặt dependency
-flutter pub get
-
-# Phân tích source code
-flutter analyze
-
-# Chạy toàn bộ test
-flutter test
-
-# Kiểm tra format
-dart format --output=none --set-exit-if-changed .
-
-# Build Android APK
-flutter build apk --release
-
-# Build Android App Bundle
-flutter build appbundle --release
-
-# Build iOS trên macOS
-flutter build ios --release
-```
-
-</details>
-
-<details>
-<summary><strong>📁 Cấu trúc dự án</strong></summary>
+## Cấu trúc dự án
 
 ```text
 smart-locking-mobile/
-├── docs/
-│   └── images/
-│       └── readme-header.png
-├── android/
-├── ios/
-├── assets/
-├── lib/
-│   ├── core/
-│   ├── features/
-│   ├── shared/
-│   └── main.dart
-├── test/
-├── pubspec.yaml
+├── assets/                  # Icon và splash screen của app
+├── docs/images/             # Hình ảnh dùng trong README
+├── scripts/
+│   └── run-android.ps1      # Script build/chạy Android trên Windows
+├── src/
+│   ├── app/                 # Màn hình và tab route của Expo Router
+│   ├── components/          # UI và icon dùng chung
+│   ├── config/              # Cấu hình biến môi trường
+│   ├── data/                # Dữ liệu bưu kiện prototype
+│   ├── lib/                 # REST API client
+│   ├── providers/           # Xác thực và đăng ký push token
+│   └── global.css           # Uniwind/Tailwind và HeroUI styles
+├── app.json                 # Cấu hình Expo và native plugin
+├── eas.json                 # EAS build profile
+├── google-services.json     # Cấu hình Firebase Android phía client
+├── package.json
 ├── README.vn.md
 └── README.md
 ```
 
-</details>
+## Lưu ý bảo mật
 
-<a id="related-repositories"></a>
+- `.env` chỉ dùng ở máy local; chỉ commit `.env.example`.
+- `google-services.json` định danh Firebase client, không chứa FCM service-account private key.
+- Không commit file `*-firebase-adminsdk-*.json`, keystore, signing key hoặc production secret.
 
-<details open>
-<summary><strong>🔗 Repo và tài liệu liên quan</strong></summary>
+## Repo liên quan
 
-| Thành phần           | Liên kết                                                                                             |
-| -------------------- | ---------------------------------------------------------------------------------------------------- |
-| GitHub Organization  | [se-05-sdlms](https://github.com/se-05-sdlms)                                                        |
-| Frontend             | [smart-locking-fe](https://github.com/se-05-sdlms/smart-locking-fe)                                  |
-| Backend              | [smart-locking-be](https://github.com/se-05-sdlms/smart-locking-be)                                  |
-| Tài liệu dự án       | [Google Drive](https://drive.google.com/drive/folders/1M3OPsm2NxAi7WnAfsKgV4MQEMRy5rOsa?usp=sharing) |
+| Thành phần          | Liên kết                                                                                             |
+| ------------------- | ---------------------------------------------------------------------------------------------------- |
+| GitHub organization | [se-05-sdlms](https://github.com/se-05-sdlms)                                                        |
+| Web frontend        | [smart-locking-fe](https://github.com/se-05-sdlms/smart-locking-fe)                                  |
+| Backend             | [smart-locking-be](https://github.com/se-05-sdlms/smart-locking-be)                                  |
+| Tài liệu dự án      | [Google Drive](https://drive.google.com/drive/folders/1M3OPsm2NxAi7WnAfsKgV4MQEMRy5rOsa?usp=sharing) |
 
-</details>
+## Nhóm phát triển
 
-<a id="development-team"></a>
-
-<details open>
-<summary><strong>👥 Nhóm phát triển</strong></summary>
-
-* **Mã dự án:** `SDLMS`
-* **Nhóm:** `SE_05`
+- **Mã dự án:** `SDLMS`
+- **Nhóm:** `SE_05`
 
 ### Giảng viên hướng dẫn
 
@@ -314,5 +199,3 @@ smart-locking-mobile/
 | DE180313 | Võ Văn Hài           | Thành viên  | [haivvde180313@fpt.edu.vn](mailto:haivvde180313@fpt.edu.vn)       |
 | DE180393 | Trần Minh Cường      | Thành viên  | [cuongtmde180393@fpt.edu.vn](mailto:cuongtmde180393@fpt.edu.vn)   |
 | DE181072 | Trương Hà Thùy Trang | Thành viên  | [trangthtde181072@fpt.edu.vn](mailto:trangthtde181072@fpt.edu.vn) |
-
-</details>

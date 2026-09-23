@@ -13,6 +13,7 @@ expo-env.d.ts
 uniwind-types.d.ts
 
 # Native
+.bundle/
 .kotlin/
 *.orig.*
 *.jks
@@ -20,6 +21,7 @@ uniwind-types.d.ts
 *.p12
 *.key
 *.mobileprovision
+*-firebase-adminsdk-*.json
 
 # Metro
 .metro-health-check*

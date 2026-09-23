@@ -1,10 +1,22 @@
+import { useThemeColor } from "heroui-native";
 import type { JSX, ReactNode } from "react";
-import { SafeAreaView, View } from "react-native";
+import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 
-export function AppScreen({ children }: { children: ReactNode }): JSX.Element {
+export function AppScreen({
+  children,
+  padded = true,
+}: {
+  children: ReactNode;
+  padded?: boolean;
+}): JSX.Element {
+  const backgroundColor = useThemeColor("background");
+
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-1 px-5 pt-4">{children}</View>
+    <SafeAreaView style={{ flex: 1, backgroundColor }} edges={["top", "right", "left"]}>
+      <StatusBar style="auto" />
+      <View className={`flex-1 bg-background ${padded ? "px-5 pt-3" : ""}`}>{children}</View>
     </SafeAreaView>
   );
 }

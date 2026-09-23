@@ -9,7 +9,7 @@ export function BoxoraLogo(): JSX.Element {
         <Defs>
           <LinearGradient id="cube" x1="18" y1="12" x2="68" y2="70">
             <Stop stopColor="#FB923C" />
-            <Stop offset="1" stop-color="#EA580C" />
+            <Stop offset="1" stopColor="#EA580C" />
           </LinearGradient>
         </Defs>
         <Path d="M43 12 68 26.5v29L43 70 18 55.5v-29z" fill="url(#cube)" />

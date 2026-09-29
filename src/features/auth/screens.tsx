@@ -36,6 +36,7 @@ export function LoginScreen(): JSX.Element {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   async function submit(): Promise<void> {
@@ -45,9 +46,11 @@ export function LoginScreen(): JSX.Element {
     }
 
     setError("");
+    setMessage("");
     setSubmitting(true);
     await wait(400);
-    router.replace("/home");
+    setSubmitting(false);
+    setMessage("Đăng nhập thành công.");
   }
 
   return (
@@ -86,6 +89,9 @@ export function LoginScreen(): JSX.Element {
         </View>
         {error ? (
           <Typography.Paragraph className="text-sm text-danger">{error}</Typography.Paragraph>
+        ) : null}
+        {message ? (
+          <Typography.Paragraph className="text-sm text-success">{message}</Typography.Paragraph>
         ) : null}
         <Button size="lg" className="mt-1" isDisabled={submitting} onPress={() => void submit()}>
           <Button.Label>{submitting ? "Đang đăng nhập..." : "Đăng nhập"}</Button.Label>

@@ -21,6 +21,7 @@ export default function ForgotPasswordScreen(): JSX.Element {
           keyboardType="phone-pad"
           autoCapitalize="none"
           autoComplete="tel"
+          returnKeyType="done"
         />
         <Button
           size="lg"

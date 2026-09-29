@@ -15,12 +15,13 @@ export default function RegisterScreen(): JSX.Element {
       title="Tạo tài khoản cư dân"
       description="Dùng số điện thoại đã đăng ký với ban quản lý để bắt đầu."
     >
-      <View className="gap-5">
+      <View className="gap-4">
         <AuthField
           label="Họ và tên"
           icon="user"
           placeholder="Nguyễn Minh Anh"
           autoComplete="name"
+          returnKeyType="next"
         />
         <AuthField
           label="Số điện thoại"
@@ -29,6 +30,7 @@ export default function RegisterScreen(): JSX.Element {
           keyboardType="phone-pad"
           autoCapitalize="none"
           autoComplete="tel"
+          returnKeyType="next"
         />
         <AuthField
           label="Mật khẩu"
@@ -36,6 +38,7 @@ export default function RegisterScreen(): JSX.Element {
           placeholder="Tối thiểu 8 ký tự"
           secureTextEntry
           autoComplete="new-password"
+          returnKeyType="next"
         />
         <AuthField
           label="Xác nhận mật khẩu"
@@ -43,8 +46,9 @@ export default function RegisterScreen(): JSX.Element {
           placeholder="Nhập lại mật khẩu"
           secureTextEntry
           autoComplete="new-password"
+          returnKeyType="done"
         />
-        <Checkbox isSelected={accepted} onSelectedChange={setAccepted}>
+        <Checkbox className="items-start" isSelected={accepted} onSelectedChange={setAccepted}>
           <Checkbox.Indicator />
           <Typography.Paragraph className="flex-1">
             Tôi đồng ý với điều khoản sử dụng và chính sách bảo mật
@@ -62,7 +66,7 @@ export default function RegisterScreen(): JSX.Element {
         >
           <Button.Label>Đăng ký</Button.Label>
         </Button>
-        <View className="flex-row justify-center gap-1">
+        <View className="flex-row items-center justify-center gap-1">
           <Typography.Paragraph className="text-muted">Đã có tài khoản?</Typography.Paragraph>
           <LinkButton onPress={() => router.replace("/login")}>Đăng nhập</LinkButton>
         </View>

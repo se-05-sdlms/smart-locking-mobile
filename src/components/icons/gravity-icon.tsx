@@ -1,14 +1,15 @@
 import type { JSX } from "react";
 import Svg, { Path } from "react-native-svg";
 
-import { useThemeColor } from "heroui-native";
+import { useThemeColor, type ThemeColor } from "heroui-native";
 
 export type GravityIconName =
-  "arrow-left" | "envelope" | "eye" | "eye-slash" | "lock" | "phone" | "user";
+  "arrow-left" | "arrow-right" | "envelope" | "eye" | "eye-slash" | "lock" | "phone" | "user";
 
 // Path data follows Gravity Icons' 24px, round-line visual language.
 const paths: Record<GravityIconName, string[]> = {
-  "arrow-left": ["M20 12H4", "m10 6-6-6 6-6"],
+  "arrow-left": ["M20 12H4", "M10 6l-6 6 6 6"],
+  "arrow-right": ["M4 12h16", "M14 6l6 6-6 6"],
   envelope: [
     "M3 6.5A2.5 2.5 0 0 1 5.5 4h13A2.5 2.5 0 0 1 21 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z",
     "m4 8 5 4 5-4",
@@ -37,11 +38,13 @@ const paths: Record<GravityIconName, string[]> = {
 export function GravityIcon({
   name,
   size = 20,
+  tone = "foreground",
 }: {
   name: GravityIconName;
   size?: number;
+  tone?: ThemeColor;
 }): JSX.Element {
-  const color = useThemeColor("foreground");
+  const color = useThemeColor(tone);
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       {paths[name].map((path) => (

@@ -16,12 +16,16 @@ export function AuthField({
   const password = Boolean(secureTextEntry);
   return (
     <TextField isInvalid={Boolean(error)}>
-      <Label>{label}</Label>
+      <Label className="mb-1 font-medium">{label}</Label>
       <InputGroup>
         <InputGroup.Prefix isDecorative>
           <GravityIcon name={icon} />
         </InputGroup.Prefix>
-        <InputGroup.Input {...props} secureTextEntry={password && !visible} />
+        <InputGroup.Input
+          {...props}
+          className="h-14 rounded-2xl border border-border bg-field"
+          secureTextEntry={password && !visible}
+        />
         {password && (
           <InputGroup.Suffix>
             <Button

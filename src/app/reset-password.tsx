@@ -20,6 +20,7 @@ export default function ResetPasswordScreen(): JSX.Element {
           placeholder="Tối thiểu 8 ký tự"
           secureTextEntry
           autoComplete="new-password"
+          returnKeyType="next"
         />
         <AuthField
           label="Xác nhận mật khẩu"
@@ -27,6 +28,7 @@ export default function ResetPasswordScreen(): JSX.Element {
           placeholder="Nhập lại mật khẩu"
           secureTextEntry
           autoComplete="new-password"
+          returnKeyType="done"
         />
         <Button size="lg" onPress={() => router.replace("/login")}>
           <Button.Label>Đổi mật khẩu</Button.Label>

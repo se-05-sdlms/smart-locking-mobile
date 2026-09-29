@@ -1,9 +1,10 @@
 import type { JSX, ReactNode } from "react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-import { authApi, onSessionExpired } from "@/features/auth/api";
+import { authApi } from "@/features/auth/api";
 import { clearSession, readSession, saveSession } from "@/features/auth/storage";
 import type { AuthSession, PendingRegistration, UserProfile } from "@/features/auth/types";
+import { onSessionExpired } from "@/lib/api-client";
 
 type AuthContextValue = {
   initializing: boolean;

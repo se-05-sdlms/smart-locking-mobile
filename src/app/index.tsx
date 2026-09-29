@@ -2,5 +2,5 @@ import { Redirect } from "expo-router";
 import type { JSX } from "react";
 
 export default function Index(): JSX.Element {
-  return <Redirect href="/login" />;
+  return <Redirect href="/welcome" />;
 }

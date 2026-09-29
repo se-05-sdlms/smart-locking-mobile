@@ -5,6 +5,6 @@ import { useAuth } from "@/features/auth/auth-context";
 
 export default function AuthLayout(): JSX.Element {
   const { initializing, user } = useAuth();
-  if (!initializing && user) return <Redirect href="/home" />;
+  if (!initializing && user) return <Redirect href="/" />;
   return <Slot />;
 }

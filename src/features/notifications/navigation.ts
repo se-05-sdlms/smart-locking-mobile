@@ -6,7 +6,10 @@ export function openNotificationTarget(target: Partial<NotificationTarget>): voi
   if (target.parcelId) {
     router.push(`/parcels/${target.parcelId}`);
   } else if (target.deliveryRequestId) {
-    router.push({ pathname: "/requests", params: { id: target.deliveryRequestId } });
+    router.push({
+      pathname: "/delivery-requests/[id]",
+      params: { id: target.deliveryRequestId },
+    });
   } else if (target.incidentId) {
     router.push({ pathname: "/incidents/[id]", params: { id: target.incidentId } });
   } else if (target.paymentTransactionId) {

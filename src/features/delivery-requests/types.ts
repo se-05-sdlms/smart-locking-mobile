@@ -11,5 +11,6 @@ export type PendingDeliveryRequest = {
 export type DeliveryApprovalMode = 0 | 1;
 
 export type ResidentApprovalProfile = {
+  registeredLockerId: string | null;
   deliveryApprovalMode: DeliveryApprovalMode;
 };

@@ -1,9 +1,7 @@
 import type { JSX } from "react";
 
-import { PlaceholderScreen } from "@/features/navigation/placeholder-screen";
+import { IncidentFormScreen } from "@/features/incidents/incident-form-screen";
 
 export default function NewIncidentScreen(): JSX.Element {
-  return (
-    <PlaceholderScreen title="Báo cáo sự cố" description="Gửi thông tin sự cố cần được hỗ trợ." />
-  );
+  return <IncidentFormScreen />;
 }

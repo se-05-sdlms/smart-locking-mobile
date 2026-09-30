@@ -18,3 +18,18 @@ export type ParcelListItem = {
   currency: string | null;
   overdueChargeStatus: "Outstanding" | "Paid" | null;
 };
+
+export type ParcelDetail = ParcelListItem & {
+  lockerRecoveryAddress: string;
+  parcelImageUrl: string | null;
+  shipperName: string | null;
+  shipperPhone: string | null;
+};
+
+export type ParcelStatusHistory = {
+  id: string;
+  fromStatus: ParcelStatus | null;
+  toStatus: ParcelStatus;
+  reason: string | null;
+  changedAt: string;
+};

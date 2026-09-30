@@ -70,7 +70,7 @@
 * **Home Dashboard** — hiển thị tổng quan bưu kiện, thông báo và các cập nhật quan trọng của tủ.
 * **Danh sách bưu kiện** — hiển thị bưu kiện đang hoạt động, đã hoàn thành, quá hạn và lịch sử.
 * **Chi tiết bưu kiện** — hiển thị thông tin bưu kiện, trạng thái lưu trữ, ngăn tủ và phương thức nhận hàng.
-* **Nhận bưu kiện** — hỗ trợ Personal QR Code, One-Time Password và Remote App Unlock.
+* **Nhận bưu kiện** — hỗ trợ One-Time Password và Remote App Unlock.
 * **Thông báo** — nhận cập nhật bưu kiện và trạng thái tủ qua Firebase Cloud Messaging.
 * **Tùy chọn giao hàng** — cho phép cư dân cấu hình chế độ phê duyệt giao hàng Auto hoặc Manual.
 * **Hồ sơ & Cài đặt** — quản lý thông tin cư dân, thiết lập bảo mật và tùy chọn ứng dụng.

@@ -9,6 +9,7 @@ export type GravityIconName =
   | "arrow-left"
   | "arrow-right"
   | "bell"
+  | "check-circle"
   | "clock"
   | "credit-card"
   | "envelope"
@@ -19,6 +20,8 @@ export type GravityIconName =
   | "package"
   | "phone"
   | "qr-code"
+  | "refresh"
+  | "unlock"
   | "user";
 
 // Path data follows Gravity Icons' 24px, round-line visual language.
@@ -27,6 +30,7 @@ const paths: Record<GravityIconName, string[]> = {
   "arrow-left": ["M20 12H4", "M10 6l-6 6 6 6"],
   "arrow-right": ["M4 12h16", "M14 6l6 6-6 6"],
   bell: ["M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9", "M10 21h4"],
+  "check-circle": ["M22 11.1V12a10 10 0 1 1-5.9-9.1", "m9 11 3 3L22 4"],
   clock: ["M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20", "M12 6v6l4 2"],
   "credit-card": ["M3 5h18v14H3z", "M3 9h18", "M7 15h3"],
   envelope: [
@@ -61,6 +65,17 @@ const paths: Record<GravityIconName, string[]> = {
     "M18 18h3v3h-3z",
     "M18 14h3",
     "M14 18v3",
+  ],
+  refresh: [
+    "M20 6v5h-5",
+    "M4 18v-5h5",
+    "M18.5 9A7 7 0 0 0 6 6.5L4 11",
+    "M5.5 15A7 7 0 0 0 18 17.5l2-4.5",
+  ],
+  unlock: [
+    "M7 10V7a5 5 0 0 1 9.5-2",
+    "M5 10h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2",
+    "M12 14v3",
   ],
   user: ["M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2", "M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"],
 };

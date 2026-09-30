@@ -61,12 +61,6 @@ export function ResidentHomeContent(): JSX.Element {
           </Typography.Paragraph>
         </View>
 
-        <Button variant="secondary" onPress={() => router.push("/personal-qr")}>
-          <GravityIcon name="qr-code" />
-          <Button.Label>Mở mã QR cá nhân</Button.Label>
-          <GravityIcon name="arrow-right" />
-        </Button>
-
         {loading ? <ParcelSkeletons /> : null}
         {!loading && error ? (
           <Card>

@@ -1,17 +1,20 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { Button, Checkbox, InputOTP, LinkButton, Typography } from "heroui-native";
+import { Button, Checkbox, InputOTP, Label, LinkButton, Select, Typography } from "heroui-native";
 import type { JSX } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 
 import { AuthField } from "@/components/auth/auth-field";
 import { AuthScreen } from "@/components/auth/auth-screen";
 import { GravityIcon } from "@/components/icons/gravity-icon";
+import { authApi } from "@/features/auth/api";
+import { useAuth } from "@/features/auth/auth-context";
+import type { RegistrationLocker } from "@/features/auth/types";
 
-const wait = (milliseconds: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, milliseconds));
 const normalizePhone = (value: string): string => value.replace(/\s/g, "");
 const isValidPhone = (value: string): boolean => /^0\d{9}$/.test(normalizePhone(value));
+const getErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : "Đã xảy ra lỗi. Vui lòng thử lại.";
 
 export function WelcomeScreen(): JSX.Element {
   return (
@@ -33,6 +36,7 @@ export function WelcomeScreen(): JSX.Element {
 }
 
 export function LoginScreen(): JSX.Element {
+  const { login } = useAuth();
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -48,9 +52,14 @@ export function LoginScreen(): JSX.Element {
     setError("");
     setMessage("");
     setSubmitting(true);
-    await wait(400);
-    setSubmitting(false);
-    setMessage("Đăng nhập thành công.");
+    try {
+      await login(normalizePhone(phone), password);
+      setMessage("Đăng nhập thành công.");
+    } catch (submitError) {
+      setError(getErrorMessage(submitError));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -107,16 +116,26 @@ export function LoginScreen(): JSX.Element {
 }
 
 export function RegisterScreen(): JSX.Element {
+  const { setPendingRegistration } = useAuth();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [accepted, setAccepted] = useState(false);
+  const [lockers, setLockers] = useState<RegistrationLocker[]>([]);
+  const [locker, setLocker] = useState<{ value: string; label: string }>();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    void authApi
+      .getRegistrationLockers()
+      .then(setLockers)
+      .catch((loadError: unknown) => setError(getErrorMessage(loadError)));
+  }, []);
+
   async function submit(): Promise<void> {
-    if (fullName.trim().length < 2 || !isValidPhone(phone) || password.length < 8) {
+    if (fullName.trim().length < 2 || !isValidPhone(phone) || password.length < 8 || !locker) {
       setError("Vui lòng kiểm tra lại thông tin đăng ký.");
       return;
     }
@@ -127,11 +146,20 @@ export function RegisterScreen(): JSX.Element {
 
     setError("");
     setSubmitting(true);
-    await wait(400);
-    router.push({
-      pathname: "/verify-otp",
-      params: { phone: normalizePhone(phone), flow: "register" },
-    });
+    try {
+      const phoneNumber = normalizePhone(phone);
+      await authApi.requestRegistrationOtp(phoneNumber);
+      setPendingRegistration({
+        phoneNumber,
+        password,
+        fullName: fullName.trim(),
+        registeredLockerId: locker.value,
+      });
+      router.push({ pathname: "/verify-otp", params: { phone: phoneNumber, flow: "register" } });
+    } catch (submitError) {
+      setError(getErrorMessage(submitError));
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -187,6 +215,33 @@ export function RegisterScreen(): JSX.Element {
             confirmation && confirmation !== password ? "Mật khẩu xác nhận không khớp." : undefined
           }
         />
+        <View className="gap-1">
+          <Label className="font-medium">Locker đăng ký</Label>
+          <Select presentation="bottom-sheet" value={locker} onValueChange={setLocker}>
+            <Select.Trigger className="h-14 w-full rounded-2xl border border-border bg-field">
+              <Select.Value
+                placeholder={lockers.length ? "Chọn locker gần bạn" : "Đang tải locker..."}
+              />
+              <Select.TriggerIndicator />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Overlay />
+              <Select.Content presentation="bottom-sheet">
+                {lockers.map((item) => (
+                  <Select.Item
+                    key={item.id}
+                    value={item.id}
+                    label={`${item.code} · ${item.address}`}
+                  >
+                    <Select.ItemLabel />
+                    <Select.ItemDescription>{item.address}</Select.ItemDescription>
+                    <Select.ItemIndicator />
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Portal>
+          </Select>
+        </View>
         <Checkbox className="items-start" isSelected={accepted} onSelectedChange={setAccepted}>
           <Checkbox.Indicator />
           <Typography.Paragraph className="flex-1">
@@ -209,6 +264,7 @@ export function RegisterScreen(): JSX.Element {
 }
 
 export function VerifyOtpScreen(): JSX.Element {
+  const { pendingRegistration, register, setPendingReset } = useAuth();
   const { phone = "số điện thoại của bạn", flow } = useLocalSearchParams<{
     phone?: string;
     flow?: string;
@@ -222,18 +278,31 @@ export function VerifyOtpScreen(): JSX.Element {
     setSubmitting(true);
     setError("");
     setMessage("");
-    await wait(400);
-    if (otp === "000000") {
+    try {
+      if (flow === "reset") {
+        setPendingReset({ phoneNumber: String(phone), otpCode: otp });
+        router.replace("/reset-password");
+      } else {
+        if (!pendingRegistration)
+          throw new Error("Thông tin đăng ký đã hết hạn. Vui lòng đăng ký lại.");
+        await register(otp);
+        setMessage("Đăng ký thành công.");
+      }
+    } catch (submitError) {
+      setError(getErrorMessage(submitError));
+    } finally {
       setSubmitting(false);
-      setError("Mã xác thực không đúng hoặc đã hết hạn.");
-      return;
     }
-    setMessage("Xác thực thành công.");
-    await wait(350);
-    if (flow === "reset") {
-      router.replace("/reset-password");
-    } else {
-      router.replace("/login");
+  }
+
+  async function resend(): Promise<void> {
+    setError("");
+    try {
+      if (flow === "reset") await authApi.forgotPassword(String(phone));
+      else await authApi.requestRegistrationOtp(String(phone));
+      setMessage("Mã xác thực mới đã được gửi.");
+    } catch (resendError) {
+      setError(getErrorMessage(resendError));
     }
   }
 
@@ -261,9 +330,7 @@ export function VerifyOtpScreen(): JSX.Element {
         ) : null}
         <View className="items-center gap-1">
           <Typography.Paragraph className="text-muted">Bạn chưa nhận được mã?</Typography.Paragraph>
-          <LinkButton onPress={() => setMessage("Mã xác thực mới đã được gửi.")}>
-            Gửi lại mã
-          </LinkButton>
+          <LinkButton onPress={() => void resend()}>Gửi lại mã</LinkButton>
         </View>
         <Button
           className="w-full"
@@ -279,17 +346,24 @@ export function VerifyOtpScreen(): JSX.Element {
 }
 
 export function ForgotPasswordScreen(): JSX.Element {
+  const { setPendingReset } = useAuth();
   const [phone, setPhone] = useState("");
+  const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   async function submit(): Promise<void> {
     if (!isValidPhone(phone)) return;
     setSubmitting(true);
-    await wait(400);
-    router.push({
-      pathname: "/verify-otp",
-      params: { phone: normalizePhone(phone), flow: "reset" },
-    });
+    setError("");
+    try {
+      const phoneNumber = normalizePhone(phone);
+      await authApi.forgotPassword(phoneNumber);
+      setPendingReset({ phoneNumber });
+      router.push({ pathname: "/verify-otp", params: { phone: phoneNumber, flow: "reset" } });
+    } catch (submitError) {
+      setError(getErrorMessage(submitError));
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -312,6 +386,9 @@ export function ForgotPasswordScreen(): JSX.Element {
           onSubmitEditing={() => void submit()}
           error={phone && !isValidPhone(phone) ? "Số điện thoại phải gồm 10 chữ số." : undefined}
         />
+        {error ? (
+          <Typography.Paragraph className="text-sm text-danger">{error}</Typography.Paragraph>
+        ) : null}
         <Button
           size="lg"
           isDisabled={!isValidPhone(phone) || submitting}
@@ -325,18 +402,31 @@ export function ForgotPasswordScreen(): JSX.Element {
 }
 
 export function ResetPasswordScreen(): JSX.Element {
+  const { pendingReset, setPendingReset } = useAuth();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   async function submit(): Promise<void> {
     if (password.length < 8 || password !== confirmation) return;
+    if (!pendingReset?.otpCode) {
+      setError("Phiên đặt lại mật khẩu đã hết hạn. Vui lòng yêu cầu mã mới.");
+      return;
+    }
     setSubmitting(true);
-    await wait(400);
-    setMessage("Đổi mật khẩu thành công.");
-    await wait(350);
-    router.replace("/login");
+    setError("");
+    try {
+      await authApi.resetPassword(pendingReset.phoneNumber, pendingReset.otpCode, password);
+      setPendingReset(null);
+      setMessage("Đổi mật khẩu thành công.");
+      router.replace("/login");
+    } catch (submitError) {
+      setError(getErrorMessage(submitError));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -373,6 +463,9 @@ export function ResetPasswordScreen(): JSX.Element {
         />
         {message ? (
           <Typography.Paragraph className="text-sm text-success">{message}</Typography.Paragraph>
+        ) : null}
+        {error ? (
+          <Typography.Paragraph className="text-sm text-danger">{error}</Typography.Paragraph>
         ) : null}
         <Button
           size="lg"

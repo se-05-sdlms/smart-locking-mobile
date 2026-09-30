@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { authApi } from "@/features/auth/api";
 import { clearSession, readSession, saveSession } from "@/features/auth/storage";
 import type { AuthSession, PendingRegistration, UserProfile } from "@/features/auth/types";
+import { deactivatePushInstallation } from "@/features/notifications/push";
 import { onSessionExpired } from "@/lib/api-client";
 
 type AuthContextValue = {
@@ -73,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
       logout: async () => {
         const session = await readSession();
         try {
+          await deactivatePushInstallation().catch(() => undefined);
           if (session?.refreshToken) await authApi.logout(session.refreshToken);
         } catch {
           // Local logout must succeed even when the server is unavailable.

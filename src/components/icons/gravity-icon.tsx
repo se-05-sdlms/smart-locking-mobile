@@ -5,10 +5,12 @@ import Svg, { Path } from "react-native-svg";
 import { useThemeColor, type ThemeColor } from "heroui-native";
 
 export type GravityIconName =
+  | "alert-circle"
   | "arrow-left"
   | "arrow-right"
   | "bell"
   | "clock"
+  | "credit-card"
   | "envelope"
   | "eye"
   | "eye-slash"
@@ -21,10 +23,12 @@ export type GravityIconName =
 
 // Path data follows Gravity Icons' 24px, round-line visual language.
 const paths: Record<GravityIconName, string[]> = {
+  "alert-circle": ["M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20", "M12 7v6", "M12 17h.01"],
   "arrow-left": ["M20 12H4", "M10 6l-6 6 6 6"],
   "arrow-right": ["M4 12h16", "M14 6l6 6-6 6"],
   bell: ["M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9", "M10 21h4"],
   clock: ["M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20", "M12 6v6l4 2"],
+  "credit-card": ["M3 5h18v14H3z", "M3 9h18", "M7 15h3"],
   envelope: [
     "M3 6.5A2.5 2.5 0 0 1 5.5 4h13A2.5 2.5 0 0 1 21 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z",
     "m4 8 5 4 5-4",

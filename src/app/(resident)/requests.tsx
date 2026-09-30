@@ -1,12 +1,7 @@
 import type { JSX } from "react";
 
-import { PlaceholderScreen } from "@/features/navigation/placeholder-screen";
+import { DeliveryRequestListScreen } from "@/features/delivery-requests/delivery-request-list-screen";
 
 export default function RequestsScreen(): JSX.Element {
-  return (
-    <PlaceholderScreen
-      title="Yêu cầu giao hàng"
-      description="Các yêu cầu đang chờ bạn phê duyệt."
-    />
-  );
+  return <DeliveryRequestListScreen />;
 }

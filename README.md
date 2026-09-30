@@ -70,7 +70,7 @@
 * **Home Dashboard** — displays parcel summaries, notifications, and important locker status updates.
 * **Parcel List** — shows active, completed, overdue, and historical parcels.
 * **Parcel Details** — displays parcel information, storage status, assigned compartment, and retrieval methods.
-* **Package Retrieval** — supports Personal QR Code, One-Time Password, and Remote App Unlock.
+* **Package Retrieval** — supports One-Time Password and Remote App Unlock.
 * **Notifications** — receives parcel and locker updates through Firebase Cloud Messaging.
 * **Delivery Preferences** — allows residents to configure Auto or Manual delivery approval.
 * **Profile & Settings** — manages resident information, security settings, and application preferences.

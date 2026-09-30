@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { Button, Card, Typography } from "heroui-native";
 import type { JSX } from "react";
 
@@ -18,6 +19,10 @@ export default function ProfileScreen(): JSX.Element {
           </Typography.Paragraph>
         </Card.Body>
       </Card>
+      <Button className="mb-3" onPress={() => router.push("/incidents")}>
+        <GravityIcon name="alert-circle" tone="accent-foreground" />
+        <Button.Label>Sự cố của tôi</Button.Label>
+      </Button>
       <Button variant="secondary" onPress={() => void logout()}>
         <GravityIcon name="arrow-left" />
         <Button.Label>Đăng xuất</Button.Label>

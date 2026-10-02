@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import type { JSX } from "react";
 
 import { GravityIcon, type GravityIconName } from "@/components/icons/gravity-icon";
+import { BoxoraLogo } from "@/components/auth/boxora-logo";
 
 const icons: Record<string, GravityIconName> = {
   index: "home",
@@ -20,9 +21,12 @@ export default function ResidentTabsLayout(): JSX.Element {
         tabBarHideOnKeyboard: true,
         tabBarLabelStyle: { fontSize: 12, fontWeight: "600" },
         tabBarStyle: { height: 68, paddingBottom: 8, paddingTop: 8 },
-        tabBarIcon: ({ color, size }) => (
-          <GravityIcon name={icons[route.name] ?? "home"} color={color} size={size} />
-        ),
+        tabBarIcon: ({ color, size, focused }) =>
+          route.name === "index" ? (
+            <BoxoraLogo size={size + 4} symbolOnly muted={!focused} />
+          ) : (
+            <GravityIcon name={icons[route.name] ?? "home"} color={color} size={size} />
+          ),
       })}
     >
       <Tabs.Screen name="index" options={{ title: "Trang chủ" }} />

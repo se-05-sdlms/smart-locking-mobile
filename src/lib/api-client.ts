@@ -25,8 +25,8 @@ export function onSessionExpired(handler: () => void): () => void {
 
 async function parseError(response: Response): Promise<string> {
   try {
-    const body = (await response.json()) as { message?: string };
-    return body.message || "Yêu cầu không thể thực hiện.";
+    const body = (await response.json()) as { message?: string; failureReason?: string };
+    return body.message || body.failureReason || "Yêu cầu không thể thực hiện.";
   } catch {
     return "Yêu cầu không thể thực hiện.";
   }

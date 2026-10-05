@@ -5,18 +5,17 @@ import { useCallback, useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { BoxoraLogo } from "@/components/auth/boxora-logo";
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { deliveryRequestApi } from "@/features/delivery-requests/api";
+import type { PendingDeliveryRequest } from "@/features/delivery-requests/types";
 import { parcelApi } from "@/features/parcels/api";
 import type { ParcelListItem } from "@/features/parcels/types";
 
-const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
-  dateStyle: "short",
-  timeStyle: "short",
-});
-
 export function ResidentHomeContent(): JSX.Element {
   const [parcels, setParcels] = useState<ParcelListItem[]>([]);
+  const [request, setRequest] = useState<PendingDeliveryRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -24,134 +23,201 @@ export function ResidentHomeContent(): JSX.Element {
     setLoading(true);
     setError("");
     try {
-      setParcels(await parcelApi.getActive());
+      const [active, pending] = await Promise.all([
+        parcelApi.getActive(),
+        deliveryRequestApi.getPending().catch(() => []),
+      ]);
+      setParcels(active);
+      setRequest(pending[0] ?? null);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Không thể tải bưu kiện.");
+      setError(loadError instanceof Error ? loadError.message : "Không thể tải dữ liệu.");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void parcelApi
-      .getActive()
-      .then(setParcels)
-      .catch((loadError: unknown) =>
-        setError(loadError instanceof Error ? loadError.message : "Không thể tải bưu kiện.")
-      )
-      .finally(() => setLoading(false));
-  }, []);
+    const task = setTimeout(() => void load(), 0);
+    return () => clearTimeout(task);
+  }, [load]);
 
+  const featured = parcels[0];
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
       <ScrollView
-        contentContainerClassName="gap-5 px-5 pb-8 pt-4"
+        contentContainerClassName="gap-5 px-5 pb-6 pt-3"
+        showsVerticalScrollIndicator={false}
       >
-        <View className="gap-1">
-          <Typography.Heading className="text-3xl">Bưu kiện của bạn</Typography.Heading>
-          <Typography.Paragraph className="text-muted">
-            Theo dõi hàng đang nằm trong locker và hạn nhận.
-          </Typography.Paragraph>
+        <View className="flex-row items-center justify-between">
+          <BoxoraLogo compact />
+          <Button
+            isIconOnly
+            variant="ghost"
+            accessibilityLabel="Mở thông báo"
+            onPress={() => router.push("/notifications")}
+          >
+            <GravityIcon name="bell" size={24} />
+            {request ? (
+              <View className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-background bg-danger" />
+            ) : null}
+          </Button>
         </View>
 
-        <Button variant="secondary" onPress={() => router.push("/personal-qr")}>
-          <GravityIcon name="qr-code" />
-          <Button.Label>Mở mã QR cá nhân</Button.Label>
-          <GravityIcon name="arrow-right" />
-        </Button>
+        {request ? (
+          <PressableFeedback
+            onPress={() => router.push(`/delivery-requests/${request.requestId}`)}
+            accessibilityRole="button"
+          >
+            <Card className="border border-danger/20 bg-danger/5">
+              <Card.Body className="flex-row items-center gap-3 py-3">
+                <View className="rounded-full bg-danger/10 p-2">
+                  <GravityIcon name="clock" tone="danger" />
+                </View>
+                <View className="flex-1 gap-0.5">
+                  <Typography.Heading className="text-base">
+                    Có bưu kiện chờ xác nhận
+                  </Typography.Heading>
+                  <Typography.Paragraph className="text-sm text-danger">
+                    Sắp hết thời gian phản hồi
+                  </Typography.Paragraph>
+                </View>
+                <GravityIcon name="chevron-right" />
+              </Card.Body>
+            </Card>
+          </PressableFeedback>
+        ) : null}
 
-        <Card className="border border-warning/30 bg-warning/10">
-          <Card.Body className="gap-3">
-            <Typography.Heading className="text-xl">Gửi đồ qua tủ</Typography.Heading>
-            <Typography.Paragraph className="text-muted">
-              Chụp ảnh kiện, mở ngăn trống và nhận mã 6 số cho shipper.
-            </Typography.Paragraph>
-            <Button onPress={() => router.push("/returns")}>
-              <GravityIcon name="package" />
-              <Button.Label>Bắt đầu gửi đồ</Button.Label>
+        <View className="gap-3">
+          <View className="flex-row items-center justify-between">
+            <Typography.Heading className="text-2xl">Đồ cần nhận</Typography.Heading>
+            {parcels.length > 1 ? (
+              <Typography.Paragraph className="text-sm text-muted">
+                {parcels.length} bưu kiện
+              </Typography.Paragraph>
+            ) : null}
+          </View>
+          {loading ? <Skeleton className="h-64 w-full rounded-3xl" /> : null}
+          {!loading && error ? <ErrorCard message={error} onRetry={load} /> : null}
+          {!loading && !error && featured ? <FeaturedParcel parcel={featured} /> : null}
+          {!loading && !error && !featured ? (
+            <Card>
+              <Card.Body className="items-center gap-3 py-8">
+                <View className="rounded-full bg-accent-soft p-4">
+                  <GravityIcon name="package" size={30} tone="accent" />
+                </View>
+                <Typography.Heading className="text-lg">Bạn chưa có đồ cần nhận</Typography.Heading>
+                <Typography.Paragraph className="text-center text-muted">
+                  Bưu kiện mới sẽ xuất hiện tại đây.
+                </Typography.Paragraph>
+              </Card.Body>
+            </Card>
+          ) : null}
+          {!loading &&
+            !error &&
+            parcels.slice(1, 3).map((parcel) => <CompactParcel key={parcel.id} parcel={parcel} />)}
+        </View>
+
+        <Card className="border border-accent/20 bg-accent/5">
+          <Card.Body className="flex-row items-center gap-3 py-4">
+            <View className="rounded-2xl bg-accent-soft p-3">
+              <GravityIcon name="send" tone="accent" />
+            </View>
+            <View className="flex-1">
+              <Typography.Heading className="text-base">Bạn muốn gửi đồ?</Typography.Heading>
+              <Typography.Paragraph className="text-sm text-muted">
+                Đặt đồ vào tủ để người khác đến lấy.
+              </Typography.Paragraph>
+            </View>
+            <Button size="sm" onPress={() => router.push("/send")}>
+              <Button.Label>Gửi đồ</Button.Label>
             </Button>
           </Card.Body>
         </Card>
-
-        {loading ? <ParcelSkeletons /> : null}
-        {!loading && error ? (
-          <Card>
-            <Card.Body className="gap-4">
-              <Typography.Heading className="text-lg">Chưa tải được bưu kiện</Typography.Heading>
-              <Typography.Paragraph className="text-danger">{error}</Typography.Paragraph>
-              <Button variant="secondary" onPress={() => void load()}>
-                <Button.Label>Thử lại</Button.Label>
-              </Button>
-            </Card.Body>
-          </Card>
-        ) : null}
-        {!loading && !error && parcels.length === 0 ? (
-          <Card>
-            <Card.Body className="items-center gap-3 py-8">
-              <GravityIcon name="package" size={36} />
-              <Typography.Heading className="text-lg">Chưa có bưu kiện chờ nhận</Typography.Heading>
-              <Typography.Paragraph className="text-center text-muted">
-                Bưu kiện mới sẽ xuất hiện tại đây sau khi shipper gửi vào locker.
-              </Typography.Paragraph>
-            </Card.Body>
-          </Card>
-        ) : null}
-        {!loading && !error
-          ? parcels.map((parcel) => <ParcelCard key={parcel.id} parcel={parcel} />)
-          : null}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function ParcelCard({ parcel }: { parcel: ParcelListItem }): JSX.Element {
-  const [currentTime] = useState(Date.now);
+function FeaturedParcel({ parcel }: { parcel: ParcelListItem }): JSX.Element {
+  const [renderedAt] = useState(Date.now);
   const overdue =
-    parcel.status === "Overdue" || new Date(parcel.pickupDueAt).getTime() < currentTime;
+    parcel.status === "Overdue" || new Date(parcel.pickupDueAt).getTime() < renderedAt;
+  return (
+    <Card className="border border-default-200">
+      <Card.Body className="gap-4">
+        <View className="flex-row gap-3">
+          <View className="h-20 w-20 items-center justify-center rounded-2xl bg-accent-soft">
+            <GravityIcon name="package" size={38} tone="accent" />
+          </View>
+          <View className="flex-1 gap-1">
+            <View className="flex-row items-start justify-between gap-2">
+              <Typography.Heading className="text-lg">{parcel.parcelCode}</Typography.Heading>
+              <StatusBadge
+                label={overdue ? "Quá hạn" : "Sẵn sàng nhận"}
+                tone={overdue ? "danger" : "success"}
+              />
+            </View>
+            <Typography.Paragraph className="text-sm">
+              {parcel.lockerCode} · Ngăn {parcel.compartmentCode}
+            </Typography.Paragraph>
+            <Typography.Paragraph
+              className={overdue ? "text-sm text-danger" : "text-sm text-muted"}
+            >
+              {remainingLabel(parcel.pickupDueAt, renderedAt)}
+            </Typography.Paragraph>
+          </View>
+        </View>
+        <Button onPress={() => router.push(`/parcels/${parcel.id}`)}>
+          <Button.Label>Nhận hàng</Button.Label>
+        </Button>
+      </Card.Body>
+    </Card>
+  );
+}
+
+function CompactParcel({ parcel }: { parcel: ParcelListItem }): JSX.Element {
   return (
     <PressableFeedback onPress={() => router.push(`/parcels/${parcel.id}`)}>
       <Card>
-        <Card.Header className="flex-row items-center justify-between">
-          <View className="flex-row items-center gap-2">
+        <Card.Body className="flex-row items-center gap-3 py-3">
+          <View className="rounded-xl bg-default p-2">
             <GravityIcon name="package" />
-            <Card.Title>{parcel.parcelCode}</Card.Title>
           </View>
-          <StatusBadge
-            label={overdue ? "Quá hạn" : "Đang lưu trữ"}
-            tone={overdue ? "danger" : "success"}
-          />
-        </Card.Header>
-        <Card.Body className="gap-2">
-          <Typography.Paragraph className="font-medium">
-            {parcel.lockerCode} · Ngăn {parcel.compartmentCode}
-          </Typography.Paragraph>
-          <Typography.Paragraph className="text-sm text-muted">
-            {parcel.lockerAddress}
-          </Typography.Paragraph>
-          <Typography.Paragraph className="text-sm text-muted">
-            Gửi lúc {dateFormatter.format(new Date(parcel.storedAt))}
-          </Typography.Paragraph>
-          <Typography.Paragraph className={overdue ? "text-sm text-danger" : "text-sm"}>
-            Hạn nhận {dateFormatter.format(new Date(parcel.pickupDueAt))}
-          </Typography.Paragraph>
+          <View className="flex-1">
+            <Typography.Heading className="text-base">{parcel.parcelCode}</Typography.Heading>
+            <Typography.Paragraph className="text-sm text-muted">
+              {parcel.lockerCode} · Ngăn {parcel.compartmentCode}
+            </Typography.Paragraph>
+          </View>
+          <GravityIcon name="chevron-right" />
         </Card.Body>
       </Card>
     </PressableFeedback>
   );
 }
 
-function ParcelSkeletons(): JSX.Element {
+function ErrorCard({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => Promise<void>;
+}): JSX.Element {
   return (
-    <View className="gap-4">
-      {[0, 1].map((item) => (
-        <Card key={item}>
-          <Card.Body className="gap-3">
-            <Skeleton className="h-6 w-2/3 rounded-lg" />
-            <Skeleton className="h-4 w-full rounded-lg" />
-            <Skeleton className="h-4 w-4/5 rounded-lg" />
-          </Card.Body>
-        </Card>
-      ))}
-    </View>
+    <Card>
+      <Card.Body className="gap-3">
+        <Typography.Paragraph className="text-danger">{message}</Typography.Paragraph>
+        <Button variant="secondary" onPress={() => void onRetry()}>
+          <Button.Label>Thử lại</Button.Label>
+        </Button>
+      </Card.Body>
+    </Card>
   );
+}
+
+function remainingLabel(dueAt: string, now: number): string {
+  const hours = Math.ceil((new Date(dueAt).getTime() - now) / 3_600_000);
+  if (hours <= 0) return "Đã quá hạn";
+  if (hours < 24) return `Còn ${hours} giờ`;
+  return `Còn ${Math.ceil(hours / 24)} ngày`;
 }

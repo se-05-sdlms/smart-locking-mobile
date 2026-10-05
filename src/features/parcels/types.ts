@@ -20,6 +20,7 @@ export type ParcelListItem = {
 };
 
 export type ParcelDetail = ParcelListItem & {
+  overdueChargeId?: string | null;
   lockerRecoveryAddress: string;
   parcelImageUrl: string | null;
   shipperName: string | null;

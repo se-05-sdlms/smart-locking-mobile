@@ -6,6 +6,7 @@ import { Image, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
+import { ScreenHeader } from "@/components/ui/resident-ui";
 import { deliveryRequestApi } from "@/features/delivery-requests/api";
 import { formatCountdown } from "@/features/delivery-requests/countdown";
 import type { PendingDeliveryRequest } from "@/features/delivery-requests/types";
@@ -44,7 +45,7 @@ export function DeliveryRequestDetailScreen({ id }: { id: string }): JSX.Element
     try {
       if (nextAction === "approve") await deliveryRequestApi.approve(request.requestId);
       else await deliveryRequestApi.reject(request.requestId);
-      router.replace("/requests");
+      router.replace("/");
     } catch (responseError) {
       setError(responseError instanceof Error ? responseError.message : "Không thể xử lý yêu cầu.");
     } finally {
@@ -57,21 +58,7 @@ export function DeliveryRequestDetailScreen({ id }: { id: string }): JSX.Element
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView contentContainerClassName="gap-4 px-5 pb-8 pt-4">
-        <Button
-          isIconOnly
-          size="sm"
-          variant="tertiary"
-          accessibilityLabel="Quay lại"
-          onPress={() => router.back()}
-        >
-          <GravityIcon name="arrow-left" />
-        </Button>
-        <View className="gap-1">
-          <Typography.Heading className="text-3xl">Xác nhận giao hàng</Typography.Heading>
-          <Typography.Paragraph className="text-muted">
-            Chỉ đồng ý khi thông tin và ảnh kiện hàng phù hợp.
-          </Typography.Paragraph>
-        </View>
+        <ScreenHeader title="Xác nhận bưu kiện đến" />
 
         {loading ? <Skeleton className="h-96 rounded-2xl" /> : null}
         {!loading && !request ? (
@@ -84,75 +71,91 @@ export function DeliveryRequestDetailScreen({ id }: { id: string }): JSX.Element
               <Typography.Paragraph className="text-center text-muted">
                 Yêu cầu có thể đã được xử lý hoặc đã hết thời gian phê duyệt.
               </Typography.Paragraph>
-              <Button variant="secondary" onPress={() => router.replace("/requests")}>
-                <Button.Label>Về danh sách</Button.Label>
+              <Button variant="secondary" onPress={() => router.replace("/")}>
+                <Button.Label>Về trang chủ</Button.Label>
               </Button>
             </Card.Body>
           </Card>
         ) : null}
 
         {request ? (
-          <Card>
-            {request.parcelImageUrl ? (
-              <Image
-                source={{ uri: request.parcelImageUrl }}
-                className="h-64 w-full rounded-t-2xl bg-default"
-                resizeMode="cover"
-                accessibilityLabel="Ảnh bưu kiện do shipper cung cấp"
-              />
-            ) : (
-              <View className="h-48 items-center justify-center gap-2 bg-default">
-                <GravityIcon name="package" size={40} />
-                <Typography.Paragraph className="text-muted">
-                  Không có ảnh bưu kiện
+          <View className="gap-4">
+            <Card className="border border-danger/20 bg-danger/5">
+              <Card.Body className="flex-row items-center gap-3 py-3">
+                <GravityIcon name="clock" tone="danger" />
+                <View className="flex-1">
+                  <Typography.Heading className="text-danger">
+                    {expired
+                      ? "Đã hết hạn"
+                      : `Còn lại ${formatCountdown(request.approvalExpiresAt, now)}`}
+                  </Typography.Heading>
+                  <Typography.Paragraph className="text-sm text-danger">
+                    Phản hồi trước {dateFormatter.format(new Date(request.approvalExpiresAt))}
+                  </Typography.Paragraph>
+                </View>
+              </Card.Body>
+            </Card>
+            <Card>
+              {request.parcelImageUrl ? (
+                <Image
+                  source={{ uri: request.parcelImageUrl }}
+                  className="h-64 w-full rounded-t-2xl bg-default"
+                  resizeMode="cover"
+                  accessibilityLabel="Ảnh bưu kiện"
+                />
+              ) : (
+                <View className="h-48 items-center justify-center gap-2 bg-default">
+                  <GravityIcon name="package" size={40} />
+                  <Typography.Paragraph className="text-muted">
+                    Không có ảnh bưu kiện
+                  </Typography.Paragraph>
+                </View>
+              )}
+              <Card.Header className="flex-row items-center justify-between gap-3">
+                <View className="flex-1">
+                  <Card.Title>Locker {request.lockerCode}</Card.Title>
+                  <Typography.Paragraph className="text-muted">
+                    {request.lockerAddress}
+                  </Typography.Paragraph>
+                </View>
+              </Card.Header>
+              <Card.Body className="gap-3">
+                <InfoRow
+                  label="Tủ nhận"
+                  value={`${request.lockerCode} · ${request.lockerAddress}`}
+                />
+                <InfoRow
+                  label="Yêu cầu lúc"
+                  value={dateFormatter.format(new Date(request.createdAt))}
+                />
+                <Typography.Paragraph className="rounded-2xl bg-default px-4 py-3 text-sm text-muted">
+                  Cho phép để bưu kiện này được gửi vào tủ của bạn.
                 </Typography.Paragraph>
-              </View>
-            )}
-            <Card.Header className="flex-row items-center justify-between gap-3">
-              <View className="flex-1">
-                <Card.Title>Locker {request.lockerCode}</Card.Title>
-                <Typography.Paragraph className="text-muted">
-                  {request.lockerAddress}
-                </Typography.Paragraph>
-              </View>
-              <View className="items-end">
-                <Typography.Paragraph className="text-xs text-muted">
-                  {expired ? "Trạng thái" : "Còn lại"}
-                </Typography.Paragraph>
-                <Typography.Heading className={expired ? "text-danger" : "text-warning"}>
-                  {expired ? "Đã hết hạn" : formatCountdown(request.approvalExpiresAt, now)}
-                </Typography.Heading>
-              </View>
-            </Card.Header>
-            <Card.Body className="gap-3">
-              <InfoRow label="Số người nhận" value={request.recipientPhone ?? "Không cung cấp"} />
-              <InfoRow label="Tạo lúc" value={dateFormatter.format(new Date(request.createdAt))} />
-              <InfoRow
-                label="Hạn duyệt"
-                value={dateFormatter.format(new Date(request.approvalExpiresAt))}
-              />
-              {error ? (
-                <Typography.Paragraph className="text-danger">{error}</Typography.Paragraph>
-              ) : null}
-              <View className="mt-2 flex-row gap-3">
-                <Button
-                  className="flex-1"
-                  variant="secondary"
-                  isDisabled={expired || action !== null}
-                  onPress={() => void respond("reject")}
-                >
-                  <Button.Label>{action === "reject" ? "Đang từ chối" : "Từ chối"}</Button.Label>
-                </Button>
-                <Button
-                  className="flex-1"
-                  isDisabled={expired || action !== null}
-                  onPress={() => void respond("approve")}
-                >
-                  <Button.Label>{action === "approve" ? "Đang duyệt" : "Đồng ý"}</Button.Label>
-                </Button>
-              </View>
-            </Card.Body>
-          </Card>
+                {error ? (
+                  <Typography.Paragraph className="text-danger">{error}</Typography.Paragraph>
+                ) : null}
+                <View className="mt-2 flex-row gap-3">
+                  <Button
+                    className="flex-1"
+                    variant="secondary"
+                    isDisabled={expired || action !== null}
+                    onPress={() => void respond("reject")}
+                  >
+                    <Button.Label>{action === "reject" ? "Đang từ chối" : "Từ chối"}</Button.Label>
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    isDisabled={expired || action !== null}
+                    onPress={() => void respond("approve")}
+                  >
+                    <Button.Label>
+                      {action === "approve" ? "Đang xử lý" : "Cho phép gửi vào tủ"}
+                    </Button.Label>
+                  </Button>
+                </View>
+              </Card.Body>
+            </Card>
+          </View>
         ) : null}
       </ScrollView>
     </SafeAreaView>

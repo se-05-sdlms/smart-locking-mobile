@@ -33,3 +33,17 @@ export type ParcelStatusHistory = {
   reason: string | null;
   changedAt: string;
 };
+
+export type PickupUnlockResponse = {
+  parcelId: string;
+  accessEventId: string;
+  result: "Succeeded" | "Failed" | "Blocked";
+  failureReason: string | null;
+  requestedAt: string;
+};
+
+export type PickupConfirmationResponse = {
+  parcelId: string;
+  status: ParcelStatus;
+  retrievedAt: string;
+};

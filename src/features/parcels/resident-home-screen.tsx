@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { Button, Card, PressableFeedback, Skeleton, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useCallback, useEffect, useState } from "react";
-import { RefreshControl, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
@@ -18,12 +18,10 @@ const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
 export function ResidentHomeContent(): JSX.Element {
   const [parcels, setParcels] = useState<ParcelListItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
-  const load = useCallback(async (refresh = false): Promise<void> => {
-    if (refresh) setRefreshing(true);
-    else setLoading(true);
+  const load = useCallback(async (): Promise<void> => {
+    setLoading(true);
     setError("");
     try {
       setParcels(await parcelApi.getActive());
@@ -31,7 +29,6 @@ export function ResidentHomeContent(): JSX.Element {
       setError(loadError instanceof Error ? loadError.message : "Không thể tải bưu kiện.");
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, []);
 
@@ -48,11 +45,7 @@ export function ResidentHomeContent(): JSX.Element {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
       <ScrollView
-        className="flex-1"
         contentContainerClassName="gap-5 px-5 pb-8 pt-4"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} />
-        }
       >
         <View className="gap-1">
           <Typography.Heading className="text-3xl">Bưu kiện của bạn</Typography.Heading>
@@ -66,6 +59,19 @@ export function ResidentHomeContent(): JSX.Element {
           <Button.Label>Mở mã QR cá nhân</Button.Label>
           <GravityIcon name="arrow-right" />
         </Button>
+
+        <Card className="border border-warning/30 bg-warning/10">
+          <Card.Body className="gap-3">
+            <Typography.Heading className="text-xl">Gửi đồ qua tủ</Typography.Heading>
+            <Typography.Paragraph className="text-muted">
+              Chụp ảnh kiện, mở ngăn trống và nhận mã 6 số cho shipper.
+            </Typography.Paragraph>
+            <Button onPress={() => router.push("/returns")}>
+              <GravityIcon name="package" />
+              <Button.Label>Bắt đầu gửi đồ</Button.Label>
+            </Button>
+          </Card.Body>
+        </Card>
 
         {loading ? <ParcelSkeletons /> : null}
         {!loading && error ? (

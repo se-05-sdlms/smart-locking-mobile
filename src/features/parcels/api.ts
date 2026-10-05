@@ -1,4 +1,10 @@
-import type { ParcelDetail, ParcelListItem, ParcelStatusHistory } from "@/features/parcels/types";
+import type {
+  ParcelDetail,
+  ParcelListItem,
+  ParcelStatusHistory,
+  PickupConfirmationResponse,
+  PickupUnlockResponse,
+} from "@/features/parcels/types";
 import { apiRequest } from "@/lib/api-client";
 
 export const parcelApi = {
@@ -13,4 +19,15 @@ export const parcelApi = {
   getDetail: (id: string) => apiRequest<ParcelDetail>(`/parcels/${id}`, { authenticated: true }),
   getStatusHistory: (id: string) =>
     apiRequest<ParcelStatusHistory[]>(`/parcels/${id}/history`, { authenticated: true }),
+  unlockPickup: (id: string) =>
+    apiRequest<PickupUnlockResponse>(`/parcels/${id}/unlock-pickup`, {
+      method: "POST",
+      authenticated: true,
+    }),
+  confirmPickup: (id: string, accessEventId: string) =>
+    apiRequest<PickupConfirmationResponse>(`/parcels/${id}/confirm-pickup`, {
+      method: "POST",
+      body: JSON.stringify({ accessEventId }),
+      authenticated: true,
+    }),
 };

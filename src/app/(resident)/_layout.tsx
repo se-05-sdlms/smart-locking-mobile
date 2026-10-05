@@ -1,4 +1,4 @@
-import { Redirect, Stack } from "expo-router";
+import { Redirect, Slot } from "expo-router";
 import { Spinner } from "heroui-native";
 import type { JSX } from "react";
 import { View } from "react-native";
@@ -15,5 +15,5 @@ export default function ResidentLayout(): JSX.Element {
     );
   }
   if (!initializing && !user) return <Redirect href="/login" />;
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return <Slot />;
 }

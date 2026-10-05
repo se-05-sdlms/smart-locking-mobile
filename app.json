@@ -2,6 +2,12 @@
   "expo": {
     "name": "Boxora",
     "slug": "boxora",
+    "owner": "wy_kowjbu",
+    "extra": {
+      "eas": {
+        "projectId": "535b5783-6307-4982-a796-1aa71e988fef"
+      }
+    },
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -11,14 +17,17 @@
       "supportsTablet": true
     },
     "android": {
+      "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.wykowjbu.boxora"
     },
     "plugins": [
+      "./plugins/with-local-api",
       "expo-router",
       [
         "expo-splash-screen",
@@ -30,11 +39,16 @@
       ],
       "expo-status-bar",
       "expo-secure-store",
-      "expo-notifications"
+      [
+        "expo-notifications",
+        {
+          "defaultChannel": "default"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
+      "reactCompiler": false
     }
   }
 }

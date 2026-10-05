@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "782612110308",
+    "project_id": "boxora-sdlms",
+    "storage_bucket": "boxora-sdlms.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:782612110308:android:30ce0a486c95edd25305f1",
+        "android_client_info": {
+          "package_name": "com.wykowjbu.boxora"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0tL7QX_lI0ApfarwMPXfMFi1uVYNIt7o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

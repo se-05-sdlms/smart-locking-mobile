@@ -14,6 +14,8 @@ export function openNotificationTarget(target: Partial<NotificationTarget>): voi
     router.push({ pathname: "/incidents/[id]", params: { id: target.incidentId } });
   } else if (target.paymentTransactionId) {
     router.push({ pathname: "/payments/[id]", params: { id: target.paymentTransactionId } });
+  } else if (target.returnRequestId) {
+    router.push({ pathname: "/returns/[id]", params: { id: target.returnRequestId } });
   }
 }
 
@@ -27,5 +29,6 @@ export function targetFromPushData(data: Record<string, unknown>): Partial<Notif
     deliveryRequestId: value("deliveryRequestId"),
     incidentId: value("incidentId"),
     paymentTransactionId: value("paymentTransactionId"),
+    returnRequestId: value("returnRequestId"),
   };
 }

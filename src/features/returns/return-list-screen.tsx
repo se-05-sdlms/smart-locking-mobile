@@ -3,7 +3,7 @@ import { Button, Card, PressableFeedback, Skeleton, Tabs, Typography } from "her
 import type { JSX } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Image, RefreshControl, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -49,9 +49,11 @@ export function ReturnListContent(): JSX.Element {
       >
         <View className="flex-row items-center justify-between">
           <Typography.Heading className="text-3xl">Gửi đồ</Typography.Heading>
-          <Button size="sm" onPress={() => router.push("/returns/new")}>
-            <Button.Label>Gửi đồ</Button.Label>
-          </Button>
+          {items.length ? (
+            <Button size="sm" onPress={() => router.push("/returns/new")}>
+              <Button.Label>Gửi đồ</Button.Label>
+            </Button>
+          ) : null}
         </View>
         <Tabs value={filter} onValueChange={(value) => setFilter(value as Filter)}>
           <Tabs.List>
@@ -75,14 +77,16 @@ export function ReturnListContent(): JSX.Element {
         ) : null}
         {!loading && !error && visible.length === 0 ? (
           <Card>
-            <Card.Body className="items-center gap-3 py-10">
-              <View className="rounded-full bg-accent-soft p-4">
-                <GravityIcon name="send" size={30} tone="accent" />
+            <Card.Body className="items-center gap-3 py-5">
+              <View className="rounded-full bg-accent-soft p-3">
+                <GravityIcon name="send" size={26} tone="accent" />
               </View>
               <Typography.Heading className="text-lg">Chưa có đồ trong mục này</Typography.Heading>
-              <Button variant="secondary" onPress={() => router.push("/returns/new")}>
-                <Button.Label>Gửi đồ</Button.Label>
-              </Button>
+              {!items.length ? (
+                <Button variant="secondary" onPress={() => router.push("/returns/new")}>
+                  <Button.Label>Gửi đồ</Button.Label>
+                </Button>
+              ) : null}
             </Card.Body>
           </Card>
         ) : null}

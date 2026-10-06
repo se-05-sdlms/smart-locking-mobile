@@ -7,7 +7,9 @@ import { ResidentTabBar } from "@/components/resident-tab-scaffold";
 export default function ResidentTabsLayout(): JSX.Element {
   return (
     <View className="flex-1 bg-background">
-      <Slot />
+      <View className="flex-1">
+        <Slot />
+      </View>
       <ResidentTabBar />
     </View>
   );

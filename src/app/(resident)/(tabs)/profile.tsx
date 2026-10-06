@@ -12,7 +12,7 @@ import {
 import type { JSX, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon, type GravityIconName } from "@/components/icons/gravity-icon";
 import { useAuth } from "@/features/auth/auth-context";
@@ -55,7 +55,7 @@ export default function ProfileScreen(): JSX.Element {
     .toUpperCase();
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
-      <ScrollView contentContainerClassName="gap-6 px-5 pb-6 pt-4">
+      <ScrollView contentContainerClassName="gap-4 px-5 pb-5 pt-4">
         <Typography.Heading className="text-3xl">Tài khoản</Typography.Heading>
         <View className="flex-row items-center gap-4">
           <Avatar size="lg" variant="soft" color="accent">
@@ -79,7 +79,7 @@ export default function ProfileScreen(): JSX.Element {
         </Section>
         <Section title="Tùy chọn nhận hàng">
           <ControlField
-            className="px-1 py-3"
+            className="px-1 py-2"
             isSelected={profile?.deliveryApprovalMode === 0}
             isDisabled={!profile || saving}
             onSelectedChange={(selected) => void changeApproval(selected)}
@@ -124,7 +124,7 @@ export default function ProfileScreen(): JSX.Element {
 
 function Section({ title, children }: { title: string; children: ReactNode }): JSX.Element {
   return (
-    <View className="gap-2">
+    <View className="gap-1">
       <Typography.Paragraph className="text-sm font-semibold text-muted">
         {title}
       </Typography.Paragraph>

@@ -3,7 +3,7 @@ import { Button, Card, ControlField, Skeleton, Switch, Typography } from "heroui
 import type { JSX } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { Image, RefreshControl, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { deliveryRequestApi } from "@/features/delivery-requests/api";

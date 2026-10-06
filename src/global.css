@@ -19,6 +19,15 @@
     }
 
     @variant dark {
+      --background: oklch(0.16 0.008 45);
+      --surface: oklch(0.205 0.009 45);
+      --surface-secondary: oklch(0.24 0.01 45);
+      --surface-tertiary: oklch(0.27 0.012 45);
+      --overlay: oklch(0.205 0.009 45);
+      --default: oklch(0.26 0.01 45);
+      --field-background: oklch(0.205 0.009 45);
+      --border: oklch(0.32 0.012 45);
+      --separator: oklch(0.4 0.012 45);
       --accent: oklch(0.72 0.19 48);
       --accent-foreground: var(--eclipse);
       --focus: var(--accent);

@@ -3,7 +3,7 @@ import { Button, Card, Skeleton, Typography } from "heroui-native";
 import type { JSX, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { IncidentAction, ScreenHeader } from "@/components/ui/resident-ui";
@@ -18,6 +18,7 @@ export function ParcelDetailContent(): JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [parcel, setParcel] = useState<ParcelDetail>();
   const [history, setHistory] = useState<ParcelStatusHistory[]>([]);
+  const [imageFailed, setImageFailed] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +42,7 @@ export function ParcelDetailContent(): JSX.Element {
   const paymentRequired =
     parcel.overdueAmount !== null && parcel.overdueChargeStatus === "Outstanding";
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
+    <SafeAreaView className="flex-1 bg-background">
       <ScrollView contentContainerClassName="gap-4 px-5 pb-8 pt-4">
         <View className="gap-3">
           <ScreenHeader title="Chi tiết bưu kiện" />
@@ -54,14 +55,22 @@ export function ParcelDetailContent(): JSX.Element {
           </View>
         </View>
 
-        {parcel.parcelImageUrl ? (
+        {parcel.parcelImageUrl && !imageFailed ? (
           <Image
             source={{ uri: parcel.parcelImageUrl }}
-            className="h-52 w-full rounded-3xl bg-default"
+            className="h-40 w-full rounded-3xl bg-default"
             resizeMode="cover"
+            onError={() => setImageFailed(true)}
             accessibilityLabel={`Ảnh bưu kiện ${parcel.parcelCode}`}
           />
-        ) : null}
+        ) : (
+          <View className="h-28 w-full items-center justify-center gap-2 rounded-3xl bg-default">
+            <GravityIcon name="package" size={30} tone="muted" />
+            <Typography.Paragraph className="text-sm text-muted">
+              Không có ảnh bưu kiện
+            </Typography.Paragraph>
+          </View>
+        )}
 
         <InfoCard title="Thông tin bưu kiện">
           <InfoLine label="Locker" value={`${parcel.lockerCode} · ${parcel.lockerAddress}`} />
@@ -86,7 +95,7 @@ export function ParcelDetailContent(): JSX.Element {
                   </Typography.Paragraph>
                   <Typography.Paragraph className="text-sm text-muted">
                     {dateFormatter.format(new Date(item.changedAt))}
-                    {item.reason ? ` · ${item.reason}` : ""}
+                    {item.reason ? ` · ${historyReason(item.reason)}` : ""}
                   </Typography.Paragraph>
                 </View>
               </View>
@@ -170,4 +179,12 @@ function statusLabel(status: ParcelStatus): string {
     Retrieved: "Đã nhận",
     Removed: "Đã chuyển kho",
   }[status];
+}
+
+function historyReason(reason: string): string {
+  return (
+    {
+      "Free storage period expired.": "Đã hết thời gian lưu trữ miễn phí.",
+    }[reason] ?? reason
+  );
 }

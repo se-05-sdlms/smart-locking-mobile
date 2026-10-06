@@ -2,7 +2,7 @@ import { Button, Card, PressableFeedback, Skeleton, Tabs, Typography } from "her
 import type { JSX } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { ScreenHeader } from "@/components/ui/resident-ui";
@@ -13,8 +13,8 @@ import type { ResidentNotification } from "@/features/notifications/types";
 type Filter = "all" | "incoming" | "outgoing" | "system";
 const filters: { value: Filter; label: string }[] = [
   { value: "all", label: "Tất cả" },
-  { value: "incoming", label: "Nhận hàng" },
-  { value: "outgoing", label: "Gửi đồ" },
+  { value: "incoming", label: "Nhận" },
+  { value: "outgoing", label: "Gửi" },
   { value: "system", label: "Hệ thống" },
 ];
 

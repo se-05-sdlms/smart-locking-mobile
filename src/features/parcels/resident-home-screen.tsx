@@ -3,7 +3,7 @@ import { Button, Card, PressableFeedback, Skeleton, Typography } from "heroui-na
 import type { JSX } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { BoxoraLogo } from "@/components/auth/boxora-logo";
 import { GravityIcon } from "@/components/icons/gravity-icon";

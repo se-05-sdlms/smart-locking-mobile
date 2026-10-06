@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { Button, LinkButton, Typography } from "heroui-native";
 import type { JSX, ReactNode } from "react";
 import { View } from "react-native";
+import { useUniwind } from "uniwind";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
 
@@ -12,6 +13,7 @@ export function ScreenHeader({
   title: string;
   action?: ReactNode;
 }): JSX.Element {
+  const { theme } = useUniwind();
   return (
     <View className="flex-row items-center gap-3">
       <Button
@@ -21,7 +23,7 @@ export function ScreenHeader({
         accessibilityLabel="Quay lại"
         onPress={() => router.back()}
       >
-        <GravityIcon name="arrow-left" />
+        <GravityIcon name="arrow-left" color={theme === "dark" ? "#f8f6f3" : "#1d1b1a"} />
       </Button>
       <Typography.Heading className="flex-1 text-2xl">{title}</Typography.Heading>
       {action}

@@ -28,7 +28,7 @@ export function ResidentTabBar(): JSX.Element {
     <View
       accessibilityRole="tablist"
       style={{
-        minHeight: 68 + insets.bottom,
+        height: 68 + insets.bottom,
         paddingBottom: Math.max(insets.bottom, 8),
         paddingTop: 8,
         borderTopWidth: 1,

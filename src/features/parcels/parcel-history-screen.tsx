@@ -3,7 +3,7 @@ import { Card, PressableFeedback, SearchField, Skeleton, Tabs, Typography } from
 import type { JSX } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Image, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { StatusBadge } from "@/components/ui/status-badge";

@@ -1,16 +1,16 @@
 import * as SecureStore from "expo-secure-store";
-import { ControlField, ListGroup, Separator, Switch, Typography } from "heroui-native";
+import { Button, ControlField, ListGroup, Separator, Switch, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 import { Uniwind, useUniwind } from "uniwind";
 
 import { ScreenHeader } from "@/components/ui/resident-ui";
 
 export default function SettingsScreen(): JSX.Element {
-  const { theme } = useUniwind();
-  const changeTheme = async (dark: boolean) => {
-    const next = dark ? "dark" : "light";
+  const { theme, hasAdaptiveThemes } = useUniwind();
+  const preference = hasAdaptiveThemes ? "system" : theme;
+  const changeTheme = async (next: "system" | "light" | "dark") => {
     Uniwind.setTheme(next);
     await SecureStore.setItemAsync("boxora-theme", next);
   };
@@ -32,13 +32,25 @@ export default function SettingsScreen(): JSX.Element {
           <Typography.Paragraph className="text-sm font-semibold text-muted">
             Giao diện
           </Typography.Paragraph>
-          <ListGroup variant="transparent">
-            <ToggleRow
-              title="Chế độ tối"
-              selected={theme === "dark"}
-              onChange={(value) => void changeTheme(value)}
-            />
-          </ListGroup>
+          <View className="flex-row gap-2">
+            {[
+              { value: "system", label: "Hệ thống" },
+              { value: "light", label: "Sáng" },
+              { value: "dark", label: "Tối" },
+            ].map((option) => (
+              <Button
+                key={option.value}
+                className="min-w-0 flex-1"
+                size="sm"
+                variant={preference === option.value ? "primary" : "secondary"}
+                onPress={() =>
+                  void changeTheme(option.value as "system" | "light" | "dark")
+                }
+              >
+                <Button.Label>{option.label}</Button.Label>
+              </Button>
+            ))}
+          </View>
         </View>
         <Typography.Paragraph className="mt-auto text-center text-xs text-muted">
           Boxora 1.0.0

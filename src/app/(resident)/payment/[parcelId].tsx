@@ -4,7 +4,7 @@ import { Button, Card, Skeleton, Spinner, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 import { ScreenHeader } from "@/components/ui/resident-ui";
 import { parcelApi } from "@/features/parcels/api";
 import type { ParcelDetail } from "@/features/parcels/types";

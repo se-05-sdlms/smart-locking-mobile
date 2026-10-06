@@ -2,8 +2,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Button, Card, Skeleton, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
-import { Image, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Image, ScrollView, View } from "react-native";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { FlowSteps, IncidentAction, ScreenHeader } from "@/components/ui/resident-ui";
@@ -18,6 +18,7 @@ export default function RetrievalScreen(): JSX.Element {
   const id = String(parcelId);
   const [parcel, setParcel] = useState<ParcelDetail>();
   const [accessEventId, setAccessEventId] = useState("");
+  const [imageFailed, setImageFailed] = useState(false);
   const [step, setStep] = useState<Step>("ready");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -59,29 +60,35 @@ export default function RetrievalScreen(): JSX.Element {
   };
   const active = step === "ready" ? 0 : step === "opened" ? 1 : 2;
   return (
-    <SafeAreaView className="flex-1 bg-background px-5 py-4">
-      <ScreenHeader
-        title={
-          step === "ready"
-            ? "Sẵn sàng mở ngăn"
-            : step === "opened"
-              ? "Ngăn đã mở"
-              : "Hoàn tất nhận hàng"
-        }
-      />
-      {loading ? <Skeleton className="mt-6 h-96 rounded-3xl" /> : null}
+    <SafeAreaView className="flex-1 bg-background">
+      <View className="px-5 pt-4">
+        <ScreenHeader
+          title={
+            step === "ready"
+              ? "Sẵn sàng mở ngăn"
+              : step === "opened"
+                ? "Ngăn đã mở"
+                : "Hoàn tất nhận hàng"
+          }
+        />
+      </View>
+      {loading ? <Skeleton className="mx-5 mt-6 h-96 rounded-3xl" /> : null}
       {!loading && parcel ? (
-        <View className="flex-1 gap-5 pt-5">
+        <ScrollView
+          contentContainerClassName="flex-grow gap-5 px-5 pb-4 pt-5"
+          showsVerticalScrollIndicator={false}
+        >
           <FlowSteps labels={labels} active={active} />
           {step === "ready" ? (
             <>
               <Card>
                 <Card.Body className="flex-row items-center gap-3">
                   <View className="h-20 w-20 items-center justify-center rounded-2xl bg-accent-soft">
-                    {parcel.parcelImageUrl ? (
+                    {parcel.parcelImageUrl && !imageFailed ? (
                       <Image
                         source={{ uri: parcel.parcelImageUrl }}
                         className="h-20 w-20 rounded-2xl"
+                        onError={() => setImageFailed(true)}
                       />
                     ) : (
                       <GravityIcon name="package" size={36} tone="accent" />
@@ -138,7 +145,7 @@ export default function RetrievalScreen(): JSX.Element {
           {error ? (
             <Typography.Paragraph className="text-center text-danger">{error}</Typography.Paragraph>
           ) : null}
-          <View className="mt-auto gap-1 pb-2">
+          <View className="mt-auto gap-1 pt-2">
             {step === "ready" ? (
               <Button isDisabled={submitting} onPress={() => void unlock()}>
                 <Button.Label>
@@ -166,10 +173,10 @@ export default function RetrievalScreen(): JSX.Element {
               />
             ) : null}
           </View>
-        </View>
+        </ScrollView>
       ) : null}
       {!loading && !parcel ? (
-        <Typography.Paragraph className="mt-6 text-danger">{error}</Typography.Paragraph>
+        <Typography.Paragraph className="mx-5 mt-6 text-danger">{error}</Typography.Paragraph>
       ) : null}
     </SafeAreaView>
   );

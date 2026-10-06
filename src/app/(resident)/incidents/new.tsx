@@ -6,7 +6,6 @@ import {
   Chip,
   Label,
   Spinner,
-  Tabs,
   TextArea,
   TextField,
   Typography,
@@ -14,7 +13,7 @@ import {
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { ScreenHeader } from "@/components/ui/resident-ui";
 import { deliveryRequestApi } from "@/features/delivery-requests/api";
@@ -22,10 +21,10 @@ import { incidentApi } from "@/features/incidents/api";
 import { returnApi } from "@/features/returns/api";
 
 const categories = [
-  { value: "Compartment", label: "Tủ / Ngăn" },
+  { value: "Compartment", label: "Tủ/ngăn" },
   { value: "Parcel", label: "Bưu kiện" },
-  { value: "Retrieval", label: "Nhận hàng" },
-  { value: "Return", label: "Gửi đồ" },
+  { value: "Retrieval", label: "Nhận" },
+  { value: "Return", label: "Gửi" },
   { value: "Payment", label: "Thanh toán" },
   { value: "Other", label: "Khác" },
 ];
@@ -88,18 +87,23 @@ export default function NewIncidentScreen(): JSX.Element {
         keyboardShouldPersistTaps="handled"
       >
         <ScreenHeader title="Báo cáo sự cố" />
-        <Tabs value={type} onValueChange={setType}>
-          <Tabs.List>
-            <Tabs.ScrollView>
-              <Tabs.Indicator />
-              {categories.map((item) => (
-                <Tabs.Trigger key={item.value} value={item.value}>
-                  <Tabs.Label>{item.label}</Tabs.Label>
-                </Tabs.Trigger>
+        <View className="gap-2">
+          {[categories.slice(0, 3), categories.slice(3)].map((row, index) => (
+            <View key={index} className="flex-row gap-2">
+              {row.map((item) => (
+                <Button
+                  key={item.value}
+                  className="min-w-0 flex-1"
+                  size="sm"
+                  variant={type === item.value ? "primary" : "secondary"}
+                  onPress={() => setType(item.value)}
+                >
+                  <Button.Label>{item.label}</Button.Label>
+                </Button>
               ))}
-            </Tabs.ScrollView>
-          </Tabs.List>
-        </Tabs>
+            </View>
+          ))}
+        </View>
         {relatedId ? (
           <View className="gap-2">
             <Typography.Paragraph className="text-sm font-medium">

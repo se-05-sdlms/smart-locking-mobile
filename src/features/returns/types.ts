@@ -5,4 +5,3 @@ export type ReturnRequestItem = {
   reservationExpiresAt: string | null; residentDepositedAt: string | null; shipperPickedUpAt: string | null;
 };
 export type ReturnUnlock = { returnRequestId: string; compartmentCode: string; accessEventId: string; reservationExpiresAt: string };
-export type ReturnDeposit = { returnRequestId: string; pickupCode: string; compartmentCode: string; status: ReturnStatus };

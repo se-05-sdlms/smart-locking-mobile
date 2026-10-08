@@ -7,7 +7,7 @@ import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { ScreenHeader } from "@/components/ui/resident-ui";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { incidentApi, type IncidentItem } from "@/features/incidents/api";
+import { incidentApi, type IncidentItem, type IncidentStatus } from "@/features/incidents/api";
 
 export default function IncidentListScreen(): JSX.Element {
   const [items, setItems] = useState<IncidentItem[]>([]);
@@ -73,12 +73,11 @@ function IncidentRow({ item }: { item: IncidentItem }): JSX.Element {
     </PressableFeedback>
   );
 }
-function incidentStatus(status: string): {
+function incidentStatus(status: IncidentStatus): {
   label: string;
   tone: "warning" | "success" | "default";
 } {
-  const value = status.toLowerCase();
-  if (value.includes("resolved")) return { label: "Đã giải quyết", tone: "success" };
-  if (value.includes("closed")) return { label: "Đã đóng", tone: "default" };
-  return { label: "Đang xử lý", tone: "warning" };
+  if (status === 2) return { label: "Đã giải quyết", tone: "success" };
+  if (status === 3) return { label: "Đã chuyển cấp", tone: "default" };
+  return { label: status === 0 ? "Mới tạo" : "Đang xử lý", tone: "warning" };
 }

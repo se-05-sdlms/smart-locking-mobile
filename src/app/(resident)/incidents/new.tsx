@@ -71,6 +71,9 @@ export default function NewIncidentScreen(): JSX.Element {
         title: `Sự cố ${label}`,
         description,
         lockerId,
+        parcelId: params.parcelId,
+        returnRequestId: params.returnId,
+        paymentTransactionId: params.paymentId,
         evidenceUrl,
       });
       router.replace({ pathname: "/incidents/[id]", params: { id: created.id } });

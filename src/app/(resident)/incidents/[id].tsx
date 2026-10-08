@@ -7,7 +7,7 @@ import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { ScreenHeader } from "@/components/ui/resident-ui";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { incidentApi, type IncidentDetail } from "@/features/incidents/api";
+import { incidentApi, type IncidentDetail, type IncidentStatus } from "@/features/incidents/api";
 
 export default function IncidentDetailScreen(): JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -114,9 +114,6 @@ function Timeline({
     </View>
   );
 }
-function statusLabel(status: string): string {
-  const value = status.toLowerCase();
-  if (value.includes("resolved")) return "Đã giải quyết";
-  if (value.includes("closed")) return "Đã đóng";
-  return "Đang xử lý";
+function statusLabel(status: IncidentStatus): string {
+  return ["Mới tạo", "Đang xử lý", "Đã giải quyết", "Đã chuyển cấp"][status];
 }

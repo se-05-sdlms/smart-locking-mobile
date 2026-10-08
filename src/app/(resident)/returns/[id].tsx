@@ -32,7 +32,14 @@ export default function ReturnDetailScreen(): JSX.Element {
     setError("");
     try {
       if (action === "open") await returnApi.allocateAndOpen(id);
-      else await returnApi.confirmDeposit(id);
+      else {
+        const current = await returnApi.get(id);
+        if (current.status !== 2) {
+          throw new Error("Hệ thống chưa ghi nhận cửa đã đóng. Vui lòng chờ vài giây rồi thử lại.");
+        }
+        setItem(current);
+        return;
+      }
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể thực hiện thao tác.");

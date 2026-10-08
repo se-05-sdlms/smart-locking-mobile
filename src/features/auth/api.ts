@@ -7,7 +7,7 @@ import type {
 import { apiRequest } from "@/lib/api-client";
 
 export const authApi = {
-  getRegistrationLockers: () => apiRequest<RegistrationLocker[]>("/auth/registration-lockers"),
+  getRegistrationLockers: () => apiRequest<RegistrationLocker[]>("/Lockers/registration-options"),
   requestRegistrationOtp: (phoneNumber: string) =>
     apiRequest<void>("/auth/registration-otp/request", {
       method: "POST",

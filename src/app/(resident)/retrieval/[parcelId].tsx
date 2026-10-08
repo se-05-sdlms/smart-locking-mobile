@@ -50,7 +50,11 @@ export default function RetrievalScreen(): JSX.Element {
     setSubmitting(true);
     setError("");
     try {
-      await parcelApi.confirmPickup(id, accessEventId);
+      const current = await parcelApi.getDetail(id);
+      if (current.status !== "Retrieved") {
+        throw new Error("Hệ thống chưa ghi nhận cửa đã đóng. Vui lòng chờ vài giây rồi thử lại.");
+      }
+      setParcel(current);
       setStep("completed");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Cửa ngăn chưa đóng.");

@@ -7,6 +7,7 @@ import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { useMobileDataRevision } from "@/features/notifications/data-sync";
 import { parcelApi } from "@/features/parcels/api";
 import type { ParcelListItem } from "@/features/parcels/types";
 import { returnApi } from "@/features/returns/api";
@@ -16,6 +17,7 @@ type Filter = "all" | "incoming" | "outgoing";
 const dateFormatter = new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" });
 
 export function ParcelHistoryContent(): JSX.Element {
+  const dataRevision = useMobileDataRevision();
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [parcels, setParcels] = useState<ParcelListItem[]>([]);
@@ -30,7 +32,7 @@ export function ParcelHistoryContent(): JSX.Element {
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Không thể tải lịch sử."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [dataRevision]);
   const query = search.trim().toLowerCase();
   const incoming = useMemo(
     () =>

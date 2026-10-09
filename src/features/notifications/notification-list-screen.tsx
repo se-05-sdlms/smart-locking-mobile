@@ -7,6 +7,7 @@ import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { ScreenHeader } from "@/components/ui/resident-ui";
 import { notificationApi } from "@/features/notifications/api";
+import { useMobileDataRevision } from "@/features/notifications/data-sync";
 import { openNotificationTarget } from "@/features/notifications/navigation";
 import type { ResidentNotification } from "@/features/notifications/types";
 
@@ -19,6 +20,7 @@ const filters: { value: Filter; label: string }[] = [
 ];
 
 export function NotificationListScreen(): JSX.Element {
+  const dataRevision = useMobileDataRevision();
   const [items, setItems] = useState<ResidentNotification[]>([]);
   const [filter, setFilter] = useState<Filter>("all");
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ export function NotificationListScreen(): JSX.Element {
   useEffect(() => {
     const task = setTimeout(() => void load(), 0);
     return () => clearTimeout(task);
-  }, [load]);
+  }, [dataRevision, load]);
   const visible = useMemo(
     () => items.filter((item) => filter === "all" || category(item.type) === filter),
     [filter, items]

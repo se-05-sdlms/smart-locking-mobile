@@ -8,6 +8,7 @@ import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { deliveryRequestApi } from "@/features/delivery-requests/api";
 import { formatCountdown } from "@/features/delivery-requests/countdown";
+import { useMobileDataRevision } from "@/features/notifications/data-sync";
 import type {
   DeliveryApprovalMode,
   PendingDeliveryRequest,
@@ -16,6 +17,7 @@ import type {
 const dateFormatter = new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" });
 
 export function DeliveryRequestListScreen(): JSX.Element {
+  const dataRevision = useMobileDataRevision();
   const [items, setItems] = useState<PendingDeliveryRequest[]>([]);
   const [mode, setMode] = useState<DeliveryApprovalMode>(0);
   const [now, setNow] = useState(0);
@@ -45,17 +47,9 @@ export function DeliveryRequestListScreen(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    void Promise.all([deliveryRequestApi.getPending(), deliveryRequestApi.getProfile()])
-      .then(([requests, profile]) => {
-        setItems(requests);
-        setMode(profile.deliveryApprovalMode);
-        setNow(Date.now());
-      })
-      .catch((loadError: unknown) =>
-        setError(loadError instanceof Error ? loadError.message : "Không thể tải yêu cầu.")
-      )
-      .finally(() => setLoading(false));
-  }, []);
+    const task = setTimeout(() => void load(), 0);
+    return () => clearTimeout(task);
+  }, [dataRevision, load]);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);

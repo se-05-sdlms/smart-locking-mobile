@@ -21,7 +21,7 @@
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#fffdfc"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.wykowjbu.boxora"
@@ -34,7 +34,7 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#fffdfc"
         }
       ],
       "expo-status-bar",

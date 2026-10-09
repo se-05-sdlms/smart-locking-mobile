@@ -1,200 +1,160 @@
-import { Button, Card, Chip, PressableFeedback, Skeleton, Typography } from "heroui-native";
+import { Button, Card, PressableFeedback, Skeleton, Tabs, Typography } from "heroui-native";
 import type { JSX } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
-import { GravityIcon, type GravityIconName } from "@/components/icons/gravity-icon";
+import { GravityIcon } from "@/components/icons/gravity-icon";
+import { ScreenHeader } from "@/components/ui/resident-ui";
 import { notificationApi } from "@/features/notifications/api";
 import { openNotificationTarget } from "@/features/notifications/navigation";
 import type { ResidentNotification } from "@/features/notifications/types";
 
-const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
-  dateStyle: "short",
-  timeStyle: "short",
-});
-
-type Category = { label: string; icon: GravityIconName };
-
-function getCategory(type: string): Category {
-  const normalized = type.toLowerCase();
-  if (normalized.includes("payment") || normalized.includes("fee")) {
-    return { label: "Thanh toán", icon: "credit-card" };
-  }
-  if (normalized.includes("incident")) return { label: "Sự cố", icon: "alert-circle" };
-  if (normalized.includes("delivery") || normalized.includes("request")) {
-    return { label: "Giao hàng", icon: "envelope" };
-  }
-  return { label: "Bưu kiện", icon: "package" };
-}
+type Filter = "all" | "incoming" | "outgoing" | "system";
+const filters: { value: Filter; label: string }[] = [
+  { value: "all", label: "Tất cả" },
+  { value: "incoming", label: "Nhận" },
+  { value: "outgoing", label: "Gửi" },
+  { value: "system", label: "Hệ thống" },
+];
 
 export function NotificationListScreen(): JSX.Element {
   const [items, setItems] = useState<ResidentNotification[]>([]);
+  const [filter, setFilter] = useState<Filter>("all");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [markingAll, setMarkingAll] = useState(false);
   const [error, setError] = useState("");
-
-  const load = useCallback(async (refresh = false): Promise<void> => {
+  const load = useCallback(async (refresh = false) => {
     if (refresh) setRefreshing(true);
     else setLoading(true);
     setError("");
     try {
       setItems(await notificationApi.getAll());
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Không thể tải thông báo.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể tải thông báo.");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
-
   useEffect(() => {
-    void notificationApi
-      .getAll()
-      .then(setItems)
-      .catch((loadError: unknown) =>
-        setError(loadError instanceof Error ? loadError.message : "Không thể tải thông báo.")
-      )
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function open(item: ResidentNotification): Promise<void> {
+    const task = setTimeout(() => void load(), 0);
+    return () => clearTimeout(task);
+  }, [load]);
+  const visible = useMemo(
+    () => items.filter((item) => filter === "all" || category(item.type) === filter),
+    [filter, items]
+  );
+  const open = async (item: ResidentNotification) => {
     if (!item.isRead) {
       setItems((current) =>
-        current.map((entry) =>
-          entry.id === item.id
-            ? { ...entry, isRead: true, readAt: new Date().toISOString() }
-            : entry
-        )
+        current.map((value) => (value.id === item.id ? { ...value, isRead: true } : value))
       );
       try {
         await notificationApi.markRead(item.id);
       } catch {
-        void load(true);
+        /* optimistic read state is enough */
       }
     }
     openNotificationTarget(item);
-  }
-
-  async function markAllRead(): Promise<void> {
-    setMarkingAll(true);
-    setError("");
-    try {
-      await notificationApi.markAllRead();
-      const readAt = new Date().toISOString();
-      setItems((current) => current.map((item) => ({ ...item, isRead: true, readAt })));
-    } catch (markError) {
-      setError(markError instanceof Error ? markError.message : "Không thể đánh dấu đã đọc.");
-    } finally {
-      setMarkingAll(false);
-    }
-  }
-
-  const unreadCount = items.filter((item) => !item.isRead).length;
-
+  };
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
+    <SafeAreaView className="flex-1 bg-background">
       <ScrollView
         contentContainerClassName="gap-4 px-5 pb-8 pt-4"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} />
         }
       >
-        <View className="flex-row items-center justify-between gap-4">
-          <View className="flex-1 gap-1">
-            <Typography.Heading className="text-3xl">Thông báo</Typography.Heading>
-            <Typography.Paragraph className="text-muted">
-              {unreadCount ? `${unreadCount} thông báo chưa đọc` : "Bạn đã xem tất cả thông báo"}
-            </Typography.Paragraph>
-          </View>
-          {unreadCount ? (
-            <Button
-              size="sm"
-              variant="tertiary"
-              isDisabled={markingAll}
-              onPress={() => void markAllRead()}
-            >
-              <Button.Label>{markingAll ? "Đang xử lý" : "Đọc tất cả"}</Button.Label>
-            </Button>
-          ) : null}
-        </View>
-
+        <ScreenHeader title="Thông báo" />
+        <Tabs value={filter} onValueChange={(value) => setFilter(value as Filter)}>
+          <Tabs.List>
+            <Tabs.ScrollView>
+              <Tabs.Indicator />
+              {filters.map((item) => (
+                <Tabs.Trigger key={item.value} value={item.value}>
+                  <Tabs.Label>{item.label}</Tabs.Label>
+                </Tabs.Trigger>
+              ))}
+            </Tabs.ScrollView>
+          </Tabs.List>
+        </Tabs>
         {error ? (
           <Card>
             <Card.Body className="gap-3">
               <Typography.Paragraph className="text-danger">{error}</Typography.Paragraph>
-              <Button size="sm" variant="secondary" onPress={() => void load()}>
+              <Button variant="secondary" onPress={() => void load()}>
                 <Button.Label>Thử lại</Button.Label>
               </Button>
             </Card.Body>
           </Card>
         ) : null}
-
-        {loading ? (
-          <View className="gap-3">
-            {[0, 1, 2].map((value) => (
-              <Skeleton key={value} className="h-36 w-full rounded-2xl" />
-            ))}
-          </View>
-        ) : null}
-
-        {!loading && !error && items.length === 0 ? (
+        {loading
+          ? [0, 1, 2].map((value) => <Skeleton key={value} className="h-24 rounded-2xl" />)
+          : null}
+        {!loading && !error && visible.length === 0 ? (
           <Card>
-            <Card.Body className="items-center gap-3 py-10">
-              <GravityIcon name="bell" size={40} />
+            <Card.Body className="items-center gap-2 py-10">
+              <GravityIcon name="bell" size={32} />
               <Typography.Heading className="text-lg">Chưa có thông báo</Typography.Heading>
-              <Typography.Paragraph className="text-center text-muted">
-                Cập nhật về bưu kiện và giao hàng sẽ xuất hiện tại đây.
-              </Typography.Paragraph>
             </Card.Body>
           </Card>
         ) : null}
-
         {!loading && !error
-          ? items.map((item) => <NotificationCard key={item.id} item={item} onPress={open} />)
+          ? visible.map((item) => <NotificationRow key={item.id} item={item} onPress={open} />)
           : null}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function NotificationCard({
+function NotificationRow({
   item,
   onPress,
 }: {
   item: ResidentNotification;
   onPress: (item: ResidentNotification) => Promise<void>;
 }): JSX.Element {
-  const category = getCategory(item.type);
   return (
-    <PressableFeedback
-      accessibilityRole="button"
-      accessibilityLabel={`${item.isRead ? "Đã đọc" : "Chưa đọc"}: ${item.title}`}
-      onPress={() => void onPress(item)}
-    >
-      <Card className={item.isRead ? "opacity-75" : "border border-accent"}>
-        <Card.Header className="flex-row items-start gap-3">
-          <View className="rounded-full bg-accent-soft p-2.5">
-            <GravityIcon name={category.icon} tone="accent" />
+    <PressableFeedback onPress={() => void onPress(item)} accessibilityRole="button">
+      <View
+        className={
+          item.isRead
+            ? "flex-row gap-3 rounded-2xl px-3 py-3"
+            : "flex-row gap-3 rounded-2xl bg-accent/5 px-3 py-3"
+        }
+      >
+        <View
+          className={
+            item.isRead
+              ? "mt-2 h-2 w-2 rounded-full bg-default-300"
+              : "mt-2 h-2 w-2 rounded-full bg-accent"
+          }
+        />
+        <View className="flex-1 gap-1">
+          <View className="flex-row items-start justify-between gap-3">
+            <Typography.Heading className="flex-1 text-base">
+              {item.title.replace("Tủ A02 báo sự cố", "Sự cố tại ngăn A02")}
+            </Typography.Heading>
+            <Typography.Paragraph className="text-xs text-muted">
+              {new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit" }).format(
+                new Date(item.createdAt)
+              )}
+            </Typography.Paragraph>
           </View>
-          <View className="flex-1 gap-2">
-            <View className="flex-row items-center justify-between gap-2">
-              <Chip size="sm" variant="soft" color="accent">
-                {category.label}
-              </Chip>
-              {!item.isRead ? <View className="h-2.5 w-2.5 rounded-full bg-accent" /> : null}
-            </View>
-            <Card.Title>{item.title}</Card.Title>
-          </View>
-        </Card.Header>
-        <Card.Body className="gap-2 pl-[60px]">
-          <Typography.Paragraph>{item.message}</Typography.Paragraph>
-          <Typography.Paragraph className="text-xs text-muted">
-            {dateFormatter.format(new Date(item.createdAt))}
+          <Typography.Paragraph className="text-sm text-muted" numberOfLines={2}>
+            {item.message}
           </Typography.Paragraph>
-        </Card.Body>
-      </Card>
+        </View>
+        <GravityIcon name="chevron-right" size={18} />
+      </View>
     </PressableFeedback>
   );
+}
+function category(type: string): Exclude<Filter, "all"> {
+  const value = type.toLowerCase();
+  if (value.includes("return")) return "outgoing";
+  if (value.includes("parcel") || value.includes("delivery") || value.includes("request"))
+    return "incoming";
+  return "system";
 }

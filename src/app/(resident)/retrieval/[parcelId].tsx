@@ -2,123 +2,186 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Button, Card, Skeleton, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Image, ScrollView, View } from "react-native";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
+import { FlowSteps, IncidentAction, ScreenHeader } from "@/components/ui/resident-ui";
 import { parcelApi } from "@/features/parcels/api";
 import type { ParcelDetail } from "@/features/parcels/types";
 
 type Step = "ready" | "opened" | "completed";
+const labels = ["Sẵn sàng", "Mở ngăn", "Hoàn tất"];
 
 export default function RetrievalScreen(): JSX.Element {
   const { parcelId } = useLocalSearchParams<{ parcelId: string }>();
   const id = String(parcelId);
   const [parcel, setParcel] = useState<ParcelDetail>();
   const [accessEventId, setAccessEventId] = useState("");
+  const [imageFailed, setImageFailed] = useState(false);
   const [step, setStep] = useState<Step>("ready");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-
   useEffect(() => {
-    void parcelApi.getDetail(id)
+    void parcelApi
+      .getDetail(id)
       .then(setParcel)
-      .catch((loadError: unknown) =>
-        setError(loadError instanceof Error ? loadError.message : "Không thể tải bưu kiện."))
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Không thể tải bưu kiện."))
       .finally(() => setLoading(false));
   }, [id]);
-
-  async function unlock(): Promise<void> {
+  const unlock = async () => {
     setSubmitting(true);
     setError("");
     try {
       const response = await parcelApi.unlockPickup(id);
-      if (response.result !== "Succeeded") throw new Error(response.failureReason ?? "Không thể mở ngăn.");
+      if (response.result !== "Succeeded")
+        throw new Error(response.failureReason ?? "Không thể mở ngăn.");
       setAccessEventId(response.accessEventId);
       setStep("opened");
-    } catch (unlockError) {
-      setError(unlockError instanceof Error ? unlockError.message : "Không thể mở ngăn.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể mở ngăn.");
     } finally {
       setSubmitting(false);
     }
-  }
-
-  async function confirm(): Promise<void> {
+  };
+  const confirm = async () => {
     if (!accessEventId) return;
     setSubmitting(true);
     setError("");
     try {
-      await parcelApi.confirmPickup(id, accessEventId);
+      const current = await parcelApi.getDetail(id);
+      if (current.status !== "Retrieved") {
+        throw new Error("Hệ thống chưa ghi nhận cửa đã đóng. Vui lòng chờ vài giây rồi thử lại.");
+      }
+      setParcel(current);
       setStep("completed");
-    } catch (confirmError) {
-      setError(confirmError instanceof Error ? confirmError.message : "Cửa ngăn chưa đóng.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Cửa ngăn chưa đóng.");
     } finally {
       setSubmitting(false);
     }
-  }
-
+  };
+  const active = step === "ready" ? 0 : step === "opened" ? 1 : 2;
   return (
-    <SafeAreaView className="flex-1 bg-background px-5 py-5">
-      <Button isIconOnly variant="secondary" accessibilityLabel="Quay lại" onPress={() => router.back()}>
-        <GravityIcon name="arrow-left" />
-      </Button>
-      {loading ? <Skeleton className="mt-5 h-96 rounded-2xl" /> : null}
+    <SafeAreaView className="flex-1 bg-background">
+      <View className="px-5 pt-4">
+        <ScreenHeader
+          title={
+            step === "ready"
+              ? "Sẵn sàng mở ngăn"
+              : step === "opened"
+                ? "Ngăn đã mở"
+                : "Hoàn tất nhận hàng"
+          }
+        />
+      </View>
+      {loading ? <Skeleton className="mx-5 mt-6 h-96 rounded-3xl" /> : null}
       {!loading && parcel ? (
-        <View className="flex-1 gap-5 pt-6">
-          <View className="items-center gap-2">
-            <GravityIcon name={step === "completed" ? "package" : "lock"} size={52} tone="accent" />
-            <Typography.Heading className="text-center text-3xl">
-              {step === "ready" ? "Nhận bưu kiện" : step === "opened" ? `Ngăn ${parcel.compartmentCode} đã mở` : "Đã nhận hàng"}
-            </Typography.Heading>
-            <Typography.Paragraph className="text-center text-muted">
-              {step === "ready"
-                ? "Đứng gần locker rồi nhấn mở ngăn."
-                : step === "opened"
-                  ? "Lấy kiện hàng ra và đóng kín cửa ngăn."
-                  : "Bưu kiện đã được chuyển vào lịch sử nhận hàng."}
-            </Typography.Paragraph>
-          </View>
-
-          <Card>
-            <Card.Body className="gap-3">
-              <Info label="Mã kiện" value={parcel.parcelCode} />
-              <Info label="Locker" value={`${parcel.lockerCode} · ${parcel.lockerAddress}`} />
-              <Info label="Ngăn" value={parcel.compartmentCode} />
-            </Card.Body>
-          </Card>
-
-          {error ? <Typography.Paragraph className="text-center text-danger">{error}</Typography.Paragraph> : null}
-          <View className="mt-auto gap-3 pb-4">
+        <ScrollView
+          contentContainerClassName="flex-grow gap-5 px-5 pb-4 pt-5"
+          showsVerticalScrollIndicator={false}
+        >
+          <FlowSteps labels={labels} active={active} />
+          {step === "ready" ? (
+            <>
+              <Card>
+                <Card.Body className="flex-row items-center gap-3">
+                  <View className="h-20 w-20 items-center justify-center rounded-2xl bg-accent-soft">
+                    {parcel.parcelImageUrl && !imageFailed ? (
+                      <Image
+                        source={{ uri: parcel.parcelImageUrl }}
+                        className="h-20 w-20 rounded-2xl"
+                        onError={() => setImageFailed(true)}
+                      />
+                    ) : (
+                      <GravityIcon name="package" size={36} tone="accent" />
+                    )}
+                  </View>
+                  <View className="flex-1 gap-1">
+                    <Typography.Heading className="text-lg">{parcel.parcelCode}</Typography.Heading>
+                    <Typography.Paragraph>{parcel.lockerCode}</Typography.Paragraph>
+                    <Typography.Paragraph className="text-muted">
+                      Ngăn {parcel.compartmentCode}
+                    </Typography.Paragraph>
+                  </View>
+                </Card.Body>
+              </Card>
+              <Card className="bg-accent/5">
+                <Card.Body className="flex-row items-center gap-3 py-3">
+                  <GravityIcon name="building" tone="accent" />
+                  <Typography.Paragraph className="flex-1">
+                    Hãy đến đúng tủ trước khi mở ngăn.
+                  </Typography.Paragraph>
+                </Card.Body>
+              </Card>
+            </>
+          ) : null}
+          {step === "opened" ? (
+            <View className="items-center gap-4">
+              <View className="w-full items-center justify-center rounded-3xl bg-default py-10">
+                <GravityIcon name="lock" size={56} tone="success" />
+              </View>
+              <Typography.Heading className="text-2xl">
+                Ngăn {parcel.compartmentCode} đã mở
+              </Typography.Heading>
+              <Typography.Paragraph className="text-center text-muted">
+                Lấy bưu kiện và đóng cửa ngăn tủ.
+              </Typography.Paragraph>
+            </View>
+          ) : null}
+          {step === "completed" ? (
+            <View className="items-center gap-4 pt-6">
+              <View className="h-24 w-24 items-center justify-center rounded-full bg-success">
+                <GravityIcon name="check" size={54} tone="success-foreground" />
+              </View>
+              <Typography.Heading className="text-3xl">Đã nhận bưu kiện</Typography.Heading>
+              <Card className="w-full">
+                <Card.Body className="items-center gap-1">
+                  <Typography.Heading className="text-lg">{parcel.parcelCode}</Typography.Heading>
+                  <Typography.Paragraph className="text-muted">
+                    Ngăn {parcel.compartmentCode} đã được đóng và hoàn tất.
+                  </Typography.Paragraph>
+                </Card.Body>
+              </Card>
+            </View>
+          ) : null}
+          {error ? (
+            <Typography.Paragraph className="text-center text-danger">{error}</Typography.Paragraph>
+          ) : null}
+          <View className="mt-auto gap-1 pt-2">
             {step === "ready" ? (
               <Button isDisabled={submitting} onPress={() => void unlock()}>
-                <GravityIcon name="lock" tone="accent-foreground" />
-                <Button.Label>{submitting ? "Đang mở ngăn..." : `Mở ngăn ${parcel.compartmentCode}`}</Button.Label>
+                <Button.Label>
+                  {submitting ? "Đang mở ngăn..." : `Mở ngăn ${parcel.compartmentCode}`}
+                </Button.Label>
               </Button>
             ) : null}
             {step === "opened" ? (
               <Button isDisabled={submitting} onPress={() => void confirm()}>
-                <Button.Label>{submitting ? "Đang kiểm tra cửa..." : "Tôi đã lấy hàng và đóng cửa"}</Button.Label>
+                <Button.Label>
+                  {submitting ? "Đang kiểm tra cửa..." : "Đã lấy hàng và đóng cửa"}
+                </Button.Label>
               </Button>
             ) : null}
             {step === "completed" ? (
-              <Button onPress={() => router.replace("/(resident)/(tabs)")}>
-                <Button.Label>Hoàn tất</Button.Label>
+              <Button onPress={() => router.replace("/")}>
+                <Button.Label>Về trang chủ</Button.Label>
               </Button>
             ) : null}
+            {step !== "completed" ? (
+              <IncidentAction
+                onPress={() =>
+                  router.push({ pathname: "/incidents/new", params: { parcelId: parcel.id } })
+                }
+              />
+            ) : null}
           </View>
-        </View>
+        </ScrollView>
       ) : null}
-      {!loading && !parcel ? <Typography.Paragraph className="mt-6 text-danger">{error}</Typography.Paragraph> : null}
+      {!loading && !parcel ? (
+        <Typography.Paragraph className="mx-5 mt-6 text-danger">{error}</Typography.Paragraph>
+      ) : null}
     </SafeAreaView>
-  );
-}
-
-function Info({ label, value }: { label: string; value: string }): JSX.Element {
-  return (
-    <View className="gap-1">
-      <Typography.Paragraph className="text-xs text-muted">{label}</Typography.Paragraph>
-      <Typography.Paragraph>{value}</Typography.Paragraph>
-    </View>
   );
 }

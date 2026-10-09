@@ -4,6 +4,18 @@ import type { AuthSession } from "@/features/auth/types";
 
 type RequestOptions = RequestInit & { authenticated?: boolean; retry?: boolean };
 
+export type PagedResponse<T> = {
+  items: T[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+};
+
+export type PageResponse<T> = T[] | PagedResponse<T>;
+
+export const pageItems = <T>(response: PageResponse<T>): T[] =>
+  Array.isArray(response) ? response : response.items;
+
 export class ApiError extends Error {
   constructor(
     message: string,

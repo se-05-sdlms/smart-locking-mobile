@@ -10,10 +10,11 @@ import { GravityIcon, type GravityIconName } from "@/components/icons/gravity-ic
 const tabs: {
   label: string;
   icon: GravityIconName;
-  path: "/" | "/history" | "/profile";
+  path: "/" | "/history" | "/send" | "/profile";
 }[] = [
   { label: "Trang chủ", icon: "home", path: "/" },
   { label: "Lịch sử", icon: "clock", path: "/history" },
+  { label: "Gửi đồ", icon: "send", path: "/send" },
   { label: "Tài khoản", icon: "user", path: "/profile" },
 ];
 

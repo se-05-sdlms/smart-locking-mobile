@@ -128,7 +128,7 @@ export function ResidentHomeContent(): JSX.Element {
                 Đặt đồ vào tủ để người khác đến lấy.
               </Typography.Paragraph>
             </View>
-            <Button size="sm" isDisabled>
+            <Button size="sm" onPress={() => router.push("/send")}>
               <Button.Label>Gửi đồ</Button.Label>
             </Button>
           </Card.Body>

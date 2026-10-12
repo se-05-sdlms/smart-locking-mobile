@@ -146,7 +146,7 @@ function OutgoingRow({ item }: { item: ReturnRequestItem }): JSX.Element {
   const label = item.status === 3 ? "Đã lấy" : item.status === 4 ? "Đã hủy" : "Chờ lấy";
   return (
     <PressableFeedback
-      onPress={undefined}
+      onPress={() => router.push({ pathname: "/returns/[id]", params: { id: item.id } })}
     >
       <Card>
         <Card.Body className="flex-row items-center gap-3 py-3">

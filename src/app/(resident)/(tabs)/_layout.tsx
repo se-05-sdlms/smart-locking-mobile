@@ -1,34 +1,16 @@
-import { Tabs } from "expo-router";
+import { Slot } from "expo-router";
 import type { JSX } from "react";
+import { View } from "react-native";
 
-import { GravityIcon, type GravityIconName } from "@/components/icons/gravity-icon";
-
-const icons: Record<string, GravityIconName> = {
-  index: "home",
-  history: "clock",
-  notifications: "bell",
-  profile: "user",
-};
+import { ResidentTabBar } from "@/components/resident-tab-scaffold";
 
 export default function ResidentTabsLayout(): JSX.Element {
   return (
-    <Tabs
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarActiveTintColor: "#d95f18",
-        tabBarInactiveTintColor: "#77716c",
-        tabBarHideOnKeyboard: true,
-        tabBarLabelStyle: { fontSize: 12, fontWeight: "600" },
-        tabBarStyle: { height: 68, paddingBottom: 8, paddingTop: 8 },
-        tabBarIcon: ({ color, size }) => (
-          <GravityIcon name={icons[route.name] ?? "home"} color={color} size={size} />
-        ),
-      })}
-    >
-      <Tabs.Screen name="index" options={{ title: "Trang chủ" }} />
-      <Tabs.Screen name="history" options={{ title: "Lịch sử" }} />
-      <Tabs.Screen name="notifications" options={{ title: "Thông báo" }} />
-      <Tabs.Screen name="profile" options={{ title: "Tài khoản" }} />
-    </Tabs>
+    <View className="flex-1 bg-background">
+      <View className="flex-1">
+        <Slot />
+      </View>
+      <ResidentTabBar />
+    </View>
   );
 }

@@ -20,10 +20,9 @@ export type ParcelListItem = {
 };
 
 export type ParcelDetail = ParcelListItem & {
+  overdueChargeId?: string | null;
   lockerRecoveryAddress: string;
   parcelImageUrl: string | null;
-  shipperName: string | null;
-  shipperPhone: string | null;
 };
 
 export type ParcelStatusHistory = {
@@ -32,4 +31,12 @@ export type ParcelStatusHistory = {
   toStatus: ParcelStatus;
   reason: string | null;
   changedAt: string;
+};
+
+export type PickupUnlockResponse = {
+  parcelId: string;
+  accessEventId: string;
+  result: "Succeeded" | "Failed" | "Blocked";
+  failureReason: string | null;
+  requestedAt: string;
 };

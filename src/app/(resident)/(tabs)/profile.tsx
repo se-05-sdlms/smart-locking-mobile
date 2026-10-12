@@ -99,7 +99,7 @@ export default function ProfileScreen(): JSX.Element {
           <FlatRow
             icon="alert-circle"
             title="Sự cố của tôi"
-            onPress={undefined}
+            onPress={() => router.push("/incidents")}
           />
           <Separator />
           <FlatRow

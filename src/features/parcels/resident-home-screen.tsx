@@ -10,10 +10,12 @@ import { GravityIcon } from "@/components/icons/gravity-icon";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { deliveryRequestApi } from "@/features/delivery-requests/api";
 import type { PendingDeliveryRequest } from "@/features/delivery-requests/types";
+import { useMobileDataRevision } from "@/features/notifications/data-sync";
 import { parcelApi } from "@/features/parcels/api";
 import type { ParcelListItem } from "@/features/parcels/types";
 
 export function ResidentHomeContent(): JSX.Element {
+  const dataRevision = useMobileDataRevision();
   const [parcels, setParcels] = useState<ParcelListItem[]>([]);
   const [request, setRequest] = useState<PendingDeliveryRequest | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,7 +41,7 @@ export function ResidentHomeContent(): JSX.Element {
   useEffect(() => {
     const task = setTimeout(() => void load(), 0);
     return () => clearTimeout(task);
-  }, [load]);
+  }, [dataRevision, load]);
 
   const featured = parcels[0];
   return (

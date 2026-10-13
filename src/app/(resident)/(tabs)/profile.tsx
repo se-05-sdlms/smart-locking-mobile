@@ -105,7 +105,7 @@ export default function ProfileScreen(): JSX.Element {
           <FlatRow
             icon="receipt"
             title="Lịch sử thanh toán"
-            onPress={undefined}
+            onPress={() => router.push("/payments")}
           />
         </Section>
         <Section title="Ứng dụng">

@@ -7,6 +7,7 @@ export type ResidentNotification = {
   parcelId: string | null;
   incidentId: string | null;
   paymentTransactionId: string | null;
+  returnRequestId: string | null;
   isRead: boolean;
   readAt: string | null;
   createdAt: string;
@@ -14,5 +15,5 @@ export type ResidentNotification = {
 
 export type NotificationTarget = Pick<
   ResidentNotification,
-  "deliveryRequestId" | "parcelId" | "incidentId" | "paymentTransactionId"
+  "deliveryRequestId" | "parcelId" | "incidentId" | "paymentTransactionId" | "returnRequestId"
 >;

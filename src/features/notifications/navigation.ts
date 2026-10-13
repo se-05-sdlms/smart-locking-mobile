@@ -27,5 +27,6 @@ export function targetFromPushData(data: Record<string, unknown>): Partial<Notif
     deliveryRequestId: value("deliveryRequestId"),
     incidentId: value("incidentId"),
     paymentTransactionId: value("paymentTransactionId"),
+    returnRequestId: value("returnRequestId"),
   };
 }

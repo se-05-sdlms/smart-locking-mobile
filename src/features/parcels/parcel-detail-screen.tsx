@@ -3,9 +3,10 @@ import { Button, Card, Skeleton, Typography } from "heroui-native";
 import type { JSX, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
+import { IncidentAction, ScreenHeader } from "@/components/ui/resident-ui";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { parcelApi } from "@/features/parcels/api";
 import type { ParcelDetail, ParcelStatus, ParcelStatusHistory } from "@/features/parcels/types";
@@ -17,6 +18,7 @@ export function ParcelDetailContent(): JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [parcel, setParcel] = useState<ParcelDetail>();
   const [history, setHistory] = useState<ParcelStatusHistory[]>([]);
+  const [imageFailed, setImageFailed] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -40,76 +42,62 @@ export function ParcelDetailContent(): JSX.Element {
   const paymentRequired =
     parcel.overdueAmount !== null && parcel.overdueChargeStatus === "Outstanding";
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
+    <SafeAreaView className="flex-1 bg-background">
       <ScrollView contentContainerClassName="gap-4 px-5 pb-8 pt-4">
-        <View className="flex-row items-center gap-3">
-          <Button
-            isIconOnly
-            variant="secondary"
-            accessibilityLabel="Quay lại"
-            onPress={() => router.back()}
-          >
-            <GravityIcon name="arrow-left" />
-          </Button>
-          <View className="flex-1">
-            <Typography.Heading className="text-2xl">{parcel.parcelCode}</Typography.Heading>
-            <Typography.Paragraph className="text-muted">Chi tiết bưu kiện</Typography.Paragraph>
+        <View className="gap-3">
+          <ScreenHeader title="Chi tiết bưu kiện" />
+          <View className="flex-row items-center justify-between gap-3">
+            <Typography.Heading className="text-xl">{parcel.parcelCode}</Typography.Heading>
+            <StatusBadge
+              label={statusLabel(parcel.status)}
+              tone={parcel.status === "Overdue" ? "danger" : "success"}
+            />
           </View>
-          <StatusBadge
-            label={statusLabel(parcel.status)}
-            tone={parcel.status === "Overdue" ? "danger" : "success"}
-          />
         </View>
 
-        {parcel.parcelImageUrl ? (
-          <Card>
-            <Card.Body>
-              <Image
-                source={{ uri: parcel.parcelImageUrl }}
-                className="h-48 w-full rounded-2xl"
-                resizeMode="cover"
-                accessibilityLabel={`Ảnh bưu kiện ${parcel.parcelCode}`}
-              />
-            </Card.Body>
-          </Card>
-        ) : null}
+        {parcel.parcelImageUrl && !imageFailed ? (
+          <Image
+            source={{ uri: parcel.parcelImageUrl }}
+            className="h-40 w-full rounded-3xl bg-default"
+            resizeMode="cover"
+            onError={() => setImageFailed(true)}
+            accessibilityLabel={`Ảnh bưu kiện ${parcel.parcelCode}`}
+          />
+        ) : (
+          <View className="h-28 w-full items-center justify-center gap-2 rounded-3xl bg-default">
+            <GravityIcon name="package" size={30} tone="muted" />
+            <Typography.Paragraph className="text-sm text-muted">
+              Không có ảnh bưu kiện
+            </Typography.Paragraph>
+          </View>
+        )}
 
-        <InfoCard title="Vị trí">
+        <InfoCard title="Thông tin bưu kiện">
           <InfoLine label="Locker" value={`${parcel.lockerCode} · ${parcel.lockerAddress}`} />
           <InfoLine label="Ngăn" value={parcel.compartmentCode} />
-          <InfoLine label="Điểm nhận hàng quá hạn" value={parcel.lockerRecoveryAddress} />
-        </InfoCard>
-        <InfoCard title="Thời gian">
-          <InfoLine label="Đã gửi" value={dateFormatter.format(new Date(parcel.storedAt))} />
+          <InfoLine label="Gửi vào tủ" value={dateFormatter.format(new Date(parcel.storedAt))} />
           <InfoLine label="Hạn nhận" value={dateFormatter.format(new Date(parcel.pickupDueAt))} />
-          <InfoLine
-            label="Lưu tối đa đến"
-            value={dateFormatter.format(new Date(parcel.maxStorageUntil))}
-          />
-        </InfoCard>
-        <InfoCard title="Giao hàng và chi phí">
-          <InfoLine label="Shipper" value={parcel.shipperName || "Không có thông tin"} />
-          <InfoLine label="Số điện thoại" value={parcel.shipperPhone || "Không có thông tin"} />
-          <InfoLine
-            label="Phí quá hạn"
-            value={
-              parcel.overdueAmount === null
-                ? "Chưa phát sinh"
-                : `${moneyFormatter.format(parcel.overdueAmount)} ${parcel.currency || "VND"}`
-            }
-          />
+          {parcel.overdueAmount !== null ? (
+            <InfoLine
+              label="Phí hiện tại"
+              value={`${moneyFormatter.format(parcel.overdueAmount)} ${parcel.currency || "VND"}`}
+            />
+          ) : null}
         </InfoCard>
         <InfoCard title="Lịch sử trạng thái">
           {history.length ? (
             history.map((item) => (
-              <View key={item.id} className="border-l-2 border-accent pl-3">
-                <Typography.Paragraph className="font-medium">
-                  {statusLabel(item.toStatus)}
-                </Typography.Paragraph>
-                <Typography.Paragraph className="text-sm text-muted">
-                  {dateFormatter.format(new Date(item.changedAt))}
-                  {item.reason ? ` · ${item.reason}` : ""}
-                </Typography.Paragraph>
+              <View key={item.id} className="flex-row gap-3">
+                <View className="mt-1 h-3 w-3 rounded-full bg-accent" />
+                <View className="flex-1">
+                  <Typography.Paragraph className="font-medium">
+                    {statusLabel(item.toStatus)}
+                  </Typography.Paragraph>
+                  <Typography.Paragraph className="text-sm text-muted">
+                    {dateFormatter.format(new Date(item.changedAt))}
+                    {item.reason ? ` · ${historyReason(item.reason)}` : ""}
+                  </Typography.Paragraph>
+                </View>
               </View>
             ))
           ) : (
@@ -123,20 +111,15 @@ export function ParcelDetailContent(): JSX.Element {
               router.push(paymentRequired ? `/payment/${parcel.id}` : `/retrieval/${parcel.id}`)
             }
           >
-            <Button.Label>
-              {paymentRequired ? "Thanh toán phí quá hạn" : "Nhận bưu kiện"}
-            </Button.Label>
+            <Button.Label>{paymentRequired ? "Thanh toán phí quá hạn" : "Nhận hàng"}</Button.Label>
             <GravityIcon name="arrow-right" tone="accent-foreground" />
           </Button>
         ) : null}
-        <Button
-          variant="secondary"
+        <IncidentAction
           onPress={() =>
             router.push({ pathname: "/incidents/new", params: { parcelId: parcel.id } })
           }
-        >
-          <Button.Label>Báo cáo sự cố</Button.Label>
-        </Button>
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -196,4 +179,12 @@ function statusLabel(status: ParcelStatus): string {
     Retrieved: "Đã nhận",
     Removed: "Đã chuyển kho",
   }[status];
+}
+
+function historyReason(reason: string): string {
+  return (
+    {
+      "Free storage period expired.": "Đã hết thời gian lưu trữ miễn phí.",
+    }[reason] ?? reason
+  );
 }

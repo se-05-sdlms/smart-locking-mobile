@@ -4,6 +4,18 @@ import type { AuthSession } from "@/features/auth/types";
 
 type RequestOptions = RequestInit & { authenticated?: boolean; retry?: boolean };
 
+export type PagedResponse<T> = {
+  items: T[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+};
+
+export type PageResponse<T> = T[] | PagedResponse<T>;
+
+export const pageItems = <T>(response: PageResponse<T>): T[] =>
+  Array.isArray(response) ? response : response.items;
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -59,7 +71,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const timeout = setTimeout(() => controller.abort(), ENV.API_TIMEOUT);
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
-  if (options.body) headers.set("Content-Type", "application/json");
+  if (options.body && !(options.body instanceof FormData)) headers.set("Content-Type", "application/json");
 
   if (authenticated) {
     const session = await readSession();

@@ -27,4 +27,6 @@ export type PendingRegistration = {
   password: string;
   fullName: string;
   registeredLockerId: string;
+  // Local preference until registration accepts a package identifier.
+  accountPackageId?: string | null;
 };

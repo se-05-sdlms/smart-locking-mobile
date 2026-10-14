@@ -1,6 +1,7 @@
 import type { JSX, ReactNode } from "react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
+import { savePreferredPackage } from "@/features/account-packages/storage";
 import { authApi } from "@/features/auth/api";
 import { clearSession, readSession, saveSession } from "@/features/auth/storage";
 import type { AuthSession, PendingRegistration, UserProfile } from "@/features/auth/types";
@@ -68,6 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
       register: async (otpCode) => {
         if (!pendingRegistration) throw new Error("Thông tin đăng ký đã hết hạn.");
         const session = await authApi.register({ ...pendingRegistration, otpCode });
+        // Package selection is advisory and must never block successful registration.
+        await savePreferredPackage(
+          session.user.id,
+          pendingRegistration.accountPackageId ?? null
+        ).catch(() => undefined);
         await acceptSession(session);
         setPendingRegistration(null);
       },

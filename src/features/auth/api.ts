@@ -16,7 +16,14 @@ export const authApi = {
   register: (payload: PendingRegistration & { otpCode: string }) =>
     apiRequest<AuthSession>("/auth/register", {
       method: "POST",
-      body: JSON.stringify(payload),
+      // Only send fields supported by Backend dev; package choice stays local.
+      body: JSON.stringify({
+        phoneNumber: payload.phoneNumber,
+        password: payload.password,
+        fullName: payload.fullName,
+        registeredLockerId: payload.registeredLockerId,
+        otpCode: payload.otpCode,
+      }),
     }),
   login: (loginIdentifier: string, password: string) =>
     apiRequest<AuthSession>("/auth/login", {

@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import {
   Avatar,
   Button,
@@ -10,12 +10,14 @@ import {
   Typography,
 } from "heroui-native";
 import type { JSX, ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon, type GravityIconName } from "@/components/icons/gravity-icon";
+import { accountPackageApi } from "@/features/account-packages/api";
 import { useAuth } from "@/features/auth/auth-context";
+import { useMobileDataRevision } from "@/features/notifications/data-sync";
 import { deliveryRequestApi } from "@/features/delivery-requests/api";
 import type {
   DeliveryApprovalMode,
@@ -27,6 +29,23 @@ export default function ProfileScreen(): JSX.Element {
   const [profile, setProfile] = useState<ResidentApprovalProfile | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [packageName, setPackageName] = useState("Đang tải gói tài khoản...");
+  const dataRevision = useMobileDataRevision();
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    setPackageName("Đang tải gói tài khoản...");
+    void accountPackageApi
+      .getCurrent()
+      .then((subscription) => {
+        if (active) setPackageName(subscription?.planName ?? "Gói Cơ bản");
+      })
+      .catch(() => {
+        if (active) setPackageName("Không thể tải gói hiện tại · Nhấn để thử lại");
+      });
+    return () => {
+      active = false;
+    };
+  }, [user?.id, dataRevision]));
   useEffect(() => {
     void deliveryRequestApi
       .getProfile()
@@ -70,6 +89,13 @@ export default function ProfileScreen(): JSX.Element {
         </View>
         <Section title="Tài khoản">
           <FlatRow icon="user" title="Thông tin cá nhân" />
+          <Separator />
+          <FlatRow
+            icon="package"
+            title="Gói tài khoản"
+            description={packageName}
+            onPress={() => router.push("/account-package")}
+          />
           <Separator />
           <FlatRow
             icon="building"

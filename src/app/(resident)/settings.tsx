@@ -1,4 +1,5 @@
 import * as SecureStore from "expo-secure-store";
+import { router } from "expo-router";
 import { Button, ControlField, ListGroup, Separator, Switch, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { ScrollView, View } from "react-native";
@@ -18,6 +19,18 @@ export default function SettingsScreen(): JSX.Element {
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView contentContainerClassName="gap-6 px-5 pb-8 pt-4">
         <ScreenHeader title="Cài đặt" />
+        <View className="gap-2">
+          <Typography.Paragraph className="text-sm font-semibold text-muted">Tài khoản</Typography.Paragraph>
+          <ListGroup variant="transparent">
+            <ListGroup.Item onPress={() => router.push("/account-package")}>
+              <ListGroup.ItemContent>
+                <ListGroup.ItemTitle>Gói tài khoản</ListGroup.ItemTitle>
+                <ListGroup.ItemDescription>Xem hạn mức và đăng ký gói mới</ListGroup.ItemDescription>
+              </ListGroup.ItemContent>
+              <ListGroup.ItemSuffix />
+            </ListGroup.Item>
+          </ListGroup>
+        </View>
         <View className="gap-2">
           <Typography.Paragraph className="text-sm font-semibold text-muted">
             Thông báo

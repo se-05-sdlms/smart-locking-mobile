@@ -7,6 +7,8 @@ import { View } from "react-native";
 import { AuthField } from "@/components/auth/auth-field";
 import { AuthScreen } from "@/components/auth/auth-screen";
 import { GravityIcon } from "@/components/icons/gravity-icon";
+import { PackagePicker } from "@/features/account-packages/package-picker";
+import { usePackagePlans } from "@/features/account-packages/use-package-plans";
 import { authApi } from "@/features/auth/api";
 import { useAuth } from "@/features/auth/auth-context";
 import type { RegistrationLocker } from "@/features/auth/types";
@@ -117,6 +119,8 @@ export function LoginScreen(): JSX.Element {
 
 export function RegisterScreen(): JSX.Element {
   const { setPendingRegistration } = useAuth();
+  const packages = usePackagePlans();
+  const [accountPackageId, setAccountPackageId] = useState<string | null>(null);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -154,6 +158,9 @@ export function RegisterScreen(): JSX.Element {
         password,
         fullName: fullName.trim(),
         registeredLockerId: locker.value,
+        accountPackageId: packages.plans.some((plan) => plan.id === accountPackageId)
+          ? accountPackageId
+          : null,
       });
       router.push({ pathname: "/verify-otp", params: { phone: phoneNumber, flow: "register" } });
     } catch (submitError) {
@@ -242,6 +249,21 @@ export function RegisterScreen(): JSX.Element {
             </Select.Portal>
           </Select>
         </View>
+        <PackagePicker
+          plans={packages.plans}
+          selectedId={
+            packages.plans.some((plan) => plan.id === accountPackageId) ? accountPackageId : null
+          }
+          onSelect={setAccountPackageId}
+          loading={packages.loading}
+          error={packages.error}
+          onRetry={packages.reload}
+          disabled={submitting}
+        />
+        <Typography.Paragraph className="text-sm text-muted">
+          Tài khoản mới sử dụng Gói Cơ bản. Lựa chọn gói bổ sung được lưu trên thiết bị này;
+          bạn có thể đăng ký và thanh toán trong Tài khoản → Gói tài khoản sau khi xác thực.
+        </Typography.Paragraph>
         <Checkbox className="items-start" isSelected={accepted} onSelectedChange={setAccepted}>
           <Checkbox.Indicator />
           <Typography.Paragraph className="flex-1">

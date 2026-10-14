@@ -3,7 +3,7 @@ import { useFocusEffect } from "expo-router";
 import { Button, Card, Spinner, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useCallback, useRef, useState } from "react";
-import { AppState, ScrollView, View } from "react-native";
+import { Alert, ScrollView, View } from "react-native";
 
 import { ScreenHeader } from "@/components/ui/resident-ui";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
@@ -13,7 +13,12 @@ import {
   PackagePicker,
   formatPackagePrice,
 } from "@/features/account-packages/package-picker";
-import { readPreferredPackage, savePreferredPackage } from "@/features/account-packages/storage";
+import {
+  readPreferredPackage,
+  readSubscriptionCheckout,
+  savePreferredPackage,
+  saveSubscriptionCheckout,
+} from "@/features/account-packages/storage";
 import type { ResidentSubscription, SubscriptionCheckout } from "@/features/account-packages/types";
 import { usePackagePlans } from "@/features/account-packages/use-package-plans";
 import { useAuth } from "@/features/auth/auth-context";
@@ -21,6 +26,19 @@ import { useMobileDataRevision } from "@/features/notifications/data-sync";
 
 const formatDate = (value: string): string =>
   new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" }).format(new Date(value));
+
+const confirmPrice = (previous: number, amount: number): Promise<boolean> => {
+  if (previous === amount) return Promise.resolve(true);
+  return new Promise((resolve) => Alert.alert(
+    "Xác nhận số tiền thanh toán",
+    `Số tiền đã thay đổi từ ${formatPackagePrice(previous)} thành ${formatPackagePrice(amount)}. Bạn có muốn tiếp tục?`,
+    [
+      { text: "Để sau", style: "cancel", onPress: () => resolve(false) },
+      { text: `Tiếp tục · ${formatPackagePrice(amount)}`, onPress: () => resolve(true) },
+    ],
+    { cancelable: true, onDismiss: () => resolve(false) }
+  ));
+};
 
 const statusLabel = (subscription: ResidentSubscription): string => {
   if (subscription.status === "PendingPayment") return "Chờ thanh toán";
@@ -65,6 +83,9 @@ export function AccountPackageScreen(): JSX.Element {
           accountPackageApi.getHistory(),
           readPreferredPackage(user.id).catch(() => null),
         ]);
+        const restored = await Promise.all(subscriptions
+          .filter((item) => item.status === "PendingPayment")
+          .map((item) => readSubscriptionCheckout(user.id, item.id)));
         if (!active || id !== request) return;
         setCurrent(subscription);
         setHistory(subscriptions);
@@ -72,11 +93,15 @@ export function AccountPackageScreen(): JSX.Element {
           setSelectedId(preference);
           selectionLoadedFor.current = user.id;
         }
-        setCheckouts((previous) => Object.fromEntries(
-          Object.entries(previous).filter(([, payment]) => !subscriptions.some(
-            (item) => item.id === payment.subscriptionId && item.status !== "PendingPayment"
-          ))
-        ));
+        setCheckouts((previous) => {
+          const pending = Object.fromEntries(Object.entries(previous).filter(([subscriptionId]) =>
+            subscriptions.some((item) => item.id === subscriptionId && item.status === "PendingPayment")
+          ));
+          restored.forEach((payment) => {
+            if (payment) pending[payment.subscriptionId] = payment;
+          });
+          return pending;
+        });
       } catch (e) {
         if (active && id === request) {
           setLoadError(e instanceof Error ? e.message : "Không thể tải gói tài khoản.");
@@ -86,32 +111,72 @@ export function AccountPackageScreen(): JSX.Element {
       }
     };
     void load();
-    const listener = AppState.addEventListener("change", (state) => {
-      if (state === "active") void load();
-    });
     return () => {
       active = false;
-      listener.remove();
     };
   }, [user, dataRevision, revision]));
 
   const currentPlan = packages.plans.find((plan) => plan.id === current?.planId);
   const selectedPlan = packages.plans.find((plan) => plan.id === selectedId);
-  const checkout = selectedPlan ? checkouts[selectedPlan.id] : undefined;
+  const selectedPending = history.find((item) =>
+    item.planId === selectedId && item.status === "PendingPayment"
+  );
 
-  const pay = async () => {
-    if (!selectedPlan || !user || selectedPlan.price <= 0 || paymentInFlight.current) return;
+  const pay = async (
+    planId = selectedPlan?.id,
+    displayedAmount = selectedPending?.price ?? selectedPlan?.price,
+    resumeSubscriptionId = selectedPending?.id
+  ) => {
+    if (!planId || displayedAmount === undefined || !user || paymentInFlight.current) return;
     paymentInFlight.current = true;
     setPaying(true);
     setPaymentError("");
     try {
-      const payment = checkout ?? (await accountPackageApi.subscribe(selectedPlan.id));
-      // Reuse the created link if opening PayOS fails or the user returns without paying.
-      setCheckouts((previous) => ({ ...previous, [selectedPlan.id]: payment }));
+      // Check server history before every POST, including after a previous ambiguous timeout.
+      const [plans, subscriptions] = await Promise.all([
+        packages.refresh(),
+        accountPackageApi.getHistory(),
+      ]);
+      setHistory(subscriptions);
+      const pending = subscriptions.find((item) =>
+        item.status === "PendingPayment" && (resumeSubscriptionId
+          ? item.id === resumeSubscriptionId
+          : item.planId === planId)
+      );
+      let payment: SubscriptionCheckout;
+      let expectedAmount = displayedAmount;
+      if (pending) {
+        const saved = checkouts[pending.id] ?? (await readSubscriptionCheckout(user.id, pending.id));
+        if (!saved) {
+          throw new Error("Gói này đã có giao dịch chờ thanh toán. Hãy mở lại trên thiết bị đã tạo giao dịch hoặc liên hệ hỗ trợ để khôi phục liên kết. Không tạo thêm giao dịch mới.");
+        }
+        if (saved.amount !== pending.price) {
+          throw new Error("Số tiền giao dịch lưu trên thiết bị không khớp với hệ thống. Vui lòng liên hệ hỗ trợ.");
+        }
+        payment = saved;
+      } else {
+        if (resumeSubscriptionId) {
+          throw new Error("Giao dịch không còn chờ thanh toán. Hãy cập nhật để xem trạng thái mới nhất.");
+        }
+        const plan = plans.find((item) => item.id === planId);
+        if (!plan || plan.price <= 0) {
+          throw new Error("Gói không còn hỗ trợ đăng ký trả phí. Vui lòng chọn lại gói.");
+        }
+        if (!(await confirmPrice(displayedAmount, plan.price))) return;
+        expectedAmount = plan.price;
+        payment = await accountPackageApi.subscribe(plan.id);
+      }
+      setCheckouts((previous) => ({ ...previous, [payment.subscriptionId]: payment }));
       if (!/^https?:\/\//i.test(payment.checkoutUrl)) {
         throw new Error("Đường dẫn thanh toán không hợp lệ.");
       }
-      await savePreferredPackage(user.id, selectedPlan.id).catch(() => undefined);
+      if (!Number.isSafeInteger(payment.amount) || payment.amount <= 0) {
+        throw new Error("Số tiền thanh toán không hợp lệ.");
+      }
+      // Persist before opening the provider; storage failure must not create another checkout.
+      await saveSubscriptionCheckout(user.id, payment);
+      if (!(await confirmPrice(expectedAmount, payment.amount))) return;
+      await savePreferredPackage(user.id, planId).catch(() => undefined);
       await Linking.openURL(payment.checkoutUrl);
     } catch (e) {
       setPaymentError(e instanceof Error ? e.message : "Không thể mở thanh toán gói tài khoản.");
@@ -162,7 +227,7 @@ export function AccountPackageScreen(): JSX.Element {
                 </Typography.Paragraph>
               )}
               <PackageBenefit
-                icon="box"
+                icon="package"
                 text={currentPlan
                   ? `Tối đa ${currentPlan.maxActiveParcels} bưu kiện cùng lúc`
                   : current
@@ -194,15 +259,15 @@ export function AccountPackageScreen(): JSX.Element {
               Gói chỉ có hiệu lực sau khi hệ thống xác nhận thanh toán. Nếu đang có gói,
               gói mới bắt đầu sau khi thời hạn các gói đã thanh toán kết thúc.
             </Typography.Paragraph>
-            {selectedPlan.price > 0 ? (
+            {selectedPlan.price > 0 || selectedPending ? (
               <Button
                 isDisabled={paying || loading || !!loadError || packages.loading}
                 onPress={() => void pay()}
               >
                 {paying ? <Spinner size="sm" color="current" /> : null}
                 <Button.Label>
-                  {paying ? "Đang mở thanh toán..." : checkout
-                    ? "Mở lại thanh toán PayOS"
+                  {paying ? "Đang mở thanh toán..." : selectedPending
+                    ? `Mở lại thanh toán · ${formatPackagePrice(selectedPending.price)}`
                     : `Đăng ký · ${formatPackagePrice(selectedPlan.price)}`}
                 </Button.Label>
               </Button>
@@ -248,9 +313,19 @@ export function AccountPackageScreen(): JSX.Element {
                       {formatDate(item.startDate)} – {formatDate(item.endDate)}
                     </Typography.Paragraph>
                   ) : (
-                    <Typography.Paragraph className="text-sm text-muted">
-                      Chưa kích hoạt. Thời hạn được xác định sau khi xác nhận thanh toán.
-                    </Typography.Paragraph>
+                    <>
+                      <Typography.Paragraph className="text-sm text-muted">
+                        Chưa kích hoạt. Thời hạn được xác định sau khi xác nhận thanh toán.
+                      </Typography.Paragraph>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        isDisabled={paying || packages.loading}
+                        onPress={() => void pay(item.planId, item.price, item.id)}
+                      >
+                        <Button.Label>Mở lại thanh toán</Button.Label>
+                      </Button>
+                    </>
                   )}
                 </Card.Body>
               </Card>

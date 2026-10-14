@@ -1,163 +1,121 @@
-import { router } from "expo-router";
-import { Button, Card, ControlField, Skeleton, Switch, Typography } from "heroui-native";
+import { router, useFocusEffect } from "expo-router";
+import { Button, Card, ControlField, Switch, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useCallback, useEffect, useState } from "react";
-import { Image, RefreshControl, ScrollView, View } from "react-native";
-import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
-
-import { GravityIcon } from "@/components/icons/gravity-icon";
+import { View } from "react-native";
+import { ParcelImage } from "@/components/ui/parcel-image";
+import { ScreenHeader } from "@/components/ui/resident-ui";
+import { ResidentFeed } from "@/components/ui/resident-feed";
+import { useResidentFeed } from "@/features/navigation/use-resident-feed";
 import { deliveryRequestApi } from "@/features/delivery-requests/api";
 import { formatCountdown } from "@/features/delivery-requests/countdown";
-import { useMobileDataRevision } from "@/features/notifications/data-sync";
 import type {
   DeliveryApprovalMode,
   PendingDeliveryRequest,
 } from "@/features/delivery-requests/types";
-
 const dateFormatter = new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" });
-
 export function DeliveryRequestListScreen(): JSX.Element {
-  const dataRevision = useMobileDataRevision();
-  const [items, setItems] = useState<PendingDeliveryRequest[]>([]);
-  const [mode, setMode] = useState<DeliveryApprovalMode>(0);
-  const [now, setNow] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const feed = useResidentFeed(deliveryRequestApi.getPendingPage);
+  const [mode, setMode] = useState<DeliveryApprovalMode | null>(null);
+  const [now, setNow] = useState(Date.now);
   const [savingMode, setSavingMode] = useState(false);
-  const [error, setError] = useState("");
-
-  const load = useCallback(async (refresh = false): Promise<void> => {
-    if (refresh) setRefreshing(true);
-    else setLoading(true);
-    setError("");
+  const [modeError, setModeError] = useState("");
+  const loadMode = useCallback(async () => {
+    setModeError("");
     try {
-      const [requests, profile] = await Promise.all([
-        deliveryRequestApi.getPending(),
-        deliveryRequestApi.getProfile(),
-      ]);
-      setItems(requests);
-      setMode(profile.deliveryApprovalMode);
-      setNow(Date.now());
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Không thể tải yêu cầu.");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+      setMode((await deliveryRequestApi.getProfile()).deliveryApprovalMode);
+    } catch (error) {
+      setModeError(error instanceof Error ? error.message : "Không thể tải chế độ duyệt.");
     }
   }, []);
-
-  useEffect(() => {
-    const task = setTimeout(() => void load(), 0);
-    return () => clearTimeout(task);
-  }, [dataRevision, load]);
-
+  useFocusEffect(
+    useCallback(() => {
+      void loadMode();
+    }, [loadMode])
+  );
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
-
   async function changeMode(isManual: boolean): Promise<void> {
-    const nextMode: DeliveryApprovalMode = isManual ? 1 : 0;
-    const previous = mode;
-    setMode(nextMode);
+    if (savingMode || mode === null) return;
     setSavingMode(true);
-    setError("");
+    setModeError("");
     try {
-      const profile = await deliveryRequestApi.updateApprovalMode(nextMode);
-      setMode(profile.deliveryApprovalMode);
-    } catch (updateError) {
-      setMode(previous);
-      setError(updateError instanceof Error ? updateError.message : "Không thể đổi chế độ duyệt.");
+      setMode((await deliveryRequestApi.updateApprovalMode(isManual ? 1 : 0)).deliveryApprovalMode);
+    } catch (error) {
+      setModeError(error instanceof Error ? error.message : "Không thể lưu chế độ duyệt.");
     } finally {
       setSavingMode(false);
     }
   }
-
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
-      <ScrollView
-        contentContainerClassName="gap-4 px-5 pb-8 pt-4"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} />
-        }
-      >
-        <View className="gap-1">
-          <Typography.Heading className="text-3xl">Yêu cầu giao hàng</Typography.Heading>
+    <ResidentFeed
+      {...feed}
+      onRefresh={() => {
+        feed.refresh();
+        void loadMode();
+      }}
+      onLoadMore={feed.loadMore}
+      keyExtractor={(item) => item.requestId}
+      renderItem={({ item }) => <RequestCard item={item} now={now} />}
+      empty="Không có yêu cầu chờ duyệt."
+      icon="package"
+      header={
+        <>
+          <ScreenHeader title="Yêu cầu giao hàng" />
           <Typography.Paragraph className="text-muted">
             Kiểm tra ảnh kiện hàng trước khi cho phép shipper sử dụng tủ.
           </Typography.Paragraph>
-        </View>
-
-        <Card>
-          <Card.Body>
-            <ControlField
-              isSelected={mode === 1}
-              isDisabled={loading || savingMode}
-              onSelectedChange={(selected) => void changeMode(selected)}
-            >
-              <View className="flex-1 gap-1">
-                <Typography.Heading className="text-base">Phê duyệt thủ công</Typography.Heading>
-                <Typography.Paragraph className="text-sm text-muted">
-                  {mode === 1 ? "Bạn duyệt từng yêu cầu" : "Hệ thống tự động phê duyệt"}
-                </Typography.Paragraph>
-              </View>
-              <ControlField.Indicator>
-                <Switch />
-              </ControlField.Indicator>
-            </ControlField>
-          </Card.Body>
-        </Card>
-
-        {error ? (
           <Card>
-            <Card.Body className="gap-3">
-              <Typography.Paragraph className="text-danger">{error}</Typography.Paragraph>
-              <Button size="sm" variant="secondary" onPress={() => void load()}>
+            <Card.Body>
+              <ControlField
+                isSelected={mode === 1}
+                isDisabled={mode === null || savingMode || !!modeError}
+                onSelectedChange={(selected) => void changeMode(selected)}
+              >
+                <View className="flex-1 gap-1">
+                  <Typography.Heading className="text-base">Phê duyệt thủ công</Typography.Heading>
+                  <Typography.Paragraph className="text-sm text-muted">
+                    {mode === null
+                      ? "Đang tải chế độ duyệt..."
+                      : mode === 1
+                        ? "Bạn duyệt từng yêu cầu"
+                        : "Hệ thống tự động phê duyệt"}
+                  </Typography.Paragraph>
+                </View>
+                <ControlField.Indicator>
+                  <Switch />
+                </ControlField.Indicator>
+              </ControlField>
+            </Card.Body>
+          </Card>
+          {modeError ? (
+            <View className="gap-2">
+              <Typography.Paragraph className="text-danger">{modeError}</Typography.Paragraph>
+              <Button variant="secondary" onPress={() => void loadMode()}>
                 <Button.Label>Thử lại</Button.Label>
               </Button>
-            </Card.Body>
-          </Card>
-        ) : null}
-
-        {loading
-          ? [0, 1].map((value) => <Skeleton key={value} className="h-52 rounded-2xl" />)
-          : null}
-
-        {!loading && !error && items.length === 0 ? (
-          <Card>
-            <Card.Body className="items-center gap-3 py-10">
-              <GravityIcon name="package" size={40} />
-              <Typography.Heading className="text-lg">
-                Không có yêu cầu chờ duyệt
-              </Typography.Heading>
-              <Typography.Paragraph className="text-center text-muted">
-                Yêu cầu mới từ shipper sẽ xuất hiện tại đây.
-              </Typography.Paragraph>
-            </Card.Body>
-          </Card>
-        ) : null}
-
-        {!loading && !error
-          ? items.map((item) => <RequestCard key={item.requestId} item={item} now={now} />)
-          : null}
-      </ScrollView>
-    </SafeAreaView>
+            </View>
+          ) : null}
+        </>
+      }
+    />
   );
 }
-
 function RequestCard({ item, now }: { item: PendingDeliveryRequest; now: number }): JSX.Element {
   return (
     <Card>
       {item.parcelImageUrl ? (
-        <Image
-          source={{ uri: item.parcelImageUrl }}
+        <ParcelImage
+          uri={item.parcelImageUrl}
           className="h-40 w-full rounded-t-2xl bg-default"
-          resizeMode="cover"
+          contentFit="cover"
           accessibilityLabel="Ảnh bưu kiện do shipper cung cấp"
         />
       ) : null}
-      <Card.Header className="flex-row items-center justify-between gap-3">
-        <View className="flex-1">
+      <Card.Header className="flex-row flex-wrap items-center justify-between gap-3">
+        <View className="min-w-0 flex-1">
           <Card.Title>Locker {item.lockerCode}</Card.Title>
           <Typography.Paragraph className="text-sm text-muted">
             {item.lockerAddress}

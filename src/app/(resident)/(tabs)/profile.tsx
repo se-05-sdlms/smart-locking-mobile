@@ -31,21 +31,23 @@ export default function ProfileScreen(): JSX.Element {
   const [error, setError] = useState("");
   const [packageName, setPackageName] = useState("Đang tải gói tài khoản...");
   const dataRevision = useMobileDataRevision();
-  useFocusEffect(useCallback(() => {
-    let active = true;
-    setPackageName("Đang tải gói tài khoản...");
-    void accountPackageApi
-      .getCurrent()
-      .then((subscription) => {
-        if (active) setPackageName(subscription?.planName ?? "Gói Cơ bản");
-      })
-      .catch(() => {
-        if (active) setPackageName("Không thể tải gói hiện tại · Nhấn để thử lại");
-      });
-    return () => {
-      active = false;
-    };
-  }, [user?.id, dataRevision]));
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      setPackageName("Đang tải gói tài khoản...");
+      void accountPackageApi
+        .getCurrent()
+        .then((subscription) => {
+          if (active) setPackageName(subscription?.planName ?? "Gói Cơ bản");
+        })
+        .catch(() => {
+          if (active) setPackageName("Không thể tải gói hiện tại · Nhấn để thử lại");
+        });
+      return () => {
+        active = false;
+      };
+    }, [user?.id, dataRevision])
+  );
   useEffect(() => {
     void deliveryRequestApi
       .getProfile()
@@ -74,7 +76,10 @@ export default function ProfileScreen(): JSX.Element {
     .toUpperCase();
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
-      <ScrollView contentContainerClassName="gap-4 px-5 pb-5 pt-4">
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="gap-4 px-5 pb-5 pt-4"
+      >
         <Typography.Heading className="text-3xl">Tài khoản</Typography.Heading>
         <View className="flex-row items-center gap-4">
           <Avatar size="lg" variant="soft" color="accent">
@@ -127,12 +132,6 @@ export default function ProfileScreen(): JSX.Element {
             title="Sự cố của tôi"
             onPress={() => router.push("/incidents")}
           />
-          <Separator />
-          <FlatRow
-            icon="receipt"
-            title="Lịch sử thanh toán"
-            onPress={() => router.push("/payments")}
-          />
         </Section>
         <Section title="Ứng dụng">
           <FlatRow icon="settings" title="Cài đặt" onPress={() => router.push("/settings")} />
@@ -170,7 +169,11 @@ function FlatRow({
   onPress?: () => void;
 }): JSX.Element {
   return (
-    <ListGroup.Item onPress={onPress}>
+    <ListGroup.Item
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole={onPress ? "button" : "text"}
+    >
       <ListGroup.ItemPrefix>
         <GravityIcon name={icon} size={20} />
       </ListGroup.ItemPrefix>
@@ -178,7 +181,11 @@ function FlatRow({
         <ListGroup.ItemTitle>{title}</ListGroup.ItemTitle>
         {description ? <ListGroup.ItemDescription>{description}</ListGroup.ItemDescription> : null}
       </ListGroup.ItemContent>
-      {onPress ? <ListGroup.ItemSuffix /> : null}
+      {onPress ? (
+        <ListGroup.ItemSuffix>
+          <GravityIcon name="chevron-right" size={18} />
+        </ListGroup.ItemSuffix>
+      ) : null}
     </ListGroup.Item>
   );
 }

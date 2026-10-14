@@ -1,14 +1,12 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { Button, Checkbox, InputOTP, Label, LinkButton, Select, Typography } from "heroui-native";
 import type { JSX } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 
 import { AuthField } from "@/components/auth/auth-field";
 import { AuthScreen } from "@/components/auth/auth-screen";
 import { GravityIcon } from "@/components/icons/gravity-icon";
-import { PackagePicker } from "@/features/account-packages/package-picker";
-import { usePackagePlans } from "@/features/account-packages/use-package-plans";
 import { authApi } from "@/features/auth/api";
 import { useAuth } from "@/features/auth/auth-context";
 import type { RegistrationLocker } from "@/features/auth/types";
@@ -46,6 +44,7 @@ export function LoginScreen(): JSX.Element {
   const [submitting, setSubmitting] = useState(false);
 
   async function submit(): Promise<void> {
+    if (submitting) return;
     if (!isValidPhone(phone) || password.length < 8) {
       setError("Vui lòng nhập số điện thoại hợp lệ và mật khẩu từ 8 ký tự.");
       return;
@@ -119,8 +118,6 @@ export function LoginScreen(): JSX.Element {
 
 export function RegisterScreen(): JSX.Element {
   const { setPendingRegistration } = useAuth();
-  const packages = usePackagePlans();
-  const [accountPackageId, setAccountPackageId] = useState<string | null>(null);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -158,9 +155,7 @@ export function RegisterScreen(): JSX.Element {
         password,
         fullName: fullName.trim(),
         registeredLockerId: locker.value,
-        accountPackageId: packages.plans.some((plan) => plan.id === accountPackageId)
-          ? accountPackageId
-          : null,
+        accountPackageId: null,
       });
       router.push({ pathname: "/verify-otp", params: { phone: phoneNumber, flow: "register" } });
     } catch (submitError) {
@@ -249,20 +244,8 @@ export function RegisterScreen(): JSX.Element {
             </Select.Portal>
           </Select>
         </View>
-        <PackagePicker
-          plans={packages.plans}
-          selectedId={
-            packages.plans.some((plan) => plan.id === accountPackageId) ? accountPackageId : null
-          }
-          onSelect={setAccountPackageId}
-          loading={packages.loading}
-          error={packages.error}
-          onRetry={packages.reload}
-          disabled={submitting}
-        />
         <Typography.Paragraph className="text-sm text-muted">
-          Tài khoản mới sử dụng Gói Cơ bản. Lựa chọn gói bổ sung được lưu trên thiết bị này;
-          bạn có thể đăng ký và thanh toán trong Tài khoản → Gói tài khoản sau khi xác thực.
+          Bạn bắt đầu với Gói Cơ bản. Có thể chọn gói bổ sung trong Tài khoản sau khi đăng ký.
         </Typography.Paragraph>
         <Checkbox className="items-start" isSelected={accepted} onSelectedChange={setAccepted}>
           <Checkbox.Indicator />
@@ -296,7 +279,16 @@ export function VerifyOtpScreen(): JSX.Element {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const [resending, setResending] = useState(false);
+  const [cooldown, setCooldown] = useState(60);
+  const resendPending = useRef(false);
+  useEffect(() => {
+    const timer = setInterval(() => setCooldown((value) => Math.max(0, value - 1)), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   async function submit(): Promise<void> {
+    if (submitting || resendPending.current || otp.length !== 6) return;
     setSubmitting(true);
     setError("");
     setMessage("");
@@ -318,13 +310,22 @@ export function VerifyOtpScreen(): JSX.Element {
   }
 
   async function resend(): Promise<void> {
+    if (resendPending.current || cooldown > 0 || submitting) return;
+    resendPending.current = true;
+    // A failed response can still mean the server sent a code; throttle attempts too.
+    setCooldown(60);
+    setResending(true);
     setError("");
+    setMessage("");
     try {
       if (flow === "reset") await authApi.forgotPassword(String(phone));
       else await authApi.requestRegistrationOtp(String(phone));
       setMessage("Mã xác thực mới đã được gửi.");
     } catch (resendError) {
       setError(getErrorMessage(resendError));
+    } finally {
+      resendPending.current = false;
+      setResending(false);
     }
   }
 
@@ -352,12 +353,21 @@ export function VerifyOtpScreen(): JSX.Element {
         ) : null}
         <View className="items-center gap-1">
           <Typography.Paragraph className="text-muted">Bạn chưa nhận được mã?</Typography.Paragraph>
-          <LinkButton onPress={() => void resend()}>Gửi lại mã</LinkButton>
+          <LinkButton
+            isDisabled={resending || submitting || cooldown > 0}
+            onPress={() => void resend()}
+          >
+            {resending
+              ? "Đang gửi mã..."
+              : cooldown > 0
+                ? `Gửi lại sau ${cooldown}s`
+                : "Gửi lại mã"}
+          </LinkButton>
         </View>
         <Button
           className="w-full"
           size="lg"
-          isDisabled={otp.length !== 6 || submitting}
+          isDisabled={otp.length !== 6 || submitting || resending}
           onPress={() => void submit()}
         >
           <Button.Label>{submitting ? "Đang xác thực..." : "Xác nhận"}</Button.Label>

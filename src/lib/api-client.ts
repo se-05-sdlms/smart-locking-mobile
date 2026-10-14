@@ -17,6 +17,10 @@ export const pageItems = <T>(response: PageResponse<T>): T[] =>
   Array.isArray(response) ? response : response.items;
 
 export class ApiError extends Error {
+  get retryable(): boolean {
+    return this.status === 0 || this.status === 429 || this.status >= 500;
+  }
+
   constructor(
     message: string,
     public readonly status: number
@@ -58,9 +62,24 @@ async function refreshSession(): Promise<AuthSession> {
     });
     await saveSession(next);
     return next;
-  })().finally(() => {
-    refreshPromise = null;
-  });
+  })()
+    .catch(async (error: unknown) => {
+      // The current backend returns 400 for an explicitly invalid refresh token.
+      const rejected =
+        error instanceof ApiError &&
+        (error.status === 401 ||
+          error.status === 403 ||
+          (error.status === 400 && error.message === "Invalid refresh token."));
+      if (rejected) {
+        await clearSession();
+        sessionExpiredHandler?.();
+        throw new ApiError("Phiên đăng nhập đã hết hạn.", 401);
+      }
+      throw error;
+    })
+    .finally(() => {
+      refreshPromise = null;
+    });
 
   return refreshPromise;
 }
@@ -71,7 +90,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const timeout = setTimeout(() => controller.abort(), ENV.API_TIMEOUT);
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
-  if (options.body && !(options.body instanceof FormData)) headers.set("Content-Type", "application/json");
+  if (options.body && !(options.body instanceof FormData))
+    headers.set("Content-Type", "application/json");
 
   if (authenticated) {
     const session = await readSession();
@@ -85,12 +105,11 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       signal: controller.signal,
     });
     if (response.status === 401 && authenticated && retry !== false) {
-      try {
+      clearTimeout(timeout);
+      const latest = await readSession();
+      // Another request may already have rotated the token before this 401 arrived.
+      if (!latest?.accessToken || headers.get("Authorization") === `Bearer ${latest.accessToken}`) {
         await refreshSession();
-      } catch {
-        await clearSession();
-        sessionExpiredHandler?.();
-        throw new ApiError("Phiên đăng nhập đã hết hạn.", 401);
       }
       return apiRequest<T>(path, { ...options, retry: false });
     }

@@ -40,7 +40,7 @@ export function AuthField({
           </InputGroup.Suffix>
         )}
       </InputGroup>
-      {error && <FieldError>{error}</FieldError>}
+      {error ? <FieldError>{error}</FieldError> : null}
     </TextField>
   );
 }

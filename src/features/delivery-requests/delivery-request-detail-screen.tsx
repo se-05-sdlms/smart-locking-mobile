@@ -1,8 +1,9 @@
+import { ParcelImage } from "@/components/ui/parcel-image";
 import { router } from "expo-router";
 import { Button, Card, Skeleton, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
-import { Image, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
@@ -57,7 +58,10 @@ export function DeliveryRequestDetailScreen({ id }: { id: string }): JSX.Element
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerClassName="gap-4 px-5 pb-8 pt-4">
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="gap-4 px-5 pb-8 pt-4"
+      >
         <ScreenHeader title="Xác nhận bưu kiện đến" />
 
         {loading ? <Skeleton className="h-96 rounded-2xl" /> : null}
@@ -97,10 +101,10 @@ export function DeliveryRequestDetailScreen({ id }: { id: string }): JSX.Element
             </Card>
             <Card>
               {request.parcelImageUrl ? (
-                <Image
-                  source={{ uri: request.parcelImageUrl }}
+                <ParcelImage
+                  uri={request.parcelImageUrl}
                   className="h-64 w-full rounded-t-2xl bg-default"
-                  resizeMode="cover"
+                  contentFit="cover"
                   accessibilityLabel="Ảnh bưu kiện"
                 />
               ) : (

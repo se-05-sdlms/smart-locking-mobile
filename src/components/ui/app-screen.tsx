@@ -1,5 +1,6 @@
 import type { JSX, ReactNode } from "react";
-import { SafeAreaView, View } from "react-native";
+import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export function AppScreen({ children }: { children: ReactNode }): JSX.Element {
   return (

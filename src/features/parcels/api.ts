@@ -7,6 +7,11 @@ import type {
 import { apiRequest, pageItems, type PageResponse } from "@/lib/api-client";
 
 export const parcelApi = {
+  getHistoryPage: (page = 1) =>
+    apiRequest<PageResponse<ParcelListItem>>(
+      `/parcels?view=History&pageNumber=${page}&pageSize=30`,
+      { authenticated: true }
+    ),
   getActive: () =>
     apiRequest<PageResponse<ParcelListItem>>("/parcels?view=Active&pageSize=100", {
       authenticated: true,

@@ -40,7 +40,10 @@ export default function PaymentScreen(): JSX.Element {
   };
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerClassName="gap-5 px-5 pb-10 pt-4">
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="gap-5 px-5 pb-10 pt-4"
+      >
         <ScreenHeader title="Thanh toán phí quá hạn" />
         {loading ? <Skeleton className="h-80 rounded-3xl" /> : null}
         {parcel ? (

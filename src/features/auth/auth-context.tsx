@@ -6,7 +6,7 @@ import { authApi } from "@/features/auth/api";
 import { clearSession, readSession, saveSession } from "@/features/auth/storage";
 import type { AuthSession, PendingRegistration, UserProfile } from "@/features/auth/types";
 import { deactivatePushInstallation } from "@/features/notifications/push";
-import { onSessionExpired } from "@/lib/api-client";
+import { ApiError, onSessionExpired } from "@/lib/api-client";
 
 type AuthContextValue = {
   initializing: boolean;
@@ -34,10 +34,18 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
   useEffect(() => {
     const unsubscribe = onSessionExpired(() => setUser(null));
     void (async () => {
+      let cached: AuthSession | null = null;
       try {
-        if (await readSession()) setUser(await authApi.me());
-      } catch {
-        await clearSession();
+        cached = await readSession();
+        if (cached) setUser(await authApi.me());
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          await clearSession();
+          setUser(null);
+        } else if (cached) {
+          // Keep the resident session available during a network/server outage.
+          setUser(cached.user);
+        }
       } finally {
         setInitializing(false);
       }

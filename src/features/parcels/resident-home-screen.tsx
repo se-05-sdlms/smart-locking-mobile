@@ -1,8 +1,8 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Button, Card, PressableFeedback, Skeleton, Typography } from "heroui-native";
 import type { JSX } from "react";
-import { useCallback, useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { useCallback, useState } from "react";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { BoxoraLogo } from "@/components/auth/boxora-logo";
@@ -27,7 +27,7 @@ export function ResidentHomeContent(): JSX.Element {
     try {
       const [active, pending] = await Promise.all([
         parcelApi.getActive(),
-        deliveryRequestApi.getPending().catch(() => []),
+        deliveryRequestApi.getPending(),
       ]);
       setParcels(active);
       setRequest(pending[0] ?? null);
@@ -38,19 +38,23 @@ export function ResidentHomeContent(): JSX.Element {
     }
   }, []);
 
-  useEffect(() => {
-    const task = setTimeout(() => void load(), 0);
-    return () => clearTimeout(task);
-  }, [dataRevision, load]);
+  useFocusEffect(
+    useCallback(() => {
+      const task = setTimeout(() => void load(), 0);
+      return () => clearTimeout(task);
+    }, [dataRevision, load])
+  );
 
   const featured = parcels[0];
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
       <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void load()} />}
         contentContainerClassName="gap-5 px-5 pb-6 pt-3"
         showsVerticalScrollIndicator={false}
       >
-        <View className="flex-row items-center justify-between">
+        <View className="flex-row flex-wrap items-center justify-between gap-2">
           <BoxoraLogo compact />
           <Button
             isIconOnly
@@ -90,7 +94,7 @@ export function ResidentHomeContent(): JSX.Element {
         ) : null}
 
         <View className="gap-3">
-          <View className="flex-row items-center justify-between">
+          <View className="flex-row flex-wrap items-center justify-between gap-2">
             <Typography.Heading className="text-2xl">Đồ cần nhận</Typography.Heading>
             {parcels.length > 1 ? (
               <Typography.Paragraph className="text-sm text-muted">
@@ -151,9 +155,15 @@ function FeaturedParcel({ parcel }: { parcel: ParcelListItem }): JSX.Element {
           <View className="h-20 w-20 items-center justify-center rounded-2xl bg-accent-soft">
             <GravityIcon name="package" size={38} tone="accent" />
           </View>
-          <View className="flex-1 gap-1">
-            <View className="flex-row items-start justify-between gap-2">
-              <Typography.Heading className="text-lg">{parcel.parcelCode}</Typography.Heading>
+          <View className="min-w-0 flex-1 gap-2">
+            <View className="min-w-0 gap-2">
+              <Typography.Heading
+                className="min-w-0 text-lg"
+                numberOfLines={1}
+                ellipsizeMode="middle"
+              >
+                {parcel.parcelCode}
+              </Typography.Heading>
               <StatusBadge
                 label={overdue ? "Quá hạn" : "Sẵn sàng nhận"}
                 tone={overdue ? "danger" : "success"}
@@ -186,7 +196,9 @@ function CompactParcel({ parcel }: { parcel: ParcelListItem }): JSX.Element {
             <GravityIcon name="package" />
           </View>
           <View className="flex-1">
-            <Typography.Heading className="text-base">{parcel.parcelCode}</Typography.Heading>
+            <Typography.Heading className="text-base" numberOfLines={1} ellipsizeMode="middle">
+              {parcel.parcelCode}
+            </Typography.Heading>
             <Typography.Paragraph className="text-sm text-muted">
               {parcel.lockerCode} · Ngăn {parcel.compartmentCode}
             </Typography.Paragraph>

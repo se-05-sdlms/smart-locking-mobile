@@ -1,8 +1,9 @@
+import { ParcelImage } from "@/components/ui/parcel-image";
 import { useLocalSearchParams } from "expo-router";
 import { Card, Skeleton, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
-import { Image, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { ScreenHeader } from "@/components/ui/resident-ui";
@@ -22,7 +23,10 @@ export default function IncidentDetailScreen(): JSX.Element {
   }, [id]);
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerClassName="gap-5 px-5 pb-10 pt-4">
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="gap-5 px-5 pb-10 pt-4"
+      >
         <ScreenHeader title="Chi tiết sự cố" />
         {!item && !error ? <Skeleton className="h-96 rounded-3xl" /> : null}
         {item ? (
@@ -46,7 +50,7 @@ export default function IncidentDetailScreen(): JSX.Element {
                 <Meta label="Loại sự cố" value={item.type} />
                 <Typography.Paragraph>{item.description}</Typography.Paragraph>
                 {item.evidenceUrl ? (
-                  <Image source={{ uri: item.evidenceUrl }} className="h-48 w-full rounded-2xl" />
+                  <ParcelImage uri={item.evidenceUrl} className="h-48 w-full rounded-2xl" />
                 ) : null}
               </Card.Body>
             </Card>

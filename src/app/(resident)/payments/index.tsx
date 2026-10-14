@@ -8,14 +8,18 @@ import { ScreenHeader } from "@/components/ui/resident-ui";
 export default function PaymentHistoryScreen(): JSX.Element {
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerClassName="gap-5 px-5 pb-10 pt-4">
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="gap-5 px-5 pb-10 pt-4"
+      >
         <ScreenHeader title="Lịch sử thanh toán" />
         <Card>
           <Card.Body className="items-center gap-3 py-10">
             <GravityIcon name="receipt" size={36} />
-            <Typography.Heading className="text-lg">Chưa có giao dịch</Typography.Heading>
+            <Typography.Heading className="text-lg">Lịch sử chưa khả dụng</Typography.Heading>
             <Typography.Paragraph className="text-center text-muted">
-              Các khoản phí đã thanh toán sẽ xuất hiện tại đây.
+              Ứng dụng chưa hỗ trợ tải danh sách giao dịch. Bạn vẫn có thể xem từng giao dịch từ
+              liên kết thanh toán.
             </Typography.Paragraph>
           </Card.Body>
         </Card>

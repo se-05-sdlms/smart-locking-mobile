@@ -1,8 +1,9 @@
+import { ParcelImage } from "@/components/ui/parcel-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button, Card, Skeleton, Typography } from "heroui-native";
 import type { JSX, ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { Image, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
@@ -43,11 +44,16 @@ export function ParcelDetailContent(): JSX.Element {
     parcel.overdueAmount !== null && parcel.overdueChargeStatus === "Outstanding";
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerClassName="gap-4 px-5 pb-8 pt-4">
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="gap-4 px-5 pb-8 pt-4"
+      >
         <View className="gap-3">
           <ScreenHeader title="Chi tiết bưu kiện" />
-          <View className="flex-row items-center justify-between gap-3">
-            <Typography.Heading className="text-xl">{parcel.parcelCode}</Typography.Heading>
+          <View className="gap-2">
+            <Typography.Heading className="text-xl" selectable>
+              {parcel.parcelCode}
+            </Typography.Heading>
             <StatusBadge
               label={statusLabel(parcel.status)}
               tone={parcel.status === "Overdue" ? "danger" : "success"}
@@ -56,10 +62,10 @@ export function ParcelDetailContent(): JSX.Element {
         </View>
 
         {parcel.parcelImageUrl && !imageFailed ? (
-          <Image
-            source={{ uri: parcel.parcelImageUrl }}
+          <ParcelImage
+            uri={parcel.parcelImageUrl}
             className="h-40 w-full rounded-3xl bg-default"
-            resizeMode="cover"
+            contentFit="cover"
             onError={() => setImageFailed(true)}
             accessibilityLabel={`Ảnh bưu kiện ${parcel.parcelCode}`}
           />

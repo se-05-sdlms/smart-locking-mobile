@@ -54,7 +54,7 @@ export default function PaymentDetailScreen(): JSX.Element {
               <Typography.Heading className="text-2xl">
                 {success ? "Đã thanh toán" : "Đang xử lý"}
               </Typography.Heading>
-              <Typography.Heading className="text-4xl text-accent">
+              <Typography.Heading className="text-4xl text-link">
                 {new Intl.NumberFormat("vi-VN").format(item.amount)}đ
               </Typography.Heading>
             </View>

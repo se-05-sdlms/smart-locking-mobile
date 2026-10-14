@@ -57,6 +57,7 @@ export function DeliveryRequestListScreen(): JSX.Element {
         void loadMode();
       }}
       onLoadMore={feed.loadMore}
+      onRetryMore={feed.retryMore}
       keyExtractor={(item) => item.requestId}
       renderItem={({ item }) => <RequestCard item={item} now={now} />}
       empty="Không có yêu cầu chờ duyệt."

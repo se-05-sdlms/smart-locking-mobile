@@ -47,6 +47,7 @@ function harness(transport, timeout = 1000) {
       if (id === "@/config/env")
         return { ENV: { API_URL: "https://example.test/api", API_TIMEOUT: timeout } };
       if (id === "@/features/auth/storage") return storage;
+      if (id === "@/lib/text-encoding-diagnostics") return { diagnoseApiText: () => {} };
       throw new Error(`Unexpected import: ${id}`);
     },
   });

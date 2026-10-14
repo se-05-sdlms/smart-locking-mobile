@@ -33,9 +33,11 @@ export function ReturnListContent(): JSX.Element {
       items={visible}
       onRefresh={feed.refresh}
       onLoadMore={feed.loadMore}
+      onRetryMore={feed.retryMore}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => <ReturnRow item={item} />}
-      empty="Chưa có đồ trong mục này."
+      emptyTitle="Chưa có đồ trong mục này"
+      empty="Đồ gửi phù hợp sẽ xuất hiện tại đây."
       icon="send"
       header={
         <>
@@ -46,7 +48,7 @@ export function ReturnListContent(): JSX.Element {
             </Button>
           </View>
           <Typography.Paragraph className="text-muted">
-            Theo dõi đồ gửi từ lúc đặt vào tủ đến khi được lấy.
+            Theo dõi đồ đã gửi và trạng thái nhận.
           </Typography.Paragraph>
           <Tabs value={filter} onValueChange={(value) => setFilter(value as Filter)}>
             <Tabs.List>
@@ -71,6 +73,8 @@ function ReturnRow({ item }: { item: ReturnRequestItem }): JSX.Element {
   const state = returnState(item);
   return (
     <PressableFeedback
+      accessibilityRole="button"
+      accessibilityLabel={`Xem đồ gửi ${item.pickupCode || item.lockerCode}`}
       onPress={() => router.push({ pathname: "/returns/[id]", params: { id: item.id } })}
     >
       <View className="border-b border-separator">

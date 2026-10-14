@@ -22,7 +22,7 @@ export function ScreenHeader({
 export function IncidentAction({ onPress }: { onPress: () => void }): JSX.Element {
   return (
     <LinkButton className="self-center px-3 py-2" onPress={onPress}>
-      <LinkButton.Label className="text-accent underline">Báo sự cố</LinkButton.Label>
+      <LinkButton.Label className="text-link underline">Báo sự cố</LinkButton.Label>
     </LinkButton>
   );
 }
@@ -69,7 +69,7 @@ export function FlowSteps({ labels, active }: { labels: string[]; active: number
             <Typography.Paragraph
               className={
                 selected
-                  ? "mt-1 text-center text-xs font-semibold text-accent"
+                  ? "mt-1 text-center text-xs font-semibold text-link"
                   : "mt-1 text-center text-xs text-muted"
               }
             >

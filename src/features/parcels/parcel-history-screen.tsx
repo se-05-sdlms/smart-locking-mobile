@@ -82,11 +82,23 @@ export function ParcelHistoryContent(): JSX.Element {
         .map((feed) => feed.error)
         .filter(Boolean)
         .join("\n")}
+      paginationError={relevant
+        .map((feed) => feed.paginationError)
+        .filter(Boolean)
+        .join("\n")}
+      onRetryMore={() =>
+        relevant.forEach((feed) => {
+          if (feed.paginationError) feed.retryMore();
+        })
+      }
       onRefresh={() => relevant.forEach((feed) => feed.refresh())}
       onLoadMore={() => relevant.forEach((feed) => feed.loadMore())}
+      emptyTitle={query ? "Không có kết quả tìm kiếm" : "Chưa có lịch sử"}
       empty={
         query
-          ? "Không tìm thấy hoạt động phù hợp. Bạn có thể tải thêm lịch sử bên dưới."
+          ? relevant.some((feed) => feed.hasMore)
+            ? "Chưa tìm thấy trong lịch sử đã tải. Tải thêm để tìm hoạt động cũ hơn."
+            : "Thử tìm bằng mã bưu kiện, tủ hoặc ngăn khác."
           : "Chưa có hoạt động trong mục này."
       }
       icon="clock"
@@ -122,7 +134,11 @@ export function ParcelHistoryContent(): JSX.Element {
 
 function IncomingRow({ parcel }: { parcel: ParcelListItem }): JSX.Element {
   return (
-    <PressableFeedback onPress={() => router.push(`/parcels/${parcel.id}`)}>
+    <PressableFeedback
+      accessibilityRole="button"
+      accessibilityLabel={`Xem bưu kiện ${parcel.parcelCode}`}
+      onPress={() => router.push(`/parcels/${parcel.id}`)}
+    >
       <View className="border-b border-separator">
         <View className="flex-row items-center gap-3 py-4">
           <View className="h-16 w-16 items-center justify-center rounded-xl bg-accent-soft">
@@ -155,6 +171,8 @@ function OutgoingRow({ item }: { item: ReturnRequestItem }): JSX.Element {
   const label = item.status === 3 ? "Đã lấy" : item.status === 4 ? "Đã hủy" : "Chờ lấy";
   return (
     <PressableFeedback
+      accessibilityRole="button"
+      accessibilityLabel={`Xem đồ gửi ${item.pickupCode || item.lockerCode}`}
       onPress={() => router.push({ pathname: "/returns/[id]", params: { id: item.id } })}
     >
       <View className="border-b border-separator">

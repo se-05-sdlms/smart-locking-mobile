@@ -21,7 +21,7 @@ export default function ResidentTabsLayout(): JSX.Element {
       iconColor={{ default: palette.muted, selected: palette.accent }}
       labelStyle={{
         default: { color: palette.muted, fontSize: 12 },
-        selected: { color: palette.accent, fontWeight: "600" },
+        selected: { color: palette.accentText, fontWeight: "600" },
       }}
       indicatorColor={palette.soft}
       labelVisibilityMode="labeled"

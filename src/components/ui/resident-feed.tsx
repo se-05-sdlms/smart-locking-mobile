@@ -2,6 +2,7 @@ import { Button, Spinner } from "heroui-native";
 import type { ReactElement, ReactNode } from "react";
 import { FlatList, RefreshControl, View, type ListRenderItem } from "react-native";
 
+import { ActionError } from "@/components/ui/action-error";
 import { ListFeedback } from "@/components/ui/list-feedback";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 import { residentLayout } from "@/theme/tokens";
@@ -15,6 +16,9 @@ export function ResidentFeed<T>({
   loading,
   refreshing,
   error,
+  paginationError = "",
+  emptyTitle,
+  onRetryMore,
   onRefresh,
   empty,
   icon,
@@ -30,6 +34,9 @@ export function ResidentFeed<T>({
   loading: boolean;
   refreshing: boolean;
   error: string;
+  paginationError?: string;
+  emptyTitle?: string;
+  onRetryMore?: () => void;
   onRefresh: () => void;
   empty: string;
   icon: GravityIconName;
@@ -58,9 +65,11 @@ export function ResidentFeed<T>({
         ListHeaderComponent={<View className="gap-4 pb-5">{header}</View>}
         ListEmptyComponent={
           <ListFeedback
-            loading={loading}
+            loading={loading || loadingMore}
             error={error}
             empty={empty}
+            emptyTitle={emptyTitle}
+            busy={refreshing}
             icon={icon}
             onRetry={onRefresh}
           />
@@ -68,18 +77,26 @@ export function ResidentFeed<T>({
         ListFooterComponent={
           <View className="gap-3 py-4">
             {items.length > 0 && error ? (
-              <ListFeedback
-                loading={false}
-                error={error}
-                empty={empty}
-                icon={icon}
-                onRetry={onRefresh}
+              <ActionError compact message={error} busy={refreshing} onRetry={onRefresh} />
+            ) : null}
+            {paginationError ? (
+              <ActionError
+                compact
+                title="Chưa tải được trang tiếp theo"
+                message={paginationError}
+                busy={loadingMore}
+                onRetry={onRetryMore}
               />
             ) : null}
             {loadingMore ? (
               <Spinner accessibilityLabel="Đang tải thêm" />
-            ) : hasMore && !error ? (
-              <Button variant="ghost" onPress={onLoadMore}>
+            ) : hasMore && !error && !paginationError ? (
+              <Button
+                variant="ghost"
+                className="min-h-12"
+                isDisabled={refreshing || loadingMore}
+                onPress={onLoadMore}
+              >
                 <Button.Label>Tải thêm</Button.Label>
               </Button>
             ) : null}

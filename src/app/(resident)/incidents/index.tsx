@@ -15,6 +15,7 @@ export default function IncidentListScreen(): JSX.Element {
       {...feed}
       onRefresh={feed.refresh}
       onLoadMore={feed.loadMore}
+      onRetryMore={feed.retryMore}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => <IncidentRow item={item} />}
       empty="Bạn chưa báo cáo sự cố nào."

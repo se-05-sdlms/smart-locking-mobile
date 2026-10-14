@@ -1,6 +1,7 @@
+import { ActionError } from "@/components/ui/action-error";
 import { ParcelImage } from "@/components/ui/parcel-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { Button, Card, Skeleton, Typography } from "heroui-native";
+import { Button, Skeleton, Surface, Typography } from "heroui-native";
 import type { JSX, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
@@ -22,22 +23,43 @@ export function ParcelDetailContent(): JSX.Element {
   const [imageFailed, setImageFailed] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [revision, setRevision] = useState(0);
 
   useEffect(() => {
-    const parcelId = String(id);
-    void Promise.all([parcelApi.getDetail(parcelId), parcelApi.getStatusHistory(parcelId)])
-      .then(([detail, timeline]) => {
-        setParcel(detail);
-        setHistory(timeline);
-      })
-      .catch((loadError: unknown) =>
-        setError(loadError instanceof Error ? loadError.message : "Không thể tải bưu kiện.")
-      )
-      .finally(() => setLoading(false));
-  }, [id]);
+    let active = true;
+    const task = setTimeout(() => {
+      setLoading(true);
+      setError("");
+      setImageFailed(false);
+      const parcelId = String(id);
+      void Promise.all([parcelApi.getDetail(parcelId), parcelApi.getStatusHistory(parcelId)])
+        .then(([detail, timeline]) => {
+          if (active) {
+            setParcel(detail);
+            setHistory(timeline);
+          }
+        })
+        .catch((error: unknown) => {
+          if (active) setError(error instanceof Error ? error.message : "Không thể tải bưu kiện.");
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    }, 0);
+    return () => {
+      active = false;
+      clearTimeout(task);
+    };
+  }, [id, revision]);
 
   if (loading) return <DetailSkeleton />;
-  if (!parcel || error) return <DetailError message={error} />;
+  if (!parcel || error)
+    return (
+      <DetailError
+        message={error || "Bưu kiện không khả dụng."}
+        onRetry={() => setRevision((value) => value + 1)}
+      />
+    );
 
   const active = parcel.status === "Stored" || parcel.status === "Overdue";
   const paymentRequired =
@@ -78,7 +100,7 @@ export function ParcelDetailContent(): JSX.Element {
           </View>
         )}
 
-        <InfoCard title="Thông tin bưu kiện">
+        <InfoSection title="Thông tin bưu kiện">
           <InfoLine label="Locker" value={`${parcel.lockerCode} · ${parcel.lockerAddress}`} />
           <InfoLine label="Ngăn" value={parcel.compartmentCode} />
           <InfoLine label="Gửi vào tủ" value={dateFormatter.format(new Date(parcel.storedAt))} />
@@ -89,8 +111,8 @@ export function ParcelDetailContent(): JSX.Element {
               value={`${moneyFormatter.format(parcel.overdueAmount)} ${parcel.currency || "VND"}`}
             />
           ) : null}
-        </InfoCard>
-        <InfoCard title="Lịch sử trạng thái">
+        </InfoSection>
+        <InfoSection title="Lịch sử trạng thái">
           {history.length ? (
             history.map((item) => (
               <View key={item.id} className="flex-row gap-3">
@@ -101,15 +123,19 @@ export function ParcelDetailContent(): JSX.Element {
                   </Typography.Paragraph>
                   <Typography.Paragraph className="text-sm text-muted">
                     {dateFormatter.format(new Date(item.changedAt))}
-                    {item.reason ? ` · ${historyReason(item.reason)}` : ""}
                   </Typography.Paragraph>
+                  {item.reason ? (
+                    <Typography.Paragraph selectable className="text-sm text-muted">
+                      {item.reason}
+                    </Typography.Paragraph>
+                  ) : null}
                 </View>
               </View>
             ))
           ) : (
             <Typography.Paragraph className="text-muted">Chưa có lịch sử.</Typography.Paragraph>
           )}
-        </InfoCard>
+        </InfoSection>
 
         {active ? (
           <Button
@@ -131,14 +157,14 @@ export function ParcelDetailContent(): JSX.Element {
   );
 }
 
-function InfoCard({ title, children }: { title: string; children: ReactNode }): JSX.Element {
+function InfoSection({ title, children }: { title: string; children: ReactNode }): JSX.Element {
   return (
-    <Card>
-      <Card.Header>
-        <Card.Title>{title}</Card.Title>
-      </Card.Header>
-      <Card.Body className="gap-3">{children}</Card.Body>
-    </Card>
+    <View className="gap-2">
+      <Typography.Heading className="text-base">{title}</Typography.Heading>
+      <Surface variant="secondary" className="gap-3 rounded-xl p-4">
+        {children}
+      </Surface>
+    </View>
   );
 }
 
@@ -162,18 +188,23 @@ function DetailSkeleton(): JSX.Element {
   );
 }
 
-function DetailError({ message }: { message: string }): JSX.Element {
+function DetailError({ message, onRetry }: { message: string; onRetry: () => void }): JSX.Element {
   return (
-    <SafeAreaView className="flex-1 bg-background px-5 py-6">
-      <Card>
-        <Card.Body className="gap-4">
-          <Typography.Heading className="text-xl">Không thể mở bưu kiện</Typography.Heading>
-          <Typography.Paragraph className="text-danger">{message}</Typography.Paragraph>
-          <Button variant="secondary" onPress={() => router.back()}>
-            <Button.Label>Quay lại</Button.Label>
-          </Button>
-        </Card.Body>
-      </Card>
+    <SafeAreaView className="flex-1 bg-background">
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="gap-4 px-5 py-6"
+      >
+        <ScreenHeader title="Chi tiết bưu kiện" />
+        <ActionError title="Không thể mở bưu kiện" message={message} onRetry={onRetry} />
+        <Button
+          variant="secondary"
+          className="min-h-12"
+          onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+        >
+          <Button.Label>Quay lại</Button.Label>
+        </Button>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -185,12 +216,4 @@ function statusLabel(status: ParcelStatus): string {
     Retrieved: "Đã nhận",
     Removed: "Đã chuyển kho",
   }[status];
-}
-
-function historyReason(reason: string): string {
-  return (
-    {
-      "Free storage period expired.": "Đã hết thời gian lưu trữ miễn phí.",
-    }[reason] ?? reason
-  );
 }

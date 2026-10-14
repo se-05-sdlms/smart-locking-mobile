@@ -28,7 +28,7 @@
       --accent: #ea580c;
       --accent-soft: #fff1e8;
       --accent-soft-foreground: #9a3412;
-      --accent-foreground: #ffffff;
+      --accent-foreground: #171717;
       --focus: var(--accent);
       --link: #c2410c;
     }

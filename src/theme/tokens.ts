@@ -7,6 +7,7 @@ export const residentPalette = {
     text: "#171717",
     muted: "#626973",
     accent: "#EA580C",
+    accentText: "#C2410C",
     soft: "#FFF1E8",
   },
   dark: {
@@ -16,6 +17,7 @@ export const residentPalette = {
     text: "#F4F5F7",
     muted: "#A6ADB8",
     accent: "#FB923C",
+    accentText: "#FB923C",
     soft: "#38251B",
   },
 } as const;

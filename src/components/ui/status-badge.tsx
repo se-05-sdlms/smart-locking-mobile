@@ -4,9 +4,9 @@ import { View } from "react-native";
 
 type BadgeTone = "success" | "warning" | "danger" | "default";
 const tones: Record<BadgeTone, string> = {
-  success: "bg-success/10 text-success",
-  warning: "bg-warning/10 text-warning",
-  danger: "bg-danger/10 text-danger",
+  success: "bg-success-soft text-success-soft-foreground",
+  warning: "bg-warning-soft text-warning-soft-foreground",
+  danger: "bg-danger-soft text-danger-soft-foreground",
   default: "bg-default text-muted",
 };
 export function StatusBadge({

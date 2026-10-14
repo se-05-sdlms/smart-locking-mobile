@@ -1,6 +1,7 @@
+import { ActionError } from "@/components/ui/action-error";
 import * as Linking from "expo-linking";
 import { useFocusEffect } from "expo-router";
-import { Button, Card, Spinner, Typography } from "heroui-native";
+import { Button, Skeleton, Spinner, Surface, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useCallback, useRef, useState } from "react";
 import { Alert, FlatList, View } from "react-native";
@@ -216,7 +217,7 @@ export function AccountPackageScreen(): JSX.Element {
           <View className="border-b border-separator py-4">
             <View className="gap-2">
               <Typography.Heading className="text-base">{item.planName}</Typography.Heading>
-              <Typography.Paragraph className="text-sm text-accent">
+              <Typography.Paragraph className="text-sm text-link">
                 {statusLabel(item)}
               </Typography.Paragraph>
               <PackageBenefit icon="credit-card" text={formatPackagePrice(item.price)} />
@@ -252,57 +253,47 @@ export function AccountPackageScreen(): JSX.Element {
         ListHeaderComponent={
           <View className="gap-5">
             <ScreenHeader title="Gói tài khoản" />
-            {loading ? <Spinner /> : null}
+            {loading ? <Skeleton className="h-32 rounded-xl" /> : null}
             {loadError ? (
-              <View className="gap-2">
-                <Typography.Paragraph className="text-danger">{loadError}</Typography.Paragraph>
-                <Button
-                  variant="secondary"
-                  isDisabled={loading || paying}
-                  onPress={() => setRevision((value) => value + 1)}
-                >
-                  <Button.Label>Tải lại gói tài khoản</Button.Label>
-                </Button>
-              </View>
+              <ActionError
+                title="Không thể tải gói đang sử dụng"
+                message={loadError}
+                busy={loading || paying}
+                onRetry={() => setRevision((value) => value + 1)}
+              />
             ) : !loading ? (
-              <Card>
-                <Card.Body className="gap-3">
-                  <Typography.Paragraph className="text-sm text-muted">
-                    Gói đang sử dụng
-                  </Typography.Paragraph>
-                  <Typography.Heading className="text-xl">
-                    {current?.planName ?? "Gói Cơ bản"}
-                  </Typography.Heading>
-                  {current ? (
-                    <>
-                      <Typography.Paragraph className="font-semibold text-accent">
-                        {formatPackagePrice(current.price)}
-                      </Typography.Paragraph>
-                      <Typography.Paragraph className="text-sm text-muted">
-                        {formatDate(current.startDate)} – {formatDate(current.endDate)}
-                      </Typography.Paragraph>
-                    </>
-                  ) : (
-                    <Typography.Paragraph className="text-sm text-muted">
-                      Bạn chưa có gói bổ sung đang hiệu lực.
+              <Surface variant="secondary" className="gap-2 rounded-xl p-4">
+                <Typography.Paragraph className="text-sm text-muted">
+                  Gói đang sử dụng
+                </Typography.Paragraph>
+                <Typography.Heading className="text-xl">
+                  {current?.planName ?? "Gói Cơ bản"}
+                </Typography.Heading>
+                {current ? (
+                  <>
+                    <Typography.Paragraph className="font-semibold text-link">
+                      {formatPackagePrice(current.price)}
                     </Typography.Paragraph>
-                  )}
-                  <PackageBenefit
-                    icon="package"
-                    text={
-                      currentPlan
-                        ? `Tối đa ${currentPlan.maxActiveParcels} bưu kiện cùng lúc`
-                        : current
-                          ? "Thông tin hạn mức gói hiện tại chưa được cung cấp"
-                          : "Hạn mức theo chính sách hiện hành của tủ"
-                    }
-                  />
-                  <PackageBenefit
-                    icon="clock"
-                    text="Thời gian lưu miễn phí theo chính sách tủ. Xem hạn nhận cụ thể trong chi tiết từng bưu kiện."
-                  />
-                </Card.Body>
-              </Card>
+                    <Typography.Paragraph className="text-sm text-muted">
+                      {formatDate(current.startDate)} – {formatDate(current.endDate)}
+                    </Typography.Paragraph>
+                  </>
+                ) : (
+                  <Typography.Paragraph className="text-sm text-muted">
+                    Bạn chưa có gói bổ sung đang hiệu lực.
+                  </Typography.Paragraph>
+                )}
+                <PackageBenefit
+                  icon="package"
+                  text={
+                    currentPlan
+                      ? `Tối đa ${currentPlan.maxActiveParcels} bưu kiện cùng lúc`
+                      : current
+                        ? "Thông tin hạn mức gói hiện tại chưa được cung cấp"
+                        : "Hạn mức theo chính sách hiện hành của tủ"
+                  }
+                />
+              </Surface>
             ) : null}
             <PackagePicker
               plans={packages.plans}
@@ -349,7 +340,7 @@ export function AccountPackageScreen(): JSX.Element {
               </Typography.Paragraph>
             )}
             {paymentError ? (
-              <Typography.Paragraph className="text-danger">{paymentError}</Typography.Paragraph>
+              <ActionError title="Chưa mở được thanh toán" message={paymentError} />
             ) : null}
             <View className="flex-row items-center gap-2">
               <Typography.Heading className="flex-1 text-lg">

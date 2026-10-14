@@ -1,6 +1,7 @@
 import { ENV } from "@/config/env";
 import { clearSession, readSession, saveSession } from "@/features/auth/storage";
 import type { AuthSession } from "@/features/auth/types";
+import { diagnoseApiText } from "@/lib/text-encoding-diagnostics";
 
 type RequestOptions = RequestInit & { authenticated?: boolean; retry?: boolean };
 
@@ -115,7 +116,9 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     }
     if (!response.ok) throw new ApiError(await parseError(response), response.status);
     if (response.status === 204) return undefined as T;
-    return (await response.json()) as T;
+    const payload = (await response.json()) as T;
+    diagnoseApiText(path, payload, response.headers.get("content-type"));
+    return payload;
   } catch (error) {
     if (error instanceof ApiError) throw error;
     if (controller.signal.aborted) throw new ApiError("Kết nối máy chủ quá thời gian.", 0);

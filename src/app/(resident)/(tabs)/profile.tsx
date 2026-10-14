@@ -10,10 +10,11 @@ import {
   Typography,
 } from "heroui-native";
 import type { JSX, ReactNode } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
+import { ActionError } from "@/components/ui/action-error";
 import { GravityIcon, type GravityIconName } from "@/components/icons/gravity-icon";
 import { accountPackageApi } from "@/features/account-packages/api";
 import { useAuth } from "@/features/auth/auth-context";
@@ -29,6 +30,9 @@ export default function ProfileScreen(): JSX.Element {
   const [profile, setProfile] = useState<ResidentApprovalProfile | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [profileLoading, setProfileLoading] = useState(true);
+  const profilePending = useRef(false);
+  const approvalPending = useRef(false);
   const [packageName, setPackageName] = useState("Đang tải gói tài khoản...");
   const dataRevision = useMobileDataRevision();
   useFocusEffect(
@@ -48,13 +52,28 @@ export default function ProfileScreen(): JSX.Element {
       };
     }, [user?.id, dataRevision])
   );
-  useEffect(() => {
-    void deliveryRequestApi
-      .getProfile()
-      .then(setProfile)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Không thể tải tài khoản."));
+  const loadProfile = useCallback(async () => {
+    if (profilePending.current) return;
+    profilePending.current = true;
+    setProfileLoading(true);
+    setError("");
+    try {
+      setProfile(await deliveryRequestApi.getProfile());
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Không thể tải tài khoản.");
+    } finally {
+      profilePending.current = false;
+      setProfileLoading(false);
+    }
   }, []);
+  useFocusEffect(
+    useCallback(() => {
+      void loadProfile();
+    }, [loadProfile])
+  );
   const changeApproval = async (automatic: boolean) => {
+    if (approvalPending.current || profilePending.current || !profile) return;
+    approvalPending.current = true;
     setSaving(true);
     setError("");
     try {
@@ -64,6 +83,7 @@ export default function ProfileScreen(): JSX.Element {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể lưu thay đổi.");
     } finally {
+      approvalPending.current = false;
       setSaving(false);
     }
   };
@@ -93,7 +113,16 @@ export default function ProfileScreen(): JSX.Element {
           </View>
         </View>
         <Section title="Tài khoản">
-          <FlatRow icon="user" title="Thông tin cá nhân" />
+          <FlatRow
+            icon="user"
+            title="Thông tin cá nhân"
+            description={
+              profile?.phoneNumber ||
+              user?.phoneNumber ||
+              user?.email ||
+              "Chưa có thông tin liên hệ"
+            }
+          />
           <Separator />
           <FlatRow
             icon="package"
@@ -112,7 +141,7 @@ export default function ProfileScreen(): JSX.Element {
           <ControlField
             className="px-1 py-2"
             isSelected={profile?.deliveryApprovalMode === 0}
-            isDisabled={!profile || saving}
+            isDisabled={!profile || saving || profileLoading}
             onSelectedChange={(selected) => void changeApproval(selected)}
           >
             <View className="flex-1 gap-1">
@@ -137,7 +166,12 @@ export default function ProfileScreen(): JSX.Element {
           <FlatRow icon="settings" title="Cài đặt" onPress={() => router.push("/settings")} />
         </Section>
         {error ? (
-          <Typography.Paragraph className="text-danger">{error}</Typography.Paragraph>
+          <ActionError
+            title="Chưa cập nhật được tài khoản"
+            message={error}
+            busy={profileLoading || saving}
+            onRetry={() => void loadProfile()}
+          />
         ) : null}
         <Button variant="ghost" className="self-start" onPress={() => void logout()}>
           <Button.Label className="text-danger">Đăng xuất</Button.Label>
@@ -168,11 +202,31 @@ function FlatRow({
   description?: string;
   onPress?: () => void;
 }): JSX.Element {
+  if (!onPress)
+    return (
+      <View
+        accessible
+        accessibilityRole="text"
+        accessibilityLabel={`${title}${description ? `: ${description}` : ""}`}
+        className="flex-row items-start gap-3 px-1 py-3"
+      >
+        <GravityIcon name={icon} size={18} tone="muted" />
+        <View className="min-w-0 flex-1 gap-1">
+          <Typography.Paragraph className="text-sm text-muted">{title}</Typography.Paragraph>
+          {description ? (
+            <Typography.Paragraph selectable className="text-sm">
+              {description}
+            </Typography.Paragraph>
+          ) : null}
+        </View>
+      </View>
+    );
   return (
     <ListGroup.Item
       onPress={onPress}
-      disabled={!onPress}
-      accessibilityRole={onPress ? "button" : "text"}
+      className="min-h-12"
+      accessibilityRole="button"
+      accessibilityLabel={`${title}${description ? `, ${description}` : ""}`}
     >
       <ListGroup.ItemPrefix>
         <GravityIcon name={icon} size={20} />

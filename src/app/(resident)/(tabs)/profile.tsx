@@ -235,11 +235,9 @@ function FlatRow({
         <ListGroup.ItemTitle>{title}</ListGroup.ItemTitle>
         {description ? <ListGroup.ItemDescription>{description}</ListGroup.ItemDescription> : null}
       </ListGroup.ItemContent>
-      {onPress ? (
-        <ListGroup.ItemSuffix>
-          <GravityIcon name="chevron-right" size={18} />
-        </ListGroup.ItemSuffix>
-      ) : null}
+      <ListGroup.ItemSuffix>
+        <GravityIcon name="chevron-right" size={18} />
+      </ListGroup.ItemSuffix>
     </ListGroup.Item>
   );
 }

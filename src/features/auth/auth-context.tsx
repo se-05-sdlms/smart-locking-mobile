@@ -18,6 +18,7 @@ type AuthContextValue = {
   login: (phoneNumber: string, password: string) => Promise<void>;
   register: (otpCode: string) => Promise<void>;
   logout: () => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -86,16 +87,17 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
         setPendingRegistration(null);
       },
       logout: async () => {
+        // Keep credentials for a retry if server-side cleanup fails.
+        await deactivatePushInstallation();
+        // Deactivation can refresh the session; revoke the latest refresh token.
         const session = await readSession();
-        try {
-          await deactivatePushInstallation().catch(() => undefined);
-          if (session?.refreshToken) await authApi.logout(session.refreshToken);
-        } catch {
-          // Local logout must succeed even when the server is unavailable.
-        } finally {
-          await clearSession();
-          setUser(null);
-        }
+        if (session?.refreshToken) await authApi.logout(session.refreshToken);
+        await clearSession();
+        setUser(null);
+      },
+      changePassword: async (currentPassword, newPassword) => {
+        const session = await authApi.changePassword(currentPassword, newPassword);
+        await acceptSession(session);
       },
     }),
     [initializing, pendingRegistration, pendingReset, user]

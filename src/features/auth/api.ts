@@ -31,6 +31,12 @@ export const authApi = {
       body: JSON.stringify({ loginIdentifier, password }),
     }),
   me: () => apiRequest<UserProfile>("/auth/me", { authenticated: true }),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    apiRequest<AuthSession>("/auth/change-password", {
+      method: "POST",
+      authenticated: true,
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
   forgotPassword: (loginIdentifier: string) =>
     apiRequest<void>("/auth/forgot-password", {
       method: "POST",

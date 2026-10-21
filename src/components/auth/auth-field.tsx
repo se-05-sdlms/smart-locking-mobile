@@ -32,6 +32,8 @@ export function AuthField({
               isIconOnly
               size="sm"
               variant="tertiary"
+              className="min-h-12 min-w-12"
+              hitSlop={8}
               accessibilityLabel={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               onPress={() => setVisible((value) => !value)}
             >

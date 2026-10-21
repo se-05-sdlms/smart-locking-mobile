@@ -28,7 +28,9 @@ export class ApiError extends Error {
 
   constructor(
     message: string,
-    public readonly status: number
+    public readonly status: number,
+    public readonly code?: string,
+    public readonly errors?: Record<string, string[]>
   ) {
     super(message);
   }
@@ -44,12 +46,75 @@ export function onSessionExpired(handler: () => void): () => void {
   };
 }
 
-async function parseError(response: Response): Promise<string> {
+const errorMessages: Record<string, string> = {
+  "auth/invalid_credentials": "Số điện thoại hoặc mật khẩu không đúng.",
+  "auth/invalid_token": "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
+  "auth/authentication_required": "Vui lòng đăng nhập để tiếp tục.",
+  "auth/token_expired": "Phiên đăng nhập đã hết hạn.",
+  "auth/invalid_refresh_token": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+  "auth/invalid_otp": "Mã OTP không đúng hoặc đã hết hạn.",
+  "auth/user_already_exists": "Tài khoản đã tồn tại.",
+  "auth/password_change_required": "Vui lòng đổi mật khẩu để tiếp tục.",
+  "auth/invalid_password": "Mật khẩu hiện tại không đúng hoặc mật khẩu mới không hợp lệ.",
+  "validation/invalid_input": "Thông tin chưa hợp lệ. Vui lòng kiểm tra các trường đã nhập.",
+  "common/access_denied": "Bạn không có quyền thực hiện thao tác này.",
+  "common/invalid_request": "Yêu cầu không hợp lệ.",
+  "common/internal_error": "Máy chủ đang gặp sự cố. Vui lòng thử lại sau.",
+  "common/rate_limited": "Bạn thao tác quá nhanh. Vui lòng chờ rồi thử lại.",
+  "common/request_timed_out": "Yêu cầu quá thời gian. Vui lòng thử lại.",
+  "locker/not_found": "Không tìm thấy tủ.",
+  "locker/not_operational": "Tủ hiện không hoạt động. Vui lòng liên hệ hỗ trợ.",
+  "locker/no_available_compartment": "Tủ không còn ngăn trống phù hợp.",
+  "locker/offline": "Tủ đang mất kết nối. Vui lòng thử lại sau.",
+  "locker/open_failed": "Chưa mở được ngăn tủ. Vui lòng thử lại hoặc báo sự cố.",
+  "parcel/not_found": "Không tìm thấy bưu kiện.",
+  "parcel/payment_required": "Vui lòng thanh toán phí quá hạn trước khi nhận hàng.",
+  "parcel/remote_unlock_disabled": "Tủ không cho phép mở từ xa.",
+  "parcel/storage_expired": "Bưu kiện đã quá thời hạn lưu trữ.",
+  "parcel/invalid_state": "Trạng thái bưu kiện không cho phép thao tác này.",
+  "delivery/not_found": "Không tìm thấy yêu cầu giao hàng.",
+  "delivery/invalid_state": "Yêu cầu giao hàng đã thay đổi trạng thái. Vui lòng tải lại.",
+  "delivery/approval_expired": "Yêu cầu xác nhận hàng đã hết hạn.",
+  "return/not_found": "Không tìm thấy yêu cầu gửi hàng.",
+  "return/invalid_state": "Trạng thái yêu cầu gửi hàng không cho phép thao tác này.",
+  "return/invalid_pickup_code": "Mã lấy hàng không đúng hoặc đã hết hạn.",
+  "incident/not_found": "Không tìm thấy sự cố.",
+  "user/inactive": "Tài khoản hiện không hoạt động. Vui lòng liên hệ hỗ trợ.",
+  "user/already_exists": "Tài khoản đã tồn tại.",
+  "subscription/invalid_payment": "Thanh toán gói chưa hợp lệ.",
+  "payment/unavailable": "Dịch vụ thanh toán đang tạm ngừng. Vui lòng thử lại sau.",
+  "payment/invalid_request": "Yêu cầu thanh toán không hợp lệ.",
+  "payment/not_found": "Không tìm thấy giao dịch thanh toán.",
+  "notification/not_found": "Không tìm thấy thông báo.",
+  "image/too_large": "Ảnh quá lớn. Vui lòng chọn ảnh có dung lượng nhỏ hơn.",
+  "image/invalid_format": "Định dạng ảnh không được hỗ trợ.",
+};
+
+async function parseError(response: Response): Promise<ApiError> {
   try {
-    const body = (await response.json()) as { message?: string };
-    return body.message || "Yêu cầu không thể thực hiện.";
+    const body: unknown = await response.json();
+    if (!body || typeof body !== "object") throw new Error("Invalid error body");
+    const problem = body as Record<string, unknown>;
+    const code = typeof problem.code === "string" ? problem.code : undefined;
+    const errors: Record<string, string[]> = {};
+    if (problem.errors && typeof problem.errors === "object") {
+      for (const [field, messages] of Object.entries(problem.errors)) {
+        if (Array.isArray(messages) && messages.every((message) => typeof message === "string")) {
+          errors[field] = messages;
+        }
+      }
+    }
+    const fallback = [problem.detail, problem.message].find(
+      (value): value is string => typeof value === "string" && value.trim().length > 0
+    );
+    return new ApiError(
+      (code && errorMessages[code]) || fallback || "Yêu cầu không thể thực hiện.",
+      response.status,
+      code,
+      Object.keys(errors).length ? errors : undefined
+    );
   } catch {
-    return "Yêu cầu không thể thực hiện.";
+    return new ApiError("Yêu cầu không thể thực hiện.", response.status);
   }
 }
 
@@ -74,7 +139,7 @@ async function refreshSession(): Promise<AuthSession> {
         error instanceof ApiError &&
         (error.status === 401 ||
           error.status === 403 ||
-          (error.status === 400 && error.message === "Invalid refresh token."));
+          error.code === "auth/invalid_refresh_token");
       if (rejected) {
         await clearSession();
         sessionExpiredHandler?.();
@@ -118,7 +183,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       }
       return apiRequest<T>(path, { ...options, retry: false });
     }
-    if (!response.ok) throw new ApiError(await parseError(response), response.status);
+    if (!response.ok) throw await parseError(response);
     if (response.status === 204) return undefined as T;
     const payload = (await response.json()) as T;
     diagnoseApiText(path, payload, response.headers.get("content-type"));

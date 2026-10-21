@@ -84,7 +84,7 @@ for (const status of [401, 403, 400]) {
   test(`explicit refresh rejection (${status}) expires the session`, async () => {
     const h = harness(async (url) =>
       url.endsWith("/auth/refresh-token")
-        ? json({ message: "Invalid refresh token." }, status)
+        ? json({ code: "auth/invalid_refresh_token", detail: "Invalid refresh token." }, status)
         : json({}, 401)
     );
     await assert.rejects(
@@ -139,6 +139,49 @@ test("server failure during refresh preserves the session", async () => {
   await assert.rejects(
     h.client.apiRequest("/parcels", { authenticated: true }),
     (error) => error.status === 503 && error.retryable
+  );
+  assert.equal(h.clears(), 0);
+});
+
+test("ProblemDetails maps codes to Vietnamese and retains field errors", async () => {
+  const h = harness(async () =>
+    json(
+      {
+        code: "auth/invalid_otp",
+        detail: "Invalid OTP.",
+        errors: { otpCode: ["Invalid OTP."] },
+      },
+      400
+    )
+  );
+  await assert.rejects(h.client.apiRequest("/auth/register"), (error) => {
+    assert.equal(error.code, "auth/invalid_otp");
+    assert.equal(error.message, "Mã OTP không đúng hoặc đã hết hạn.");
+    assert.deepEqual(Array.from(error.errors.otpCode), ["Invalid OTP."]);
+    return true;
+  });
+});
+
+test("unrecognized ProblemDetails retains detail; malformed responses remain usable", async () => {
+  for (const body of [{ code: "future/error", detail: "Thông báo từ máy chủ" }, null]) {
+    const h = harness(async () => json(body, 409));
+    await assert.rejects(h.client.apiRequest("/parcels"), (error) => {
+      assert.equal(error.status, 409);
+      assert.equal(error.message, body?.detail ?? "Yêu cầu không thể thực hiện.");
+      return true;
+    });
+  }
+});
+
+test("unrelated validation failure during refresh does not clear the session", async () => {
+  const h = harness(async (url) =>
+    url.endsWith("/auth/refresh-token")
+      ? json({ code: "validation/invalid_input", detail: "Invalid input" }, 400)
+      : json({}, 401)
+  );
+  await assert.rejects(
+    h.client.apiRequest("/parcels", { authenticated: true }),
+    (error) => error.code === "validation/invalid_input"
   );
   assert.equal(h.clears(), 0);
 });

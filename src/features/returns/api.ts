@@ -11,6 +11,7 @@ export const returnApi = {
       method: "POST",
       body: form,
       authenticated: true,
+      timeoutMs: 90_000,
     });
     return result.url;
   },

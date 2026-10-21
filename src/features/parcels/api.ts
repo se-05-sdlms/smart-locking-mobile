@@ -32,7 +32,7 @@ export const parcelApi = {
       authenticated: true,
     }).then(pageItems),
   unlockPickup: (id: string) =>
-    apiRequest<PickupUnlockResponse>(`/parcels/${id}:openCompartment`, {
+    apiRequest<PickupUnlockResponse>(`/parcels/${id}/unlock-pickup`, {
       method: "POST",
       authenticated: true,
     }),

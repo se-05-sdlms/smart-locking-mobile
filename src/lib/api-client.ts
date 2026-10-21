@@ -3,7 +3,11 @@ import { clearSession, readSession, saveSession } from "@/features/auth/storage"
 import type { AuthSession } from "@/features/auth/types";
 import { diagnoseApiText } from "@/lib/text-encoding-diagnostics";
 
-type RequestOptions = RequestInit & { authenticated?: boolean; retry?: boolean };
+type RequestOptions = RequestInit & {
+  authenticated?: boolean;
+  retry?: boolean;
+  timeoutMs?: number;
+};
 
 export type PagedResponse<T> = {
   items: T[];
@@ -86,9 +90,9 @@ async function refreshSession(): Promise<AuthSession> {
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { authenticated, retry, ...fetchOptions } = options;
+  const { authenticated, retry, timeoutMs = ENV.API_TIMEOUT, ...fetchOptions } = options;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), ENV.API_TIMEOUT);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
   if (options.body && !(options.body instanceof FormData))

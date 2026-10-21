@@ -133,6 +133,23 @@ export function AccountPackageScreen(): JSX.Element {
     (item) => item.planId === selectedId && item.status === "PendingPayment"
   );
 
+  const activateFreePlan = async () => {
+    if (!selectedPlan || selectedPlan.price !== 0 || !user || paymentInFlight.current) return;
+    paymentInFlight.current = true;
+    setPaying(true);
+    setPaymentError("");
+    try {
+      await accountPackageApi.subscribe(selectedPlan.id);
+      await savePreferredPackage(user.id, selectedPlan.id).catch(() => undefined);
+    } catch (e) {
+      setPaymentError(e instanceof Error ? e.message : "Không thể kích hoạt gói miễn phí.");
+    } finally {
+      paymentInFlight.current = false;
+      setPaying(false);
+      setRevision((value) => value + 1);
+    }
+  };
+
   const pay = async (
     planId = selectedPlan?.id,
     displayedAmount = selectedPending?.price ?? selectedPlan?.price,
@@ -328,9 +345,13 @@ export function AccountPackageScreen(): JSX.Element {
                     </Button.Label>
                   </Button>
                 ) : (
-                  <Typography.Paragraph className="text-sm text-muted">
-                    Gói miễn phí hiện chưa hỗ trợ kích hoạt trực tiếp. Bạn vẫn sử dụng gói hiện tại.
-                  </Typography.Paragraph>
+                  <Button
+                    isDisabled={paying || loading || !!loadError || packages.loading}
+                    onPress={() => void activateFreePlan()}
+                  >
+                    {paying ? <Spinner size="sm" color="current" /> : null}
+                    <Button.Label>{paying ? "Đang kích hoạt..." : "Kích hoạt gói miễn phí"}</Button.Label>
+                  </Button>
                 )}
               </View>
             ) : (

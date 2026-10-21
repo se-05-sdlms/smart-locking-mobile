@@ -1,6 +1,7 @@
 import type { JSX, ReactNode } from "react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
+import { subscribeAfterRegistration } from "@/features/account-packages/registration";
 import { savePreferredPackage } from "@/features/account-packages/storage";
 import { authApi } from "@/features/auth/api";
 import { clearSession, readSession, saveSession } from "@/features/auth/storage";
@@ -85,6 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
         ).catch(() => undefined);
         await acceptSession(session);
         setPendingRegistration(null);
+        // Record the chosen package on the Backend now that the Resident is signed in (SRS UC-01).
+        // It must not delay or fail registration; a failure leaves the preference for Account > Package.
+        void subscribeAfterRegistration(session.user.id, pendingRegistration.accountPackageId);
       },
       logout: async () => {
         // Keep credentials for a retry if server-side cleanup fails.

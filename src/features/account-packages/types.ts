@@ -26,4 +26,6 @@ export type SubscriptionCheckout = {
   checkoutUrl: string;
   orderCode: number;
   amount: number;
+  // true for a free plan that Backend activated immediately; there is no checkout to open then.
+  activated?: boolean;
 };

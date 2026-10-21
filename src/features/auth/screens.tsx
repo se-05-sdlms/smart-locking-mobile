@@ -7,6 +7,9 @@ import { View } from "react-native";
 import { AuthField } from "@/components/auth/auth-field";
 import { AuthScreen } from "@/components/auth/auth-screen";
 import { GravityIcon } from "@/components/icons/gravity-icon";
+import { accountPackageApi } from "@/features/account-packages/api";
+import { PackagePicker } from "@/features/account-packages/package-picker";
+import type { AccountPackage } from "@/features/account-packages/types";
 import { authApi } from "@/features/auth/api";
 import { useAuth } from "@/features/auth/auth-context";
 import type { RegistrationLocker } from "@/features/auth/types";
@@ -125,6 +128,10 @@ export function RegisterScreen(): JSX.Element {
   const [accepted, setAccepted] = useState(false);
   const [lockers, setLockers] = useState<RegistrationLocker[]>([]);
   const [locker, setLocker] = useState<{ value: string; label: string }>();
+  const [plans, setPlans] = useState<AccountPackage[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [plansError, setPlansError] = useState("");
+  const [planId, setPlanId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -135,6 +142,38 @@ export function RegisterScreen(): JSX.Element {
       .catch((loadError: unknown) => setError(getErrorMessage(loadError)));
   }, []);
 
+  const fetchPlans = (isActive: () => boolean): void => {
+    accountPackageApi
+      .getPlans()
+      .then((items) => {
+        if (!isActive()) return;
+        const active = items.filter((item) => item.isActive);
+        setPlans(active);
+        // Pre-select the free plan when there is one so the quickest path is a single tap.
+        setPlanId((current) => current ?? active.find((item) => item.price === 0)?.id ?? null);
+      })
+      .catch((loadError: unknown) => {
+        if (isActive()) setPlansError(getErrorMessage(loadError));
+      })
+      .finally(() => {
+        if (isActive()) setPlansLoading(false);
+      });
+  };
+
+  function retryPlans(): void {
+    setPlansLoading(true);
+    setPlansError("");
+    fetchPlans(() => true);
+  }
+
+  useEffect(() => {
+    let active = true;
+    fetchPlans(() => active);
+    return () => {
+      active = false;
+    };
+  }, []);
+
   async function submit(): Promise<void> {
     if (fullName.trim().length < 2 || !isValidPhone(phone) || password.length < 8 || !locker) {
       setError("Vui lòng kiểm tra lại thông tin đăng ký.");
@@ -142,6 +181,10 @@ export function RegisterScreen(): JSX.Element {
     }
     if (password !== confirmation) {
       setError("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+    if (plans.length > 0 && !planId) {
+      setError("Vui lòng chọn gói tài khoản.");
       return;
     }
 
@@ -155,7 +198,7 @@ export function RegisterScreen(): JSX.Element {
         password,
         fullName: fullName.trim(),
         registeredLockerId: locker.value,
-        accountPackageId: null,
+        accountPackageId: planId,
       });
       router.push({ pathname: "/verify-otp", params: { phone: phoneNumber, flow: "register" } });
     } catch (submitError) {
@@ -244,8 +287,20 @@ export function RegisterScreen(): JSX.Element {
             </Select.Portal>
           </Select>
         </View>
+        <PackagePicker
+          plans={plans}
+          selectedId={planId}
+          onSelect={setPlanId}
+          loading={plansLoading}
+          error={plansError}
+          onRetry={retryPlans}
+          disabled={submitting}
+          allowDefault={false}
+        />
         <Typography.Paragraph className="text-sm text-muted">
-          Bạn bắt đầu với Gói Cơ bản. Có thể chọn gói bổ sung trong Tài khoản sau khi đăng ký.
+          {plans.some((item) => item.id === planId && item.price > 0)
+            ? "Gói trả phí sẽ mở trang thanh toán ngay sau khi đăng ký thành công."
+            : "Cần có gói đang hiệu lực để nhận thêm bưu kiện. Bạn có thể đổi hoặc thêm gói trong Tài khoản."}
         </Typography.Paragraph>
         <Checkbox className="items-start" isSelected={accepted} onSelectedChange={setAccepted}>
           <Checkbox.Indicator />

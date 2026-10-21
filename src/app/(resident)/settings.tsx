@@ -50,6 +50,25 @@ export default function SettingsScreen(): JSX.Element {
           <ListGroup variant="transparent">
             <ListGroup.Item
               accessibilityRole="button"
+              accessibilityLabel="Lịch sử thanh toán phí quá hạn"
+              className="min-h-12"
+              onPress={() => router.push("/payments")}
+            >
+              <ListGroup.ItemPrefix>
+                <GravityIcon name="receipt" />
+              </ListGroup.ItemPrefix>
+              <ListGroup.ItemContent>
+                <ListGroup.ItemTitle>Lịch sử thanh toán</ListGroup.ItemTitle>
+                <ListGroup.ItemDescription>
+                  Giao dịch phí quá hạn qua PayOS
+                </ListGroup.ItemDescription>
+              </ListGroup.ItemContent>
+              <ListGroup.ItemSuffix>
+                <GravityIcon name="chevron-right" />
+              </ListGroup.ItemSuffix>
+            </ListGroup.Item>
+            <ListGroup.Item
+              accessibilityRole="button"
               accessibilityLabel="Gói tài khoản, xem hạn mức và đăng ký gói mới"
               className="min-h-12"
               onPress={() => router.push("/account-package")}

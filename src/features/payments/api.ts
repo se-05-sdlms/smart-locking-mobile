@@ -1,12 +1,13 @@
-import type { CreatedPayment, PaymentTransaction } from "@/features/payments/types";
+import type { PaymentTransaction } from "@/features/payments/types";
 import { apiRequest } from "@/lib/api-client";
 
 export const paymentApi = {
   create: (overdueChargeId: string) =>
-    apiRequest<CreatedPayment>("/payments", {
+    apiRequest<PaymentTransaction>(`/overdue-payments/charges/${overdueChargeId}/checkout`, {
       method: "POST",
       authenticated: true,
-      body: JSON.stringify({ overdueChargeId }),
     }),
-  get: (id: string) => apiRequest<PaymentTransaction>(`/payments/${id}`, { authenticated: true }),
+  get: (id: string) =>
+    apiRequest<PaymentTransaction>(`/overdue-payments/${id}`, { authenticated: true }),
+  getHistory: () => apiRequest<PaymentTransaction[]>("/overdue-payments", { authenticated: true }),
 };

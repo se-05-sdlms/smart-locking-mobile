@@ -21,9 +21,9 @@ export const notificationApi = {
       authenticated: true,
     }),
   registerDevice: (body: { installationId: string; expoPushToken: string; platform: string }) =>
-    apiRequest(`/device-installations/${encodeURIComponent(body.installationId)}`, {
+    apiRequest("/device-installations", {
       method: "PUT",
-      body: JSON.stringify({ expoPushToken: body.expoPushToken, platform: body.platform }),
+      body: JSON.stringify(body),
       authenticated: true,
     }),
   deactivateDevice: (installationId: string) =>

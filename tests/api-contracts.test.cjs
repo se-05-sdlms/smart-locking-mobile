@@ -56,3 +56,15 @@ test("notification array contract avoids fictitious pagination and uses read end
   assert.equal(calls[3].url, "/notifications/read-all");
   assert.equal(calls[3].options.method, "PATCH");
 });
+
+test("push registration sends installation ID in PUT body; deletion uses its encoded path", async () => {
+  const { api, calls } = loadApi("features/notifications/api.ts", "notificationApi");
+  const body = { installationId: "a/b", expoPushToken: "ExpoPushToken[test]", platform: "android" };
+  await api.registerDevice(body);
+  await api.deactivateDevice(body.installationId);
+  assert.equal(calls[0].url, "/device-installations");
+  assert.equal(calls[0].options.method, "PUT");
+  assert.deepEqual(JSON.parse(calls[0].options.body), body);
+  assert.equal(calls[1].url, "/device-installations/a%2Fb");
+  assert.equal(calls[1].options.method, "DELETE");
+});

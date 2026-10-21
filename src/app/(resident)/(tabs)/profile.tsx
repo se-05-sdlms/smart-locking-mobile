@@ -29,6 +29,8 @@ export default function ProfileScreen(): JSX.Element {
   const { user, logout } = useAuth();
   const [profile, setProfile] = useState<ResidentApprovalProfile | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const logoutPending = useRef(false);
   const [error, setError] = useState("");
   const [profileLoading, setProfileLoading] = useState(true);
   const profilePending = useRef(false);
@@ -88,6 +90,22 @@ export default function ProfileScreen(): JSX.Element {
     }
   };
   const name = profile?.fullName || "Cư dân";
+  const signOut = async () => {
+    if (logoutPending.current) return;
+    logoutPending.current = true;
+    setLoggingOut(true);
+    setError("");
+    try {
+      await logout();
+    } catch {
+      setError(
+        "Chưa đăng xuất an toàn được. Vui lòng kiểm tra kết nối và bấm Đăng xuất để thử lại."
+      );
+    } finally {
+      logoutPending.current = false;
+      setLoggingOut(false);
+    }
+  };
   const initials = name
     .split(" ")
     .slice(-2)
@@ -116,6 +134,7 @@ export default function ProfileScreen(): JSX.Element {
           <FlatRow
             icon="user"
             title="Thông tin cá nhân"
+            onPress={() => router.push("/account-profile")}
             description={
               profile?.phoneNumber ||
               user?.phoneNumber ||
@@ -135,6 +154,13 @@ export default function ProfileScreen(): JSX.Element {
             icon="building"
             title="Tủ của tôi"
             description={profile?.registeredLockerId ? "Đã liên kết" : "Chưa liên kết"}
+          />
+        </Section>
+        <Section title="Bảo mật">
+          <FlatRow
+            icon="lock"
+            title="Đổi mật khẩu"
+            onPress={() => router.push("/account-security")}
           />
         </Section>
         <Section title="Tùy chọn nhận hàng">
@@ -173,8 +199,15 @@ export default function ProfileScreen(): JSX.Element {
             onRetry={() => void loadProfile()}
           />
         ) : null}
-        <Button variant="ghost" className="self-start" onPress={() => void logout()}>
-          <Button.Label className="text-danger">Đăng xuất</Button.Label>
+        <Button
+          variant="ghost"
+          className="min-h-12 self-start"
+          isDisabled={loggingOut}
+          onPress={() => void signOut()}
+        >
+          <Button.Label className="text-danger">
+            {loggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
+          </Button.Label>
         </Button>
       </ScrollView>
     </SafeAreaView>

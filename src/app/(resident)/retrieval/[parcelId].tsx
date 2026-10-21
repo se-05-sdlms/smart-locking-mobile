@@ -10,6 +10,7 @@ import { GravityIcon } from "@/components/icons/gravity-icon";
 import { FlowSteps, IncidentAction, ScreenHeader } from "@/components/ui/resident-ui";
 import { parcelApi } from "@/features/parcels/api";
 import type { ParcelDetail } from "@/features/parcels/types";
+import { ApiError } from "@/lib/api-client";
 
 type Step = "ready" | "opened" | "completed";
 const labels = ["Sẵn sàng", "Mở ngăn", "Hoàn tất"];
@@ -41,6 +42,10 @@ export default function RetrievalScreen(): JSX.Element {
       setAccessEventId(response.accessEventId);
       setStep("opened");
     } catch (e) {
+      if (e instanceof ApiError && e.code === "parcel/payment_required") {
+        router.replace({ pathname: "/payment/[parcelId]", params: { parcelId: id } });
+        return;
+      }
       setError(e instanceof Error ? e.message : "Không thể mở ngăn.");
     } finally {
       setSubmitting(false);

@@ -21,7 +21,13 @@ export function ScreenHeader({
 
 export function IncidentAction({ onPress }: { onPress: () => void }): JSX.Element {
   return (
-    <LinkButton className="self-center px-3 py-2" onPress={onPress}>
+    <LinkButton
+      className="min-h-12 self-center px-3 py-2"
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel="Báo sự cố"
+      onPress={onPress}
+    >
       <LinkButton.Label className="text-link underline">Báo sự cố</LinkButton.Label>
     </LinkButton>
   );

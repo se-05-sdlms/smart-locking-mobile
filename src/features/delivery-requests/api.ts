@@ -22,8 +22,8 @@ export const deliveryRequestApi = {
     apiRequest(`/delivery-requests/${id}:reject`, { method: "POST", authenticated: true }),
   getProfile: () => apiRequest<ResidentApprovalProfile>("/residents/me", { authenticated: true }),
   updateApprovalMode: (deliveryApprovalMode: DeliveryApprovalMode) =>
-    apiRequest<ResidentApprovalProfile>("/residents/me", {
-      method: "PATCH",
+    apiRequest<ResidentApprovalProfile>("/residents/me/approval-mode", {
+      method: "PUT",
       body: JSON.stringify({ deliveryApprovalMode }),
       authenticated: true,
     }),

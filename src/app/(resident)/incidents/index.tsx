@@ -24,7 +24,7 @@ export default function IncidentListScreen(): JSX.Element {
         <ScreenHeader
           title="Sự cố của tôi"
           action={
-            <Button size="sm" onPress={() => router.push("/incidents/new")}>
+            <Button size="sm" className="min-h-12" onPress={() => router.push("/incidents/new")}>
               <Button.Label>Báo sự cố</Button.Label>
             </Button>
           }
@@ -37,6 +37,8 @@ function IncidentRow({ item }: { item: IncidentItem }): JSX.Element {
   const status = incidentStatus(item.status);
   return (
     <PressableFeedback
+      accessibilityRole="button"
+      accessibilityLabel={`Xem chi tiết sự cố: ${item.title}`}
       onPress={() => router.push({ pathname: "/incidents/[id]", params: { id: item.id } })}
     >
       <View className="flex-row items-center gap-3 rounded-2xl border border-default-200 px-4 py-4">

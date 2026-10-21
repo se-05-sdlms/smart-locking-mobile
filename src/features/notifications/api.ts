@@ -2,25 +2,22 @@ import type { ResidentNotification } from "@/features/notifications/types";
 import { apiRequest, pageItems, type PageResponse } from "@/lib/api-client";
 
 export const notificationApi = {
-  getPage: (page = 1) =>
-    apiRequest<PageResponse<ResidentNotification>>(
-      `/notifications?pageNumber=${page}&pageSize=30`,
-      { authenticated: true }
-    ),
+  // Backend returns a bounded array, not numbered pages. Never append repeated results.
+  getPage: () =>
+    apiRequest<ResidentNotification[]>("/notifications?limit=100", { authenticated: true }),
   getAll: (unreadOnly = false) =>
     apiRequest<PageResponse<ResidentNotification>>(
-      `/notifications?unreadOnly=${unreadOnly}&pageSize=50`,
+      `/notifications?unreadOnly=${unreadOnly}&limit=100`,
       { authenticated: true }
     ).then(pageItems),
   markRead: (id: string) =>
-    apiRequest<ResidentNotification>(`/notifications/${id}`, {
+    apiRequest<ResidentNotification>(`/notifications/${id}/read`, {
       method: "PATCH",
-      body: JSON.stringify({ isRead: true }),
       authenticated: true,
     }),
   markAllRead: () =>
-    apiRequest<{ updatedCount: number }>("/notifications:markAllRead", {
-      method: "POST",
+    apiRequest<{ updatedCount: number }>("/notifications/read-all", {
+      method: "PATCH",
       authenticated: true,
     }),
   registerDevice: (body: { installationId: string; expoPushToken: string; platform: string }) =>

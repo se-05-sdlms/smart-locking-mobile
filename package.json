@@ -11,7 +11,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:session": "node --test tests/api-client.test.cjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "~57.0.14",
@@ -21,6 +22,7 @@
     "expo-constants": "~57.0.16",
     "expo-device": "~57.0.2",
     "expo-file-system": "~57.0.7",
+    "expo-image": "~57.0.5",
     "expo-image-picker": "~57.0.20",
     "expo-linking": "~57.0.8",
     "expo-notifications": "~57.0.21",

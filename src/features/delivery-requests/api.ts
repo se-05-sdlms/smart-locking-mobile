@@ -6,6 +6,11 @@ import type {
 import { apiRequest, pageItems, type PageResponse } from "@/lib/api-client";
 
 export const deliveryRequestApi = {
+  getPendingPage: (page = 1) =>
+    apiRequest<PageResponse<PendingDeliveryRequest>>(
+      `/delivery-requests?status=pending&pageNumber=${page}&pageSize=30`,
+      { authenticated: true }
+    ),
   getPending: () =>
     apiRequest<PageResponse<PendingDeliveryRequest>>(
       "/delivery-requests?status=pending&pageSize=100",

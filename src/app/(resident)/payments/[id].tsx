@@ -29,7 +29,10 @@ export default function PaymentDetailScreen(): JSX.Element {
     : false;
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerClassName="gap-5 px-5 pb-10 pt-4">
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="gap-5 px-5 pb-10 pt-4"
+      >
         <ScreenHeader title={success ? "Thanh toán thành công" : "Chi tiết thanh toán"} />
         {!item && !error ? <Skeleton className="h-96 rounded-3xl" /> : null}
         {item ? (
@@ -51,7 +54,7 @@ export default function PaymentDetailScreen(): JSX.Element {
               <Typography.Heading className="text-2xl">
                 {success ? "Đã thanh toán" : "Đang xử lý"}
               </Typography.Heading>
-              <Typography.Heading className="text-4xl text-accent">
+              <Typography.Heading className="text-4xl text-link">
                 {new Intl.NumberFormat("vi-VN").format(item.amount)}đ
               </Typography.Heading>
             </View>
@@ -69,7 +72,7 @@ export default function PaymentDetailScreen(): JSX.Element {
               </Card.Body>
             </Card>
             <Button onPress={() => router.replace("/")}>
-              <Button.Label>{success ? "Nhận hàng" : "Về trang chủ"}</Button.Label>
+              <Button.Label>Về trang chủ</Button.Label>
             </Button>
           </>
         ) : null}

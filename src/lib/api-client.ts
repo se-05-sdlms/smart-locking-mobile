@@ -1,8 +1,13 @@
 import { ENV } from "@/config/env";
 import { clearSession, readSession, saveSession } from "@/features/auth/storage";
 import type { AuthSession } from "@/features/auth/types";
+import { diagnoseApiText } from "@/lib/text-encoding-diagnostics";
 
-type RequestOptions = RequestInit & { authenticated?: boolean; retry?: boolean };
+type RequestOptions = RequestInit & {
+  authenticated?: boolean;
+  retry?: boolean;
+  timeoutMs?: number;
+};
 
 export type PagedResponse<T> = {
   items: T[];
@@ -17,6 +22,10 @@ export const pageItems = <T>(response: PageResponse<T>): T[] =>
   Array.isArray(response) ? response : response.items;
 
 export class ApiError extends Error {
+  get retryable(): boolean {
+    return this.status === 0 || this.status === 429 || this.status >= 500;
+  }
+
   constructor(
     message: string,
     public readonly status: number
@@ -58,20 +67,36 @@ async function refreshSession(): Promise<AuthSession> {
     });
     await saveSession(next);
     return next;
-  })().finally(() => {
-    refreshPromise = null;
-  });
+  })()
+    .catch(async (error: unknown) => {
+      // The current backend returns 400 for an explicitly invalid refresh token.
+      const rejected =
+        error instanceof ApiError &&
+        (error.status === 401 ||
+          error.status === 403 ||
+          (error.status === 400 && error.message === "Invalid refresh token."));
+      if (rejected) {
+        await clearSession();
+        sessionExpiredHandler?.();
+        throw new ApiError("Phiên đăng nhập đã hết hạn.", 401);
+      }
+      throw error;
+    })
+    .finally(() => {
+      refreshPromise = null;
+    });
 
   return refreshPromise;
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { authenticated, retry, ...fetchOptions } = options;
+  const { authenticated, retry, timeoutMs = ENV.API_TIMEOUT, ...fetchOptions } = options;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), ENV.API_TIMEOUT);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
-  if (options.body && !(options.body instanceof FormData)) headers.set("Content-Type", "application/json");
+  if (options.body && !(options.body instanceof FormData))
+    headers.set("Content-Type", "application/json");
 
   if (authenticated) {
     const session = await readSession();
@@ -85,18 +110,19 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       signal: controller.signal,
     });
     if (response.status === 401 && authenticated && retry !== false) {
-      try {
+      clearTimeout(timeout);
+      const latest = await readSession();
+      // Another request may already have rotated the token before this 401 arrived.
+      if (!latest?.accessToken || headers.get("Authorization") === `Bearer ${latest.accessToken}`) {
         await refreshSession();
-      } catch {
-        await clearSession();
-        sessionExpiredHandler?.();
-        throw new ApiError("Phiên đăng nhập đã hết hạn.", 401);
       }
       return apiRequest<T>(path, { ...options, retry: false });
     }
     if (!response.ok) throw new ApiError(await parseError(response), response.status);
     if (response.status === 204) return undefined as T;
-    return (await response.json()) as T;
+    const payload = (await response.json()) as T;
+    diagnoseApiText(path, payload, response.headers.get("content-type"));
+    return payload;
   } catch (error) {
     if (error instanceof ApiError) throw error;
     if (controller.signal.aborted) throw new ApiError("Kết nối máy chủ quá thời gian.", 0);

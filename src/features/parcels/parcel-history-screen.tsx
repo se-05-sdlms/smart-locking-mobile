@@ -1,131 +1,154 @@
 import { router } from "expo-router";
-import { Card, PressableFeedback, SearchField, Skeleton, Tabs, Typography } from "heroui-native";
+import { PressableFeedback, SearchField, Tabs, Typography } from "heroui-native";
 import type { JSX } from "react";
-import { useEffect, useMemo, useState } from "react";
-import { Image, ScrollView, View } from "react-native";
-import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
-
+import { useMemo, useState } from "react";
+import { View } from "react-native";
 import { GravityIcon } from "@/components/icons/gravity-icon";
+import { ParcelImage } from "@/components/ui/parcel-image";
+import { ResidentFeed } from "@/components/ui/resident-feed";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { useMobileDataRevision } from "@/features/notifications/data-sync";
+import { useResidentFeed } from "@/features/navigation/use-resident-feed";
 import { parcelApi } from "@/features/parcels/api";
 import type { ParcelListItem } from "@/features/parcels/types";
 import { returnApi } from "@/features/returns/api";
 import type { ReturnRequestItem } from "@/features/returns/types";
 
 type Filter = "all" | "incoming" | "outgoing";
+type HistoryRow =
+  { kind: "incoming"; value: ParcelListItem } | { kind: "outgoing"; value: ReturnRequestItem };
 const dateFormatter = new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" });
-
 export function ParcelHistoryContent(): JSX.Element {
-  const dataRevision = useMobileDataRevision();
+  const incoming = useResidentFeed(parcelApi.getHistoryPage);
+  const outgoing = useResidentFeed(returnApi.getPage);
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
-  const [parcels, setParcels] = useState<ParcelListItem[]>([]);
-  const [returns, setReturns] = useState<ReturnRequestItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  useEffect(() => {
-    void Promise.all([parcelApi.getHistory(), returnApi.getMine().catch(() => [])])
-      .then(([incoming, outgoing]) => {
-        setParcels(incoming);
-        setReturns(outgoing);
-      })
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Không thể tải lịch sử."))
-      .finally(() => setLoading(false));
-  }, [dataRevision]);
   const query = search.trim().toLowerCase();
-  const incoming = useMemo(
-    () =>
-      parcels.filter(
-        (item) =>
+  const visible = useMemo(() => {
+    const rows: HistoryRow[] = [];
+    if (filter !== "outgoing")
+      incoming.items.forEach((value) => {
+        if (
           !query ||
-          `${item.parcelCode} ${item.lockerCode} ${item.compartmentCode}`
+          `${value.parcelCode} ${value.lockerCode} ${value.compartmentCode}`
             .toLowerCase()
             .includes(query)
-      ),
-    [parcels, query]
-  );
-  const outgoing = useMemo(
-    () =>
-      returns.filter(
-        (item) =>
-          item.status >= 2 &&
+        )
+          rows.push({ kind: "incoming", value });
+      });
+    if (filter !== "incoming")
+      outgoing.items.forEach((value) => {
+        if (
+          value.status >= 2 &&
           (!query ||
-            `${item.pickupCode} ${item.lockerCode} ${item.compartmentCode ?? ""}`
+            `${value.pickupCode} ${value.lockerCode} ${value.compartmentCode ?? ""}`
               .toLowerCase()
               .includes(query))
-      ),
-    [returns, query]
-  );
-
+        )
+          rows.push({ kind: "outgoing", value });
+      });
+    return rows.sort(
+      (a, b) =>
+        new Date(
+          b.kind === "incoming"
+            ? (b.value.retrievedAt ?? b.value.storedAt)
+            : (b.value.shipperPickedUpAt ?? b.value.createdAt)
+        ).getTime() -
+        new Date(
+          a.kind === "incoming"
+            ? (a.value.retrievedAt ?? a.value.storedAt)
+            : (a.value.shipperPickedUpAt ?? a.value.createdAt)
+        ).getTime()
+    );
+  }, [incoming.items, outgoing.items, filter, query]);
+  const relevant =
+    filter === "incoming" ? [incoming] : filter === "outgoing" ? [outgoing] : [incoming, outgoing];
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
-      <ScrollView
-        contentContainerClassName="gap-4 px-5 pb-6 pt-4"
-        keyboardShouldPersistTaps="handled"
-      >
-        <Typography.Heading className="text-3xl">Lịch sử</Typography.Heading>
-        <SearchField value={search} onChange={setSearch}>
-          <SearchField.Group>
-            <SearchField.SearchIcon />
-            <SearchField.Input placeholder="Tìm mã, tủ hoặc ngăn" />
-            <SearchField.ClearButton />
-          </SearchField.Group>
-        </SearchField>
-        <Tabs value={filter} onValueChange={(value) => setFilter(value as Filter)}>
-          <Tabs.List>
-            <Tabs.Indicator />
-            <Tabs.Trigger value="all">
-              <Tabs.Label>Tất cả</Tabs.Label>
-            </Tabs.Trigger>
-            <Tabs.Trigger value="incoming">
-              <Tabs.Label>Nhận hàng</Tabs.Label>
-            </Tabs.Trigger>
-            <Tabs.Trigger value="outgoing">
-              <Tabs.Label>Gửi đồ</Tabs.Label>
-            </Tabs.Trigger>
-          </Tabs.List>
-        </Tabs>
-        {error ? (
-          <Typography.Paragraph className="text-danger">{error}</Typography.Paragraph>
-        ) : null}
-        {loading
-          ? [0, 1, 2].map((value) => <Skeleton key={value} className="h-24 rounded-2xl" />)
-          : null}
-        {!loading && filter !== "outgoing"
-          ? incoming.map((parcel) => <IncomingRow key={parcel.id} parcel={parcel} />)
-          : null}
-        {!loading && filter !== "incoming"
-          ? outgoing.map((item) => <OutgoingRow key={item.id} item={item} />)
-          : null}
-        {!loading &&
-        !error &&
-        ((filter === "incoming" && incoming.length === 0) ||
-          (filter === "outgoing" && outgoing.length === 0) ||
-          (filter === "all" && incoming.length + outgoing.length === 0)) ? (
-          <Card>
-            <Card.Body className="items-center gap-2 py-10">
-              <GravityIcon name="clock" size={32} />
-              <Typography.Heading className="text-lg">Chưa có hoạt động phù hợp</Typography.Heading>
-            </Card.Body>
-          </Card>
-        ) : null}
-      </ScrollView>
-    </SafeAreaView>
+    <ResidentFeed
+      tab
+      items={visible}
+      keyExtractor={(row) => `${row.kind}-${row.value.id}`}
+      renderItem={({ item }) =>
+        item.kind === "incoming" ? (
+          <IncomingRow parcel={item.value} />
+        ) : (
+          <OutgoingRow item={item.value} />
+        )
+      }
+      loading={relevant.some((feed) => feed.loading)}
+      refreshing={relevant.some((feed) => feed.refreshing)}
+      loadingMore={relevant.some((feed) => feed.loadingMore)}
+      hasMore={relevant.some((feed) => feed.hasMore)}
+      error={relevant
+        .map((feed) => feed.error)
+        .filter(Boolean)
+        .join("\n")}
+      paginationError={relevant
+        .map((feed) => feed.paginationError)
+        .filter(Boolean)
+        .join("\n")}
+      onRetryMore={() =>
+        relevant.forEach((feed) => {
+          if (feed.paginationError) feed.retryMore();
+        })
+      }
+      onRefresh={() => relevant.forEach((feed) => feed.refresh())}
+      onLoadMore={() => relevant.forEach((feed) => feed.loadMore())}
+      emptyTitle={query ? "Không có kết quả tìm kiếm" : "Chưa có lịch sử"}
+      empty={
+        query
+          ? relevant.some((feed) => feed.hasMore)
+            ? "Chưa tìm thấy trong lịch sử đã tải. Tải thêm để tìm hoạt động cũ hơn."
+            : "Thử tìm bằng mã bưu kiện, tủ hoặc ngăn khác."
+          : "Chưa có hoạt động trong mục này."
+      }
+      icon="clock"
+      header={
+        <>
+          <Typography.Heading className="text-3xl">Lịch sử</Typography.Heading>
+          <SearchField value={search} onChange={setSearch}>
+            <SearchField.Group>
+              <SearchField.SearchIcon />
+              <SearchField.Input placeholder="Tìm mã, tủ hoặc ngăn" />
+              <SearchField.ClearButton />
+            </SearchField.Group>
+          </SearchField>
+          <Tabs value={filter} onValueChange={(value) => setFilter(value as Filter)}>
+            <Tabs.List>
+              <Tabs.Indicator />
+              <Tabs.Trigger value="all">
+                <Tabs.Label>Tất cả</Tabs.Label>
+              </Tabs.Trigger>
+              <Tabs.Trigger value="incoming">
+                <Tabs.Label>Nhận hàng</Tabs.Label>
+              </Tabs.Trigger>
+              <Tabs.Trigger value="outgoing">
+                <Tabs.Label>Gửi đồ</Tabs.Label>
+              </Tabs.Trigger>
+            </Tabs.List>
+          </Tabs>
+        </>
+      }
+    />
   );
 }
 
 function IncomingRow({ parcel }: { parcel: ParcelListItem }): JSX.Element {
   return (
-    <PressableFeedback onPress={() => router.push(`/parcels/${parcel.id}`)}>
-      <Card>
-        <Card.Body className="flex-row items-center gap-3 py-3">
+    <PressableFeedback
+      accessibilityRole="button"
+      accessibilityLabel={`Xem bưu kiện ${parcel.parcelCode}`}
+      onPress={() => router.push(`/parcels/${parcel.id}`)}
+    >
+      <View className="border-b border-separator">
+        <View className="flex-row items-center gap-3 py-4">
           <View className="h-16 w-16 items-center justify-center rounded-xl bg-accent-soft">
             <GravityIcon name="package" tone="accent" />
           </View>
-          <View className="flex-1 gap-1">
-            <View className="flex-row items-center justify-between gap-2">
-              <Typography.Heading className="text-base">{parcel.parcelCode}</Typography.Heading>
+          <View className="min-w-0 flex-1 gap-1">
+            <View className="min-w-0 gap-1">
+              <Typography.Heading className="text-base" numberOfLines={1} ellipsizeMode="middle">
+                {parcel.parcelCode}
+              </Typography.Heading>
               <StatusBadge
                 label={parcel.status === "Retrieved" ? "Đã nhận" : "Đã chuyển kho"}
                 tone="default"
@@ -138,8 +161,8 @@ function IncomingRow({ parcel }: { parcel: ParcelListItem }): JSX.Element {
               {dateFormatter.format(new Date(parcel.retrievedAt ?? parcel.storedAt))}
             </Typography.Paragraph>
           </View>
-        </Card.Body>
-      </Card>
+        </View>
+      </View>
     </PressableFeedback>
   );
 }
@@ -148,13 +171,19 @@ function OutgoingRow({ item }: { item: ReturnRequestItem }): JSX.Element {
   const label = item.status === 3 ? "Đã lấy" : item.status === 4 ? "Đã hủy" : "Chờ lấy";
   return (
     <PressableFeedback
+      accessibilityRole="button"
+      accessibilityLabel={`Xem đồ gửi ${item.pickupCode || item.lockerCode}`}
       onPress={() => router.push({ pathname: "/returns/[id]", params: { id: item.id } })}
     >
-      <Card>
-        <Card.Body className="flex-row items-center gap-3 py-3">
-          <Image source={{ uri: item.imageUrl }} className="h-16 w-16 rounded-xl bg-default" />
-          <View className="flex-1 gap-1">
-            <View className="flex-row items-center justify-between gap-2">
+      <View className="border-b border-separator">
+        <View className="flex-row items-center gap-3 py-4">
+          <ParcelImage
+            uri={item.imageUrl}
+            recyclingKey={item.id}
+            style={{ width: 56, height: 56, borderRadius: 12 }}
+          />
+          <View className="min-w-0 flex-1 gap-1">
+            <View className="min-w-0 gap-1">
               <Typography.Heading className="text-base">
                 {item.pickupCode || "Đồ gửi"}
               </Typography.Heading>
@@ -168,8 +197,8 @@ function OutgoingRow({ item }: { item: ReturnRequestItem }): JSX.Element {
               {dateFormatter.format(new Date(item.shipperPickedUpAt ?? item.createdAt))}
             </Typography.Paragraph>
           </View>
-        </Card.Body>
-      </Card>
+        </View>
+      </View>
     </PressableFeedback>
   );
 }

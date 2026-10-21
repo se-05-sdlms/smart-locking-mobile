@@ -10,26 +10,48 @@
 @layer theme {
   :root {
     @variant light {
-      --background: oklch(0.985 0.008 70);
-      --accent: oklch(0.67 0.205 43);
-      --accent-foreground: var(--snow);
+      --background: #ffffff;
+      --foreground: #171717;
+      --surface: #ffffff;
+      --surface-foreground: #171717;
+      --surface-secondary: #f6f7f9;
+      --surface-tertiary: #eef0f3;
+      --overlay: #ffffff;
+      --default: #f6f7f9;
+      --default-foreground: #171717;
+      --muted: #626973;
+      --border: #e7e9ed;
+      --separator: #e7e9ed;
+      --field-background: #f6f7f9;
+      --field-foreground: #171717;
+      --field-border: #e7e9ed;
+      --accent: #ea580c;
+      --accent-soft: #fff1e8;
+      --accent-soft-foreground: #9a3412;
+      --accent-foreground: #171717;
       --focus: var(--accent);
-      --link: var(--accent);
-      --field-border: oklch(0.9 0.02 55);
+      --link: #c2410c;
     }
-
     @variant dark {
-      --background: oklch(0.16 0.008 45);
-      --surface: oklch(0.205 0.009 45);
-      --surface-secondary: oklch(0.24 0.01 45);
-      --surface-tertiary: oklch(0.27 0.012 45);
-      --overlay: oklch(0.205 0.009 45);
-      --default: oklch(0.26 0.01 45);
-      --field-background: oklch(0.205 0.009 45);
-      --border: oklch(0.32 0.012 45);
-      --separator: oklch(0.4 0.012 45);
-      --accent: oklch(0.72 0.19 48);
-      --accent-foreground: var(--eclipse);
+      --background: #111214;
+      --foreground: #f4f5f7;
+      --surface: #1b1d21;
+      --surface-foreground: #f4f5f7;
+      --surface-secondary: #24272c;
+      --surface-tertiary: #2d3138;
+      --overlay: #1b1d21;
+      --default: #24272c;
+      --default-foreground: #f4f5f7;
+      --muted: #a6adb8;
+      --field-background: #1b1d21;
+      --field-foreground: #f4f5f7;
+      --field-border: #363b44;
+      --border: #363b44;
+      --separator: #363b44;
+      --accent: #fb923c;
+      --accent-soft: #38251b;
+      --accent-soft-foreground: #fdba74;
+      --accent-foreground: #171717;
       --focus: var(--accent);
       --link: var(--accent);
     }

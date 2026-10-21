@@ -1,8 +1,9 @@
+import { ParcelImage } from "@/components/ui/parcel-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button, Card, Spinner, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useCallback, useEffect, useState } from "react";
-import { Image, ScrollView, Share, View } from "react-native";
+import { ScrollView, Share, View } from "react-native";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { FlowSteps, IncidentAction, ScreenHeader } from "@/components/ui/resident-ui";
@@ -50,7 +51,10 @@ export default function ReturnDetailScreen(): JSX.Element {
   const active = !item || item.status === 0 ? 0 : item.status === 1 ? 1 : 2;
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerClassName="gap-5 px-5 pb-10 pt-4">
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="gap-5 px-5 pb-10 pt-4"
+      >
         <ScreenHeader
           title={
             item?.status === 2
@@ -67,10 +71,10 @@ export default function ReturnDetailScreen(): JSX.Element {
             <FlowSteps labels={["Thông tin", "Gửi vào tủ", "Hoàn tất"]} active={active} />
             {item.status === 0 ? (
               <>
-                <Image
-                  source={{ uri: item.imageUrl }}
+                <ParcelImage
+                  uri={item.imageUrl}
                   className="h-44 w-full rounded-3xl bg-default"
-                  resizeMode="cover"
+                  contentFit="cover"
                 />
                 <Card>
                   <Card.Body className="gap-3">

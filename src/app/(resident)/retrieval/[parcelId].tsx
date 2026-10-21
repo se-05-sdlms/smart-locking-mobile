@@ -1,8 +1,9 @@
+import { ParcelImage } from "@/components/ui/parcel-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button, Card, Skeleton, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
-import { Image, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
@@ -79,6 +80,7 @@ export default function RetrievalScreen(): JSX.Element {
       {loading ? <Skeleton className="mx-5 mt-6 h-96 rounded-3xl" /> : null}
       {!loading && parcel ? (
         <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
           contentContainerClassName="flex-grow gap-5 px-5 pb-4 pt-5"
           showsVerticalScrollIndicator={false}
         >
@@ -89,8 +91,8 @@ export default function RetrievalScreen(): JSX.Element {
                 <Card.Body className="flex-row items-center gap-3">
                   <View className="h-20 w-20 items-center justify-center rounded-2xl bg-accent-soft">
                     {parcel.parcelImageUrl && !imageFailed ? (
-                      <Image
-                        source={{ uri: parcel.parcelImageUrl }}
+                      <ParcelImage
+                        uri={parcel.parcelImageUrl}
                         className="h-20 w-20 rounded-2xl"
                         onError={() => setImageFailed(true)}
                       />

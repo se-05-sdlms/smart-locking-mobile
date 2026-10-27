@@ -1,3 +1,4 @@
+import { LockerSupportCard } from "@/features/support/locker-support-card";
 import { router, useFocusEffect } from "expo-router";
 import {
   Button,
@@ -170,6 +171,7 @@ export function ResidentHomeContent(): JSX.Element {
             </Button>
           </Card.Body>
         </Card>
+        <LockerSupportCard />
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,3 +1,4 @@
+import { LockerSupportCard } from "@/features/support/locker-support-card";
 import { ParcelImage } from "@/components/ui/parcel-image";
 import { useLocalSearchParams } from "expo-router";
 import { Card, Skeleton, Typography } from "heroui-native";
@@ -31,6 +32,7 @@ export default function IncidentDetailScreen(): JSX.Element {
         {!item && !error ? <Skeleton className="h-96 rounded-3xl" /> : null}
         {item ? (
           <>
+            <LockerSupportCard lockerCode={item.lockerCode} reference={item.id} />
             <View className="flex-row items-center justify-between">
               <Typography.Heading className="text-xl">{item.title}</Typography.Heading>
               <StatusBadge

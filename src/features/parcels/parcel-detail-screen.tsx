@@ -101,7 +101,8 @@ export function ParcelDetailContent(): JSX.Element {
               </Typography.Heading>
             </View>
             <Typography.Paragraph className="text-sm">
-              Nhân viên vận hành đã chuyển kiện hàng khỏi tủ về địa chỉ thu hồi. Kiện hàng hiện không còn trong ngăn tủ.
+              Nhân viên vận hành đã chuyển kiện hàng khỏi tủ về địa chỉ thu hồi. Kiện hàng hiện
+              không còn trong ngăn tủ.
             </Typography.Paragraph>
             <View className="gap-1 rounded-xl bg-background/80 p-3">
               <Typography.Paragraph className="text-xs text-muted">

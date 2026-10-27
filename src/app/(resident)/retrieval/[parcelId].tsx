@@ -50,7 +50,10 @@ export default function RetrievalScreen(): JSX.Element {
         router.replace({ pathname: "/payment/[parcelId]", params: { parcelId: id } });
         return;
       }
-      void parcelApi.getDetail(id).then(setParcel).catch(() => {});
+      void parcelApi
+        .getDetail(id)
+        .then(setParcel)
+        .catch(() => {});
       setError(e instanceof Error ? e.message : "Không thể mở ngăn.");
     } finally {
       setSubmitting(false);
@@ -111,7 +114,8 @@ export default function RetrievalScreen(): JSX.Element {
                     </Typography.Heading>
                   </View>
                   <Typography.Paragraph className="text-sm">
-                    Nhân viên vận hành đã chuyển kiện hàng khỏi tủ về địa chỉ thu hồi. Kiện hàng hiện không còn trong ngăn tủ và không thể mở ngăn để nhận.
+                    Nhân viên vận hành đã chuyển kiện hàng khỏi tủ về địa chỉ thu hồi. Kiện hàng
+                    hiện không còn trong ngăn tủ và không thể mở ngăn để nhận.
                   </Typography.Paragraph>
                   <View className="gap-1 rounded-xl bg-background/80 p-3">
                     <Typography.Paragraph className="text-xs text-muted">
@@ -127,7 +131,9 @@ export default function RetrievalScreen(): JSX.Element {
               </Card>
 
               {error ? (
-                <Typography.Paragraph className="text-center text-danger">{error}</Typography.Paragraph>
+                <Typography.Paragraph className="text-center text-danger">
+                  {error}
+                </Typography.Paragraph>
               ) : null}
 
               <View className="gap-2 pt-2">
@@ -167,7 +173,9 @@ export default function RetrievalScreen(): JSX.Element {
                         )}
                       </View>
                       <View className="flex-1 gap-1">
-                        <Typography.Heading className="text-lg">{parcel.parcelCode}</Typography.Heading>
+                        <Typography.Heading className="text-lg">
+                          {parcel.parcelCode}
+                        </Typography.Heading>
                         <Typography.Paragraph>{parcel.lockerCode}</Typography.Paragraph>
                         <Typography.Paragraph className="text-muted">
                           Ngăn {parcel.compartmentCode}
@@ -206,7 +214,9 @@ export default function RetrievalScreen(): JSX.Element {
                   <Typography.Heading className="text-3xl">Đã nhận bưu kiện</Typography.Heading>
                   <Card className="w-full">
                     <Card.Body className="items-center gap-1">
-                      <Typography.Heading className="text-lg">{parcel.parcelCode}</Typography.Heading>
+                      <Typography.Heading className="text-lg">
+                        {parcel.parcelCode}
+                      </Typography.Heading>
                       <Typography.Paragraph className="text-muted">
                         Ngăn {parcel.compartmentCode} đã được đóng và hoàn tất.
                       </Typography.Paragraph>
@@ -215,7 +225,9 @@ export default function RetrievalScreen(): JSX.Element {
                 </View>
               ) : null}
               {error ? (
-                <Typography.Paragraph className="text-center text-danger">{error}</Typography.Paragraph>
+                <Typography.Paragraph className="text-center text-danger">
+                  {error}
+                </Typography.Paragraph>
               ) : null}
               <View className="mt-auto gap-1 pt-2">
                 {step === "ready" ? (

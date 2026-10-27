@@ -39,6 +39,8 @@ export default function ProfileScreen(): JSX.Element {
   const dataRevision = useMobileDataRevision();
   useFocusEffect(
     useCallback(() => {
+      void user?.id;
+      void dataRevision;
       let active = true;
       setPackageName("Đang tải gói tài khoản...");
       void accountPackageApi
@@ -70,8 +72,9 @@ export default function ProfileScreen(): JSX.Element {
   }, []);
   useFocusEffect(
     useCallback(() => {
+      void dataRevision;
       void loadProfile();
-    }, [loadProfile])
+    }, [loadProfile, dataRevision])
   );
   const changeApproval = async (automatic: boolean) => {
     if (approvalPending.current || profilePending.current || !profile) return;
@@ -154,6 +157,14 @@ export default function ProfileScreen(): JSX.Element {
             icon="building"
             title="Tủ của tôi"
             description={profile?.registeredLockerId ? "Đã liên kết" : "Chưa liên kết"}
+            onPress={() => router.push("/account-changes")}
+          />
+          <Separator />
+          <FlatRow
+            icon="user"
+            title="Yêu cầu đổi tủ / số điện thoại"
+            description="Tạo và theo dõi phê duyệt"
+            onPress={() => router.push("/account-changes")}
           />
         </Section>
         <Section title="Bảo mật">

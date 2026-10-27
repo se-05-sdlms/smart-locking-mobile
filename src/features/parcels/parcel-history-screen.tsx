@@ -150,7 +150,7 @@ function IncomingRow({ parcel }: { parcel: ParcelListItem }): JSX.Element {
                 {parcel.parcelCode}
               </Typography.Heading>
               <StatusBadge
-                label={parcel.status === "Retrieved" ? "Đã nhận" : "Đã chuyển kho"}
+                label={parcel.status === "Retrieved" ? "Đã nhận" : "Đã thu hồi"}
                 tone="default"
               />
             </View>
@@ -158,7 +158,7 @@ function IncomingRow({ parcel }: { parcel: ParcelListItem }): JSX.Element {
               {parcel.lockerCode} · Ngăn {parcel.compartmentCode}
             </Typography.Paragraph>
             <Typography.Paragraph className="text-xs text-muted">
-              {dateFormatter.format(new Date(parcel.retrievedAt ?? parcel.storedAt))}
+              {dateFormatter.format(new Date(parcel.retrievedAt ?? parcel.removedAt ?? parcel.storedAt))}
             </Typography.Paragraph>
           </View>
         </View>

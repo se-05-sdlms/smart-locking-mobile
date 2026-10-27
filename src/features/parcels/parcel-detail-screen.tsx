@@ -1,3 +1,4 @@
+import { LockerSupportCard } from "@/features/support/locker-support-card";
 import { ActionError } from "@/components/ui/action-error";
 import { ParcelImage } from "@/components/ui/parcel-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -204,6 +205,7 @@ export function ParcelDetailContent(): JSX.Element {
             <GravityIcon name="arrow-right" tone="accent-foreground" />
           </Button>
         ) : null}
+        <LockerSupportCard lockerId={parcel.lockerId} reference={parcel.parcelCode} />
         <IncidentAction
           onPress={() =>
             router.push({ pathname: "/incidents/new", params: { parcelId: parcel.id } })

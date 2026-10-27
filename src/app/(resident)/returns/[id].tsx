@@ -1,3 +1,4 @@
+import { LockerSupportCard } from "@/features/support/locker-support-card";
 import { ParcelImage } from "@/components/ui/parcel-image";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Button, Card, Spinner, Typography } from "heroui-native";
@@ -119,6 +120,7 @@ export default function ReturnDetailScreen(): JSX.Element {
           <Spinner />
         ) : (
           <>
+            <LockerSupportCard lockerCode={item.lockerCode} reference={item.id} />
             {item.cancellation ? (
               <Card>
                 <Card.Body className="gap-3">

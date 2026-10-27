@@ -1,3 +1,4 @@
+import { LockerSupportCard } from "@/features/support/locker-support-card";
 import { ParcelImage } from "@/components/ui/parcel-image";
 import { router, useFocusEffect } from "expo-router";
 import { Button, Card, Skeleton, Typography } from "heroui-native";
@@ -136,6 +137,7 @@ export function DeliveryRequestDetailScreen({ id }: { id: string }): JSX.Element
 
         {request ? (
           <View className="gap-4">
+            <LockerSupportCard lockerCode={request.lockerCode} reference={request.requestId} />
             {canRespond && request.approvalExpiresAt ? (
               <Card className="border border-danger/20 bg-danger/5">
                 <Card.Body className="flex-row items-center gap-3 py-3">

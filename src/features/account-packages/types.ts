@@ -19,6 +19,10 @@ export type ResidentSubscription = {
   price: number;
   externalOrderCode: string | null;
   paidAt: string | null;
+  planCode?: string | null;
+  durationDays?: number | null;
+  maxActiveParcels?: number | null;
+  requiresBenefitsReconciliation?: boolean;
 };
 
 export type SubscriptionCheckout = {

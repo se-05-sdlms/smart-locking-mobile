@@ -19,7 +19,7 @@ const defaults: Dependencies = {
 };
 
 const isValidPayment = (payment: SubscriptionCheckout): boolean =>
-  /^https?:\/\//i.test(payment.checkoutUrl) &&
+  /^https:\/\//i.test(payment.checkoutUrl) &&
   Number.isSafeInteger(payment.amount) &&
   payment.amount > 0 &&
   Number.isSafeInteger(payment.orderCode);

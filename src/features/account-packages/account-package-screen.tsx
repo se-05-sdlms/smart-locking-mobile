@@ -28,6 +28,11 @@ import { useMobileDataRevision } from "@/features/notifications/data-sync";
 const formatDate = (value: string): string =>
   new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" }).format(new Date(value));
 
+const purchasedBenefits = (item: ResidentSubscription): string =>
+  item.requiresBenefitsReconciliation || !item.maxActiveParcels || !item.durationDays
+    ? "Quyền lợi lượt mua cũ cần được đối chiếu. Liên hệ hỗ trợ; hạn mức hiện bán không thay thế quyền lợi đã mua."
+    : `${item.durationDays} ngày · Tối đa ${item.maxActiveParcels} bưu kiện cùng lúc`;
+
 const confirmPrice = (previous: number, amount: number): Promise<boolean> => {
   if (previous === amount) return Promise.resolve(true);
   return new Promise((resolve) =>
@@ -74,6 +79,8 @@ export function AccountPackageScreen(): JSX.Element {
 
   useFocusEffect(
     useCallback(() => {
+      void dataRevision;
+      void revision;
       let active = true;
       let request = 0;
       const load = async () => {
@@ -127,7 +134,6 @@ export function AccountPackageScreen(): JSX.Element {
     }, [user, dataRevision, revision])
   );
 
-  const currentPlan = packages.plans.find((plan) => plan.id === current?.planId);
   const selectedPlan = packages.plans.find((plan) => plan.id === selectedId);
   const selectedPending = history.find(
     (item) => item.planId === selectedId && item.status === "PendingPayment"
@@ -238,6 +244,7 @@ export function AccountPackageScreen(): JSX.Element {
                 {statusLabel(item)}
               </Typography.Paragraph>
               <PackageBenefit icon="credit-card" text={formatPackagePrice(item.price)} />
+              <PackageBenefit icon="package" text={purchasedBenefits(item)} />
               {item.status !== "PendingPayment" ? (
                 <Typography.Paragraph className="text-sm text-muted">
                   {formatDate(item.startDate)} – {formatDate(item.endDate)}
@@ -284,7 +291,7 @@ export function AccountPackageScreen(): JSX.Element {
                   Gói đang sử dụng
                 </Typography.Paragraph>
                 <Typography.Heading className="text-xl">
-                  {current?.planName ?? "Gói Cơ bản"}
+                  {current?.planName ?? "Chưa có gói đang hiệu lực"}
                 </Typography.Heading>
                 {current ? (
                   <>
@@ -297,22 +304,20 @@ export function AccountPackageScreen(): JSX.Element {
                   </>
                 ) : (
                   <Typography.Paragraph className="text-sm text-muted">
-                    Bạn chưa có gói bổ sung đang hiệu lực.
+                    Cần kích hoạt gói trước khi nhận thêm kiện mới. Bạn vẫn có thể lấy các kiện đã
+                    có.
                   </Typography.Paragraph>
                 )}
                 <PackageBenefit
                   icon="package"
                   text={
-                    currentPlan
-                      ? `Tối đa ${currentPlan.maxActiveParcels} bưu kiện cùng lúc`
-                      : current
-                        ? "Thông tin hạn mức gói hiện tại chưa được cung cấp"
-                        : "Hạn mức theo chính sách hiện hành của tủ"
+                    current ? purchasedBenefits(current) : "Chọn gói tài khoản ở dưới để tiếp tục."
                   }
                 />
               </Surface>
             ) : null}
             <PackagePicker
+              allowDefault={false}
               plans={packages.plans}
               selectedId={selectedPlan?.id ?? null}
               onSelect={(id) => {
@@ -350,14 +355,16 @@ export function AccountPackageScreen(): JSX.Element {
                     onPress={() => void activateFreePlan()}
                   >
                     {paying ? <Spinner size="sm" color="current" /> : null}
-                    <Button.Label>{paying ? "Đang kích hoạt..." : "Kích hoạt gói miễn phí"}</Button.Label>
+                    <Button.Label>
+                      {paying ? "Đang kích hoạt..." : "Kích hoạt gói miễn phí"}
+                    </Button.Label>
                   </Button>
                 )}
               </View>
             ) : (
               <Typography.Paragraph className="text-sm text-muted">
-                Gói Cơ bản là lựa chọn mặc định khi chưa có gói bổ sung. Chọn mục này không hủy hoặc
-                thay đổi gói đang hiệu lực.
+                Chọn gói đang bán để đăng ký. Quyền lợi các lượt đã mua được giữ nguyên theo lịch
+                sử; chọn gói mới không hủy hoặc thay đổi lượt đang hiệu lực.
               </Typography.Paragraph>
             )}
             {paymentError ? (

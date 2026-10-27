@@ -75,6 +75,8 @@ const errorMessages: Record<string, string> = {
   "delivery/not_found": "Không tìm thấy yêu cầu giao hàng.",
   "delivery/invalid_state": "Yêu cầu giao hàng đã thay đổi trạng thái. Vui lòng tải lại.",
   "delivery/approval_expired": "Yêu cầu xác nhận hàng đã hết hạn.",
+  "delivery/recipient_cannot_receive":
+    "Bạn chưa thể nhận thêm kiện. Hãy kiểm tra gói đang hiệu lực và số kiện đang lưu; liên hệ ban quản lý nếu quyền lợi gói cần đối chiếu.",
   "return/not_found": "Không tìm thấy yêu cầu gửi hàng.",
   "return/invalid_state": "Trạng thái yêu cầu gửi hàng không cho phép thao tác này.",
   "return/invalid_pickup_code": "Mã lấy hàng không đúng hoặc đã hết hạn.",

@@ -109,6 +109,8 @@ function returnState(item: ReturnRequestItem): {
   label: string;
   tone: "warning" | "success" | "danger" | "default";
 } {
+  if (item.cancellation?.status === "PendingVerification")
+    return { label: "Chờ xác minh hủy", tone: "warning" };
   if (item.status === 3) return { label: "Đã lấy", tone: "success" };
   if (item.status >= 4) return { label: "Đã hủy", tone: "default" };
   if (item.status === 2) return { label: "Chờ lấy", tone: "warning" };

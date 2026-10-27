@@ -2,10 +2,15 @@ import type {
   DeliveryApprovalMode,
   PendingDeliveryRequest,
   ResidentApprovalProfile,
+  ResidentDeliveryRequest,
 } from "@/features/delivery-requests/types";
 import { apiRequest, pageItems, type PageResponse } from "@/lib/api-client";
 
 export const deliveryRequestApi = {
+  getDetail: (id: string) =>
+    apiRequest<ResidentDeliveryRequest>(`/delivery-requests/${id}/resident`, {
+      authenticated: true,
+    }),
   getPendingPage: (page = 1) =>
     apiRequest<PageResponse<PendingDeliveryRequest>>(
       `/delivery-requests?status=pending&pageNumber=${page}&pageSize=30`,

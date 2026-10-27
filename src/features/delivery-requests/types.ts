@@ -18,3 +18,18 @@ export type ResidentApprovalProfile = {
   email?: string | null;
   deliveryApprovalMode: DeliveryApprovalMode;
 };
+
+export type ResidentDeliveryRequest = Omit<PendingDeliveryRequest, "approvalExpiresAt"> & {
+  status:
+    | "Started"
+    | "PendingApproval"
+    | "Approved"
+    | "Allocated"
+    | "Deposited"
+    | "Rejected"
+    | "Expired"
+    | "Cancelled"
+    | "Failed";
+  approvalExpiresAt: string | null;
+  decisionAt: string | null;
+};

@@ -30,6 +30,8 @@ export const returnApi = {
       authenticated: true,
     }).then(pageItems),
   get: (id: string) => apiRequest<ReturnRequestItem>(`/returns/${id}`, { authenticated: true }),
+  cancel: (id: string) =>
+    apiRequest<ReturnRequestItem>(`/returns/${id}:cancel`, { method: "POST", authenticated: true }),
   allocateAndOpen: (id: string) =>
     apiRequest<ReturnUnlock>(`/returns/${id}:openCompartment`, {
       method: "POST",

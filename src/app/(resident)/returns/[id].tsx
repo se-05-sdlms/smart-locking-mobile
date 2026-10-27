@@ -17,16 +17,18 @@ export default function ReturnDetailScreen(): JSX.Element {
   const [error, setError] = useState("");
   const [codeHidden, setCodeHidden] = useState(false);
   const requestGeneration = useRef(0);
+  const cancellationInFlight = useRef(false);
   const load = useCallback(async () => {
-    if (!id) return;
+    if (!id || cancellationInFlight.current) return;
     const generation = requestGeneration.current;
     try {
       const current = await returnApi.get(id);
-      if (generation !== requestGeneration.current) return;
+      if (generation !== requestGeneration.current || cancellationInFlight.current) return;
       setItem(current);
       setError("");
       setCodeHidden(Boolean(current.cancellation));
     } catch (e) {
+      if (generation !== requestGeneration.current || cancellationInFlight.current) return;
       setError(e instanceof Error ? e.message : "Không thể tải yêu cầu.");
     }
   }, [id]);
@@ -52,6 +54,7 @@ export default function ReturnDetailScreen(): JSX.Element {
   }, [item?.cancellation?.status, load]);
   const cancel = async () => {
     if (!id || busy) return;
+    cancellationInFlight.current = true;
     setBusy(true);
     requestGeneration.current++;
     setCodeHidden(true);
@@ -66,6 +69,8 @@ export default function ReturnDetailScreen(): JSX.Element {
       );
       // Keep the code hidden until the server confirms the current state.
     } finally {
+      requestGeneration.current++;
+      cancellationInFlight.current = false;
       setBusy(false);
     }
   };

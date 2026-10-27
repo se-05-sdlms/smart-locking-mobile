@@ -2,7 +2,7 @@ import { router, useFocusEffect } from "expo-router";
 import { Button, Card, ControlField, Switch, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useCallback, useEffect, useState } from "react";
-import { View } from "react-native";
+import { AppState, View } from "react-native";
 import { ParcelImage } from "@/components/ui/parcel-image";
 import { ScreenHeader } from "@/components/ui/resident-ui";
 import { ResidentFeed } from "@/components/ui/resident-feed";
@@ -16,6 +16,15 @@ import type {
 const dateFormatter = new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" });
 export function DeliveryRequestListScreen(): JSX.Element {
   const feed = useResidentFeed(deliveryRequestApi.getPendingPage);
+  const refresh = feed.refresh;
+  useFocusEffect(
+    useCallback(() => {
+      const timer = setInterval(() => {
+        if (AppState.currentState === "active") refresh();
+      }, 10000);
+      return () => clearInterval(timer);
+    }, [refresh])
+  );
   const [mode, setMode] = useState<DeliveryApprovalMode | null>(null);
   const [now, setNow] = useState(Date.now);
   const [savingMode, setSavingMode] = useState(false);

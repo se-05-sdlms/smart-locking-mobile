@@ -1,6 +1,6 @@
 import { ActionError } from "@/components/ui/action-error";
 import * as Linking from "expo-linking";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Button, Skeleton, Spinner, Surface, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useCallback, useRef, useState } from "react";
@@ -245,6 +245,20 @@ export function AccountPackageScreen(): JSX.Element {
               </Typography.Paragraph>
               <PackageBenefit icon="credit-card" text={formatPackagePrice(item.price)} />
               <PackageBenefit icon="package" text={purchasedBenefits(item)} />
+              {item.externalOrderCode && item.price > 0 ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/payment-reconciliations/[id]",
+                      params: { id: "new", kind: "Subscription", paymentId: item.id },
+                    })
+                  }
+                >
+                  <Button.Label>Tra soát thanh toán gói này</Button.Label>
+                </Button>
+              ) : null}
               {item.status !== "PendingPayment" ? (
                 <Typography.Paragraph className="text-sm text-muted">
                   {formatDate(item.startDate)} – {formatDate(item.endDate)}
@@ -277,6 +291,9 @@ export function AccountPackageScreen(): JSX.Element {
         ListHeaderComponent={
           <View className="gap-5">
             <ScreenHeader title="Gói tài khoản" />
+            <Button variant="secondary" onPress={() => router.push("/payment-reconciliations")}>
+              <Button.Label>Tra soát của tôi</Button.Label>
+            </Button>
             {loading ? <Skeleton className="h-32 rounded-xl" /> : null}
             {loadError ? (
               <ActionError

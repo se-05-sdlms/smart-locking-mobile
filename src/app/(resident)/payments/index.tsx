@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { ListGroup } from "heroui-native";
+import { Button, ListGroup } from "heroui-native";
 import type { JSX } from "react";
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { ResidentFeed } from "@/components/ui/resident-feed";
@@ -17,7 +17,14 @@ export default function PaymentHistoryScreen(): JSX.Element {
       onRefresh={feed.refresh}
       onLoadMore={feed.loadMore}
       onRetryMore={feed.retryMore}
-      header={<ScreenHeader title="Lịch sử thanh toán" />}
+      header={
+        <>
+          <ScreenHeader title="Lịch sử thanh toán" />
+          <Button variant="secondary" onPress={() => router.push("/payment-reconciliations")}>
+            <Button.Label>Tra soát của tôi</Button.Label>
+          </Button>
+        </>
+      }
       empty="Bạn chưa có giao dịch thanh toán phí quá hạn."
       icon="receipt"
       keyExtractor={(item) => item.id}

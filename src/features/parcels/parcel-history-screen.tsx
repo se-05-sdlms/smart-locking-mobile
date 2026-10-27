@@ -50,12 +50,12 @@ export function ParcelHistoryContent(): JSX.Element {
       (a, b) =>
         new Date(
           b.kind === "incoming"
-            ? (b.value.retrievedAt ?? b.value.storedAt)
+            ? (b.value.retrievedAt ?? b.value.removedAt ?? b.value.storedAt)
             : (b.value.shipperPickedUpAt ?? b.value.createdAt)
         ).getTime() -
         new Date(
           a.kind === "incoming"
-            ? (a.value.retrievedAt ?? a.value.storedAt)
+            ? (a.value.retrievedAt ?? a.value.removedAt ?? a.value.storedAt)
             : (a.value.shipperPickedUpAt ?? a.value.createdAt)
         ).getTime()
     );
@@ -150,7 +150,7 @@ function IncomingRow({ parcel }: { parcel: ParcelListItem }): JSX.Element {
                 {parcel.parcelCode}
               </Typography.Heading>
               <StatusBadge
-                label={parcel.status === "Retrieved" ? "Đã nhận" : "Đã chuyển kho"}
+                label={parcel.status === "Retrieved" ? "Đã nhận" : "Đã thu hồi"}
                 tone="default"
               />
             </View>
@@ -158,7 +158,9 @@ function IncomingRow({ parcel }: { parcel: ParcelListItem }): JSX.Element {
               {parcel.lockerCode} · Ngăn {parcel.compartmentCode}
             </Typography.Paragraph>
             <Typography.Paragraph className="text-xs text-muted">
-              {dateFormatter.format(new Date(parcel.retrievedAt ?? parcel.storedAt))}
+              {dateFormatter.format(
+                new Date(parcel.retrievedAt ?? parcel.removedAt ?? parcel.storedAt)
+              )}
             </Typography.Paragraph>
           </View>
         </View>

@@ -27,6 +27,14 @@
       "package": "com.wykowjbu.boxora"
     },
     "plugins": [
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": false,
+          "neverForLocation": true,
+          "bluetoothAlwaysPermission": "Boxora dùng Bluetooth để kết nối đúng tủ ở gần và chuyển lệnh mở ngăn bạn được phép sử dụng."
+        }
+      ],
       "./plugins/with-local-api",
       "expo-router",
       [

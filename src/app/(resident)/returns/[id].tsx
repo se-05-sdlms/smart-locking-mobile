@@ -2,19 +2,30 @@ import { ParcelImage } from "@/components/ui/parcel-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button, Card, Spinner, Typography } from "heroui-native";
 import type { JSX } from "react";
-import { useCallback, useEffect, useState } from "react";
-import { ScrollView, Share, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AppState, ScrollView, Share, View } from "react-native";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 import { GravityIcon } from "@/components/icons/gravity-icon";
 import { FlowSteps, IncidentAction, ScreenHeader } from "@/components/ui/resident-ui";
 import { returnApi } from "@/features/returns/api";
 import type { ReturnRequestItem } from "@/features/returns/types";
+import { unlockViaBluetooth } from "@/features/bluetooth/unlock";
 
 export default function ReturnDetailScreen(): JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [item, setItem] = useState<ReturnRequestItem | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const bluetoothRun = useRef<AbortController | null>(null);
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") bluetoothRun.current?.abort();
+    });
+    return () => {
+      subscription.remove();
+      bluetoothRun.current?.abort();
+    };
+  }, []);
   const load = useCallback(async () => {
     if (!id) return;
     try {
@@ -45,6 +56,24 @@ export default function ReturnDetailScreen(): JSX.Element {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể thực hiện thao tác.");
     } finally {
+      setBusy(false);
+    }
+  };
+  const bluetoothOpen = async () => {
+    if (!id) return;
+    const run = new AbortController();
+    bluetoothRun.current = run;
+    setBusy(true);
+    setError("");
+    try {
+      await unlockViaBluetooth("R", id, run.signal);
+    } catch (e) {
+      if (!run.signal.aborted)
+        setError(e instanceof Error ? e.message : "Chưa xác nhận được lệnh Bluetooth.");
+    } finally {
+      // Preparation may already have allocated the return even if BLE failed.
+      if (!run.signal.aborted) await load();
+      bluetoothRun.current = null;
       setBusy(false);
     }
   };
@@ -87,6 +116,17 @@ export default function ReturnDetailScreen(): JSX.Element {
                         {busy ? "Đang tìm ngăn..." : "Tìm ngăn trống và mở"}
                       </Button.Label>
                     </Button>
+                    <Button
+                      variant="secondary"
+                      isDisabled={busy}
+                      onPress={() => void bluetoothOpen()}
+                    >
+                      <Button.Label>Mở qua Bluetooth khi ở gần tủ</Button.Label>
+                    </Button>
+                    <Typography.Paragraph className="text-xs text-muted">
+                      Điện thoại cần Internet để kiểm tra quyền. Bluetooth chỉ khả dụng khi chính
+                      sách cho phép.
+                    </Typography.Paragraph>
                   </Card.Body>
                 </Card>
               </>
@@ -96,16 +136,20 @@ export default function ReturnDetailScreen(): JSX.Element {
                 <View className="items-center gap-3 rounded-3xl bg-default py-8">
                   <GravityIcon name="lock" size={48} tone="success" />
                   <Typography.Heading className="text-2xl">
-                    Ngăn {item.compartmentCode} đã mở
+                    Kiểm tra ngăn {item.compartmentCode}
                   </Typography.Heading>
                   <Typography.Paragraph className="text-muted">
-                    Hãy đặt đồ vào ngăn và đóng cửa.
+                    Nếu cửa đã mở, hãy đặt đồ vào ngăn và đóng cửa. Chờ máy chủ ghi nhận sau khi tủ
+                    kết nối lại.
                   </Typography.Paragraph>
                 </View>
                 <Button isDisabled={busy} onPress={() => void run("deposit")}>
                   <Button.Label>
                     {busy ? "Đang kiểm tra cửa..." : "Đã đặt đồ và đóng cửa"}
                   </Button.Label>
+                </Button>
+                <Button variant="secondary" isDisabled={busy} onPress={() => void bluetoothOpen()}>
+                  <Button.Label>Thử mở lại qua Bluetooth</Button.Label>
                 </Button>
                 <IncidentAction
                   onPress={() =>

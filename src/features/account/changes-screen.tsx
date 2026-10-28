@@ -50,7 +50,7 @@ function date(value: string): string {
 }
 const blockerLabels: Record<string, string> = {
   Parcel:
-    "Kiện hàng chưa hoàn tất lấy hàng/chuyển điểm tập kết, mã mở ngăn còn hiệu lực hoặc còn phí cần thanh toán.",
+    "Kiện hàng chưa hoàn tất lấy hàng/chuyển đến địa chỉ thu hồi của tủ, mã mở ngăn còn hiệu lực hoặc còn phí cần thanh toán.",
   Delivery:
     "Yêu cầu giao còn chờ duyệt, chưa hoàn tất hoặc ngăn/phiên mở cửa chưa được giải phóng.",
   Return: "Hàng gửi trả, chờ shipper lấy hoặc ngăn/phiên mở cửa chưa hoàn tất.",
@@ -147,7 +147,15 @@ function useRefresh<T>(fetcher: () => Promise<T>) {
       };
     }, [load, revision])
   );
-  return { data, error, loading, load };
+  const apply = useCallback((value: T) => {
+    // A confirmed mutation supersedes any older refresh still in flight.
+    generation.current++;
+    pending.current = false;
+    setData(value);
+    setError("");
+    setLoading(false);
+  }, []);
+  return { data, error, loading, load, apply };
 }
 
 export function AccountChangesScreen(): JSX.Element {
@@ -530,10 +538,10 @@ function ChangeDetail({ id }: { id: string }): JSX.Element {
     setBusy(true);
     setError("");
     try {
-      await accountChangesApi.cancel(id);
+      const updated = await accountChangesApi.cancel(id);
       if (mounted.current) {
+        detail.apply(updated);
         invalidateMobileData();
-        await detail.load();
       }
     } catch (error) {
       if (mounted.current) setError(failureMessage(error));

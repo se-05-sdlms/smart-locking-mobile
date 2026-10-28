@@ -16,7 +16,7 @@ export const authApi = {
   register: (payload: PendingRegistration & { otpCode: string }) =>
     apiRequest<AuthSession>("/auth/register", {
       method: "POST",
-      // Only send fields supported by Backend dev; package choice stays local.
+      // The chosen package is recorded right after registration through /resident-subscriptions/subscribe.
       body: JSON.stringify({
         phoneNumber: payload.phoneNumber,
         password: payload.password,

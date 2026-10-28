@@ -1,6 +1,6 @@
 import { ActionError } from "@/components/ui/action-error";
 import * as Linking from "expo-linking";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Button, Skeleton, Spinner, Surface, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useCallback, useRef, useState } from "react";
@@ -27,6 +27,11 @@ import { useMobileDataRevision } from "@/features/notifications/data-sync";
 
 const formatDate = (value: string): string =>
   new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" }).format(new Date(value));
+
+const purchasedBenefits = (item: ResidentSubscription): string =>
+  item.requiresBenefitsReconciliation || !item.maxActiveParcels || !item.durationDays
+    ? "Quyền lợi lượt mua cũ cần được đối chiếu. Liên hệ hỗ trợ; hạn mức hiện bán không thay thế quyền lợi đã mua."
+    : `${item.durationDays} ngày · Tối đa ${item.maxActiveParcels} bưu kiện cùng lúc`;
 
 const confirmPrice = (previous: number, amount: number): Promise<boolean> => {
   if (previous === amount) return Promise.resolve(true);
@@ -74,6 +79,8 @@ export function AccountPackageScreen(): JSX.Element {
 
   useFocusEffect(
     useCallback(() => {
+      void dataRevision;
+      void revision;
       let active = true;
       let request = 0;
       const load = async () => {
@@ -127,7 +134,6 @@ export function AccountPackageScreen(): JSX.Element {
     }, [user, dataRevision, revision])
   );
 
-  const currentPlan = packages.plans.find((plan) => plan.id === current?.planId);
   const selectedPlan = packages.plans.find((plan) => plan.id === selectedId);
   const selectedPending = history.find(
     (item) => item.planId === selectedId && item.status === "PendingPayment"
@@ -177,12 +183,17 @@ export function AccountPackageScreen(): JSX.Element {
           );
         }
         const plan = plans.find((item) => item.id === planId);
-        if (!plan || plan.price <= 0) {
-          throw new Error("Gói không còn hỗ trợ đăng ký trả phí. Vui lòng chọn lại gói.");
+        if (!plan || plan.price < 0) {
+          throw new Error("Gói không còn hỗ trợ đăng ký. Vui lòng chọn lại gói.");
         }
         if (!(await confirmPrice(displayedAmount, plan.price))) return;
         expectedAmount = plan.price;
         payment = await accountPackageApi.subscribe(plan.id);
+      }
+      if (payment.activated === true) {
+        if (payment.amount !== 0) throw new Error("Số tiền kích hoạt gói không hợp lệ.");
+        await savePreferredPackage(user.id, planId).catch(() => undefined);
+        return;
       }
       setCheckouts((previous) => ({ ...previous, [payment.subscriptionId]: payment }));
       if (!/^https?:\/\//i.test(payment.checkoutUrl)) {
@@ -221,6 +232,21 @@ export function AccountPackageScreen(): JSX.Element {
                 {statusLabel(item)}
               </Typography.Paragraph>
               <PackageBenefit icon="credit-card" text={formatPackagePrice(item.price)} />
+              <PackageBenefit icon="package" text={purchasedBenefits(item)} />
+              {item.externalOrderCode && item.price > 0 ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/payment-reconciliations/[id]",
+                      params: { id: "new", kind: "Subscription", paymentId: item.id },
+                    })
+                  }
+                >
+                  <Button.Label>Tra soát thanh toán gói này</Button.Label>
+                </Button>
+              ) : null}
               {item.status !== "PendingPayment" ? (
                 <Typography.Paragraph className="text-sm text-muted">
                   {formatDate(item.startDate)} – {formatDate(item.endDate)}
@@ -253,6 +279,9 @@ export function AccountPackageScreen(): JSX.Element {
         ListHeaderComponent={
           <View className="gap-5">
             <ScreenHeader title="Gói tài khoản" />
+            <Button variant="secondary" onPress={() => router.push("/payment-reconciliations")}>
+              <Button.Label>Tra soát của tôi</Button.Label>
+            </Button>
             {loading ? <Skeleton className="h-32 rounded-xl" /> : null}
             {loadError ? (
               <ActionError
@@ -267,7 +296,7 @@ export function AccountPackageScreen(): JSX.Element {
                   Gói đang sử dụng
                 </Typography.Paragraph>
                 <Typography.Heading className="text-xl">
-                  {current?.planName ?? "Gói Cơ bản"}
+                  {current?.planName ?? "Chưa có gói đang hiệu lực"}
                 </Typography.Heading>
                 {current ? (
                   <>
@@ -280,22 +309,20 @@ export function AccountPackageScreen(): JSX.Element {
                   </>
                 ) : (
                   <Typography.Paragraph className="text-sm text-muted">
-                    Bạn chưa có gói bổ sung đang hiệu lực.
+                    Cần kích hoạt gói trước khi nhận thêm kiện mới. Bạn vẫn có thể lấy các kiện đã
+                    có.
                   </Typography.Paragraph>
                 )}
                 <PackageBenefit
                   icon="package"
                   text={
-                    currentPlan
-                      ? `Tối đa ${currentPlan.maxActiveParcels} bưu kiện cùng lúc`
-                      : current
-                        ? "Thông tin hạn mức gói hiện tại chưa được cung cấp"
-                        : "Hạn mức theo chính sách hiện hành của tủ"
+                    current ? purchasedBenefits(current) : "Chọn gói tài khoản ở dưới để tiếp tục."
                   }
                 />
               </Surface>
             ) : null}
             <PackagePicker
+              allowDefault={false}
               plans={packages.plans}
               selectedId={selectedPlan?.id ?? null}
               onSelect={(id) => {
@@ -328,15 +355,21 @@ export function AccountPackageScreen(): JSX.Element {
                     </Button.Label>
                   </Button>
                 ) : (
-                  <Typography.Paragraph className="text-sm text-muted">
-                    Gói miễn phí hiện chưa hỗ trợ kích hoạt trực tiếp. Bạn vẫn sử dụng gói hiện tại.
-                  </Typography.Paragraph>
+                  <Button
+                    isDisabled={paying || loading || !!loadError || packages.loading}
+                    onPress={() => void pay()}
+                  >
+                    {paying ? <Spinner size="sm" color="current" /> : null}
+                    <Button.Label>
+                      {paying ? "Đang kích hoạt..." : "Kích hoạt gói miễn phí"}
+                    </Button.Label>
+                  </Button>
                 )}
               </View>
             ) : (
               <Typography.Paragraph className="text-sm text-muted">
-                Gói Cơ bản là lựa chọn mặc định khi chưa có gói bổ sung. Chọn mục này không hủy hoặc
-                thay đổi gói đang hiệu lực.
+                Chọn gói đang bán để đăng ký. Quyền lợi các lượt đã mua được giữ nguyên theo lịch
+                sử; chọn gói mới không hủy hoặc thay đổi lượt đang hiệu lực.
               </Typography.Paragraph>
             )}
             {paymentError ? (

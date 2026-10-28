@@ -1,3 +1,4 @@
+import { LockerSupportCard } from "@/features/support/locker-support-card";
 import { ActionError } from "@/components/ui/action-error";
 import { ParcelImage } from "@/components/ui/parcel-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -78,10 +79,44 @@ export function ParcelDetailContent(): JSX.Element {
             </Typography.Heading>
             <StatusBadge
               label={statusLabel(parcel.status)}
-              tone={parcel.status === "Overdue" ? "danger" : "success"}
+              tone={
+                parcel.status === "Overdue"
+                  ? "danger"
+                  : parcel.status === "Removed"
+                    ? "default"
+                    : "success"
+              }
             />
           </View>
         </View>
+
+        {parcel.status === "Removed" ? (
+          <Surface
+            variant="secondary"
+            className="gap-3 rounded-2xl border border-warning/30 bg-warning/5 p-4"
+          >
+            <View className="flex-row items-center gap-2">
+              <GravityIcon name="alert-circle" tone="warning" size={20} />
+              <Typography.Heading className="text-base font-semibold">
+                Kiện hàng đã được thu hồi
+              </Typography.Heading>
+            </View>
+            <Typography.Paragraph className="text-sm">
+              Nhân viên vận hành đã chuyển kiện hàng khỏi tủ về địa chỉ thu hồi. Kiện hàng hiện
+              không còn trong ngăn tủ.
+            </Typography.Paragraph>
+            <View className="gap-1 rounded-xl bg-background/80 p-3">
+              <Typography.Paragraph className="text-xs text-muted">
+                Địa chỉ thu hồi của tủ
+              </Typography.Paragraph>
+              <Typography.Paragraph selectable className="text-sm font-medium">
+                {parcel.lockerRecoveryAddress?.trim()
+                  ? parcel.lockerRecoveryAddress
+                  : "Chưa có thông tin địa chỉ thu hồi"}
+              </Typography.Paragraph>
+            </View>
+          </Surface>
+        ) : null}
 
         {parcel.parcelImageUrl && !imageFailed ? (
           <ParcelImage
@@ -102,12 +137,35 @@ export function ParcelDetailContent(): JSX.Element {
 
         <InfoSection title="Thông tin bưu kiện">
           <InfoLine label="Locker" value={`${parcel.lockerCode} · ${parcel.lockerAddress}`} />
-          <InfoLine label="Ngăn" value={parcel.compartmentCode} />
+          <InfoLine
+            label={parcel.status === "Removed" ? "Ngăn trước đây" : "Ngăn"}
+            value={parcel.compartmentCode}
+          />
           <InfoLine label="Gửi vào tủ" value={dateFormatter.format(new Date(parcel.storedAt))} />
-          <InfoLine label="Hạn nhận" value={dateFormatter.format(new Date(parcel.pickupDueAt))} />
+          <InfoLine
+            label={parcel.status === "Removed" ? "Hạn nhận ban đầu" : "Hạn nhận"}
+            value={dateFormatter.format(new Date(parcel.pickupDueAt))}
+          />
+          {parcel.removedAt ? (
+            <InfoLine
+              label="Thời gian thu hồi"
+              value={dateFormatter.format(new Date(parcel.removedAt))}
+            />
+          ) : null}
+          {parcel.status === "Removed" ? (
+            <InfoLine
+              label="Địa chỉ thu hồi"
+              value={
+                parcel.lockerRecoveryAddress?.trim()
+                  ? parcel.lockerRecoveryAddress
+                  : "Chưa có thông tin địa chỉ thu hồi"
+              }
+              selectable
+            />
+          ) : null}
           {parcel.overdueAmount !== null ? (
             <InfoLine
-              label="Phí hiện tại"
+              label="Phí quá hạn"
               value={`${moneyFormatter.format(parcel.overdueAmount)} ${parcel.currency || "VND"}`}
             />
           ) : null}
@@ -147,6 +205,7 @@ export function ParcelDetailContent(): JSX.Element {
             <GravityIcon name="arrow-right" tone="accent-foreground" />
           </Button>
         ) : null}
+        <LockerSupportCard lockerId={parcel.lockerId} reference={parcel.parcelCode} />
         <IncidentAction
           onPress={() =>
             router.push({ pathname: "/incidents/new", params: { parcelId: parcel.id } })
@@ -168,11 +227,19 @@ function InfoSection({ title, children }: { title: string; children: ReactNode }
   );
 }
 
-function InfoLine({ label, value }: { label: string; value: string }): JSX.Element {
+function InfoLine({
+  label,
+  value,
+  selectable = false,
+}: {
+  label: string;
+  value: string;
+  selectable?: boolean;
+}): JSX.Element {
   return (
     <View className="gap-1">
       <Typography.Paragraph className="text-xs text-muted">{label}</Typography.Paragraph>
-      <Typography.Paragraph>{value}</Typography.Paragraph>
+      <Typography.Paragraph selectable={selectable}>{value}</Typography.Paragraph>
     </View>
   );
 }
@@ -214,6 +281,6 @@ function statusLabel(status: ParcelStatus): string {
     Stored: "Đang lưu trữ",
     Overdue: "Quá hạn",
     Retrieved: "Đã nhận",
-    Removed: "Đã chuyển kho",
+    Removed: "Đã thu hồi",
   }[status];
 }

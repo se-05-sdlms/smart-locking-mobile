@@ -1,3 +1,4 @@
+import { LockerSupportCard } from "@/features/support/locker-support-card";
 import { router, useFocusEffect } from "expo-router";
 import {
   Button,
@@ -8,9 +9,7 @@ import {
   Skeleton,
   Typography,
 } from "heroui-native";
-import { Fragment } from "react";
-import type { JSX } from "react";
-import { useCallback, useRef, useState } from "react";
+import { Fragment, useCallback, useRef, useState, type JSX } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
@@ -170,6 +169,7 @@ export function ResidentHomeContent(): JSX.Element {
             </Button>
           </Card.Body>
         </Card>
+        <LockerSupportCard />
       </ScrollView>
     </SafeAreaView>
   );

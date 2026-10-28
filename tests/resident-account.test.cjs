@@ -66,6 +66,7 @@ function authHarness(failingStep) {
   const mod = load("features/auth/auth-context.tsx", {
     react,
     "react/jsx-runtime": { jsx: (_, props) => props },
+    "@/features/account-packages/registration": { subscribeAfterRegistration: async () => "skipped" },
     "@/features/account-packages/storage": {},
     "@/features/auth/api": {
       authApi: { logout: step("revoke"), changePassword: step("change", session) },

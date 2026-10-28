@@ -31,6 +31,7 @@ export function PackagePicker({
   error,
   onRetry,
   disabled = false,
+  allowDefault = true,
 }: {
   plans: AccountPackage[];
   selectedId: string | null;
@@ -39,8 +40,10 @@ export function PackagePicker({
   error: string;
   onRetry: () => void;
   disabled?: boolean;
+  // false at registration: a package is required before parcels can be received.
+  allowDefault?: boolean;
 }): JSX.Element {
-  const options: (AccountPackage | null)[] = [null, ...plans];
+  const options: (AccountPackage | null)[] = allowDefault ? [null, ...plans] : plans;
   const selectedPlan = plans.find((plan) => plan.id === selectedId);
   const [focused, setFocused] = useState<string | null>(null);
   return (
@@ -64,7 +67,7 @@ export function PackagePicker({
       {!loading && !error ? (
         <>
           <RadioGroup
-            value={selectedId ?? "default"}
+            value={selectedId ?? (allowDefault ? "default" : "")}
             onValueChange={(value) => onSelect(value === "default" ? null : value)}
             isDisabled={disabled}
             accessibilityLabel="Chọn gói tài khoản"

@@ -81,6 +81,19 @@ export default function PaymentDetailScreen(): JSX.Element {
         <Button variant="ghost" onPress={() => router.replace("/payments")}>
           <Button.Label>Lịch sử thanh toán</Button.Label>
         </Button>
+        {item ? (
+          <Button
+            variant="secondary"
+            onPress={() =>
+              router.push({
+                pathname: "/payment-reconciliations/[id]",
+                params: { id: "new", kind: "Overdue", paymentId: item.id },
+              })
+            }
+          >
+            <Button.Label>Yêu cầu tra soát giao dịch này</Button.Label>
+          </Button>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );

@@ -71,10 +71,16 @@ export function ReturnListContent(): JSX.Element {
 }
 function ReturnRow({ item }: { item: ReturnRequestItem }): JSX.Element {
   const state = returnState(item);
+  const pickupCode = item.status === 2 && !item.cancellation ? item.pickupCode : "";
+  const cancellationWarning =
+    item.cancellation?.status === "PendingVerification"
+      ? "Chờ xác minh hủy; không chia sẻ mã hoặc tự lấy đồ."
+      : undefined;
   return (
     <PressableFeedback
       accessibilityRole="button"
-      accessibilityLabel={`Xem đồ gửi ${item.pickupCode || item.lockerCode}`}
+      accessibilityLabel={`Xem đồ gửi ${pickupCode || item.lockerCode}`}
+      accessibilityHint={cancellationWarning}
       onPress={() => router.push({ pathname: "/returns/[id]", params: { id: item.id } })}
     >
       <View className="border-b border-separator">
@@ -87,10 +93,15 @@ function ReturnRow({ item }: { item: ReturnRequestItem }): JSX.Element {
           <View className="min-w-0 flex-1 gap-1">
             <View className="gap-1">
               <Typography.Heading className="text-base">
-                {item.pickupCode || "Đồ gửi"}
+                {pickupCode || "Đồ gửi"}
               </Typography.Heading>
               <StatusBadge label={state.label} tone={state.tone} />
             </View>
+            {cancellationWarning ? (
+              <Typography.Paragraph className="text-xs text-warning">
+                {cancellationWarning}
+              </Typography.Paragraph>
+            ) : null}
             <Typography.Paragraph className="text-sm text-muted">
               {item.lockerCode}
               {item.compartmentCode ? ` · Ngăn ${item.compartmentCode}` : ""}

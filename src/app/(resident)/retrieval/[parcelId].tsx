@@ -2,8 +2,8 @@ import { ParcelImage } from "@/components/ui/parcel-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button, Card, Skeleton, Typography } from "heroui-native";
 import type { JSX } from "react";
-import { useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { AppState, ScrollView, View } from "react-native";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
@@ -11,6 +11,7 @@ import { FlowSteps, IncidentAction, ScreenHeader } from "@/components/ui/residen
 import { parcelApi } from "@/features/parcels/api";
 import type { ParcelDetail } from "@/features/parcels/types";
 import { ApiError } from "@/lib/api-client";
+import { unlockViaBluetooth } from "@/features/bluetooth/unlock";
 
 type Step = "ready" | "opened" | "completed";
 const labels = ["Sẵn sàng", "Mở ngăn", "Hoàn tất"];
@@ -19,12 +20,21 @@ export default function RetrievalScreen(): JSX.Element {
   const { parcelId } = useLocalSearchParams<{ parcelId: string }>();
   const id = String(parcelId);
   const [parcel, setParcel] = useState<ParcelDetail>();
-  const [accessEventId, setAccessEventId] = useState("");
+  const bluetoothRun = useRef<AbortController | null>(null);
   const [imageFailed, setImageFailed] = useState(false);
   const [step, setStep] = useState<Step>("ready");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") bluetoothRun.current?.abort();
+    });
+    return () => {
+      subscription.remove();
+      bluetoothRun.current?.abort();
+    };
+  }, []);
   useEffect(() => {
     void parcelApi
       .getDetail(id)
@@ -39,7 +49,6 @@ export default function RetrievalScreen(): JSX.Element {
       const response = await parcelApi.unlockPickup(id);
       if (response.result !== "Succeeded")
         throw new Error(response.failureReason ?? "Không thể mở ngăn.");
-      setAccessEventId(response.accessEventId);
       setStep("opened");
     } catch (e) {
       if (e instanceof ApiError && e.code === "parcel/payment_required") {
@@ -51,8 +60,23 @@ export default function RetrievalScreen(): JSX.Element {
       setSubmitting(false);
     }
   };
+  const bluetoothUnlock = async () => {
+    setSubmitting(true);
+    setError("");
+    const run = new AbortController();
+    bluetoothRun.current = run;
+    try {
+      await unlockViaBluetooth("P", id, run.signal);
+      if (!run.signal.aborted) setStep("opened");
+    } catch (e) {
+      if (!run.signal.aborted)
+        setError(e instanceof Error ? e.message : "Chưa xác nhận được lệnh Bluetooth.");
+    } finally {
+      bluetoothRun.current = null;
+      setSubmitting(false);
+    }
+  };
   const confirm = async () => {
-    if (!accessEventId) return;
     setSubmitting(true);
     setError("");
     try {
@@ -77,7 +101,7 @@ export default function RetrievalScreen(): JSX.Element {
             step === "ready"
               ? "Sẵn sàng mở ngăn"
               : step === "opened"
-                ? "Ngăn đã mở"
+                ? "Kiểm tra ngăn tủ"
                 : "Hoàn tất nhận hàng"
           }
         />
@@ -130,10 +154,11 @@ export default function RetrievalScreen(): JSX.Element {
                 <GravityIcon name="lock" size={56} tone="success" />
               </View>
               <Typography.Heading className="text-2xl">
-                Ngăn {parcel.compartmentCode} đã mở
+                Đã gửi lệnh cho ngăn {parcel.compartmentCode}
               </Typography.Heading>
               <Typography.Paragraph className="text-center text-muted">
-                Lấy bưu kiện và đóng cửa ngăn tủ.
+                Nếu cửa đã mở, lấy bưu kiện và đóng cửa. Ứng dụng chỉ báo hoàn tất khi máy chủ ghi
+                nhận; tủ mất mạng có thể cần chờ đồng bộ.
               </Typography.Paragraph>
             </View>
           ) : null}
@@ -158,11 +183,24 @@ export default function RetrievalScreen(): JSX.Element {
           ) : null}
           <View className="mt-auto gap-1 pt-2">
             {step === "ready" ? (
-              <Button isDisabled={submitting} onPress={() => void unlock()}>
-                <Button.Label>
-                  {submitting ? "Đang mở ngăn..." : `Mở ngăn ${parcel.compartmentCode}`}
-                </Button.Label>
-              </Button>
+              <>
+                <Button isDisabled={submitting} onPress={() => void unlock()}>
+                  <Button.Label>
+                    {submitting ? "Đang mở ngăn..." : `Mở ngăn ${parcel.compartmentCode}`}
+                  </Button.Label>
+                </Button>
+                <Button
+                  variant="secondary"
+                  isDisabled={submitting}
+                  onPress={() => void bluetoothUnlock()}
+                >
+                  <Button.Label>Mở qua Bluetooth khi ở gần tủ</Button.Label>
+                </Button>
+                <Typography.Paragraph className="text-center text-xs text-muted">
+                  Điện thoại cần Internet để kiểm tra quyền. Bluetooth chỉ khả dụng khi chính sách
+                  cho phép.
+                </Typography.Paragraph>
+              </>
             ) : null}
             {step === "opened" ? (
               <Button isDisabled={submitting} onPress={() => void confirm()}>

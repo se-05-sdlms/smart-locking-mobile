@@ -4,7 +4,15 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { subscribeAfterRegistration } from "@/features/account-packages/registration";
 import { savePreferredPackage } from "@/features/account-packages/storage";
 import { authApi } from "@/features/auth/api";
-import { clearSession, readSession, saveSession } from "@/features/auth/storage";
+import {
+  clearSession,
+  clearSessionIfCurrent,
+  isSessionCurrent,
+  readSession,
+  readSessionSnapshot,
+  saveSession,
+  type SessionSnapshot,
+} from "@/features/auth/storage";
 import type { AuthSession, PendingRegistration, UserProfile } from "@/features/auth/types";
 import { deactivatePushInstallation } from "@/features/notifications/push";
 import { ApiError, onSessionExpired } from "@/lib/api-client";
@@ -36,17 +44,27 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
   useEffect(() => {
     const unsubscribe = onSessionExpired(() => setUser(null));
     void (async () => {
-      let cached: AuthSession | null = null;
+      let source: SessionSnapshot | undefined;
       try {
-        cached = await readSession();
-        if (cached) setUser(await authApi.me());
+        source = await readSessionSnapshot();
+        if (!isSessionCurrent(source)) return;
+        if (source.session) {
+          const restoredUser = await authApi.me();
+          if (isSessionCurrent(source)) setUser(restoredUser);
+        }
       } catch (error) {
+        // Restoration belongs to its original login, including cached fallback and expiry cleanup.
+        if (!source || !isSessionCurrent(source)) return;
+        if (error instanceof ApiError && error.code === "auth/session_changed") return;
         if (error instanceof ApiError && error.status === 401) {
-          await clearSession();
-          setUser(null);
-        } else if (cached) {
+          const latest = await readSessionSnapshot();
+          if (!isSessionCurrent(source) || latest.revision !== source.revision) return;
+          const clearedRevision = await clearSessionIfCurrent(latest);
+          if (clearedRevision !== null && isSessionCurrent({ revision: clearedRevision }))
+            setUser(null);
+        } else if (source.session) {
           // Keep the resident session available during a network/server outage.
-          setUser(cached.user);
+          setUser(source.session.user);
         }
       } finally {
         setInitializing(false);

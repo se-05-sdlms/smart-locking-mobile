@@ -1,5 +1,11 @@
 import { ENV } from "@/config/env";
-import { clearSession, readSession, saveSession } from "@/features/auth/storage";
+import {
+  clearSessionIfCurrent,
+  isSessionCurrent,
+  readSessionSnapshot,
+  saveRefreshedSession,
+  type SessionSnapshot,
+} from "@/features/auth/storage";
 import type { AuthSession } from "@/features/auth/types";
 import { diagnoseApiText } from "@/lib/text-encoding-diagnostics";
 
@@ -36,7 +42,7 @@ export class ApiError extends Error {
   }
 }
 
-let refreshPromise: Promise<AuthSession> | null = null;
+let refreshOperation: { source: SessionSnapshot; promise: Promise<AuthSession> } | null = null;
 let sessionExpiredHandler: (() => void) | undefined;
 
 export function onSessionExpired(handler: () => void): () => void {
@@ -120,11 +126,24 @@ async function parseError(response: Response): Promise<ApiError> {
   }
 }
 
-async function refreshSession(): Promise<AuthSession> {
-  if (refreshPromise) return refreshPromise;
+function sessionChanged(): ApiError {
+  return new ApiError(
+    "Phiên đăng nhập đã thay đổi. Vui lòng thực hiện lại thao tác.",
+    409,
+    "auth/session_changed"
+  );
+}
 
-  refreshPromise = (async () => {
-    const current = await readSession();
+async function refreshSession(source: SessionSnapshot): Promise<AuthSession> {
+  if (!isSessionCurrent(source)) throw sessionChanged();
+  if (
+    refreshOperation?.source.revision === source.revision &&
+    refreshOperation.source.session?.refreshToken === source.session?.refreshToken
+  )
+    return refreshOperation.promise;
+
+  const promise = (async () => {
+    const current = source.session;
     if (!current?.refreshToken) throw new ApiError("Phiên đăng nhập đã hết hạn.", 401);
 
     const next = await apiRequest<AuthSession>("/auth/refresh-token", {
@@ -132,10 +151,12 @@ async function refreshSession(): Promise<AuthSession> {
       body: JSON.stringify({ refreshToken: current.refreshToken }),
       retry: false,
     });
-    await saveSession(next);
+    if (!(await saveRefreshedSession(source, next)) || !isSessionCurrent(source))
+      throw sessionChanged();
     return next;
   })()
     .catch(async (error: unknown) => {
+      if (!isSessionCurrent(source)) throw sessionChanged();
       // The current backend returns 400 for an explicitly invalid refresh token.
       const rejected =
         error instanceof ApiError &&
@@ -143,20 +164,32 @@ async function refreshSession(): Promise<AuthSession> {
           error.status === 403 ||
           error.code === "auth/invalid_refresh_token");
       if (rejected) {
-        await clearSession();
+        const clearedRevision = await clearSessionIfCurrent(source);
+        if (clearedRevision === null || !isSessionCurrent({ revision: clearedRevision }))
+          throw sessionChanged();
         sessionExpiredHandler?.();
         throw new ApiError("Phiên đăng nhập đã hết hạn.", 401);
       }
       throw error;
     })
     .finally(() => {
-      refreshPromise = null;
+      // A finishing old operation must not remove the refresh started by a newer login.
+      if (refreshOperation?.promise === promise) refreshOperation = null;
     });
 
-  return refreshPromise;
+  refreshOperation = { source, promise };
+  return promise;
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  return request<T>(path, options);
+}
+
+async function request<T>(
+  path: string,
+  options: RequestOptions,
+  source?: SessionSnapshot
+): Promise<T> {
   const { authenticated, retry, timeoutMs = ENV.API_TIMEOUT, ...fetchOptions } = options;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -165,12 +198,15 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   if (options.body && !(options.body instanceof FormData))
     headers.set("Content-Type", "application/json");
 
-  if (authenticated) {
-    const session = await readSession();
-    if (session?.accessToken) headers.set("Authorization", `Bearer ${session.accessToken}`);
-  }
-
   try {
+    if (authenticated) {
+      const current = await readSessionSnapshot();
+      if (!isSessionCurrent(current) || (source && source.revision !== current.revision))
+        throw sessionChanged();
+      source ??= current;
+      if (current.session?.accessToken)
+        headers.set("Authorization", `Bearer ${current.session.accessToken}`);
+    }
     const response = await fetch(`${ENV.API_URL}${path}`, {
       ...fetchOptions,
       headers,
@@ -178,16 +214,31 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     });
     if (response.status === 401 && authenticated && retry !== false) {
       clearTimeout(timeout);
-      const latest = await readSession();
+      const latest = await readSessionSnapshot();
+      if (!source || !isSessionCurrent(source) || latest.revision !== source.revision)
+        throw sessionChanged();
       // Another request may already have rotated the token before this 401 arrived.
-      if (!latest?.accessToken || headers.get("Authorization") === `Bearer ${latest.accessToken}`) {
-        await refreshSession();
+      if (
+        !latest.session?.accessToken ||
+        headers.get("Authorization") === `Bearer ${latest.session.accessToken}`
+      ) {
+        await refreshSession(latest);
       }
-      return apiRequest<T>(path, { ...options, retry: false });
+      if (!isSessionCurrent(source)) throw sessionChanged();
+      return request<T>(path, { ...options, retry: false }, source);
     }
-    if (!response.ok) throw await parseError(response);
+    if (!response.ok) {
+      const error = await parseError(response);
+      // Include the final retry: its late 401 must not expire a newer login.
+      if (authenticated && source && !isSessionCurrent(source)) throw sessionChanged();
+      throw error;
+    }
+    // Successful responses also belong to the source login, including empty responses.
+    if (authenticated && source && !isSessionCurrent(source)) throw sessionChanged();
     if (response.status === 204) return undefined as T;
     const payload = (await response.json()) as T;
+    // Reading the body can finish after logout or a different account has signed in.
+    if (authenticated && source && !isSessionCurrent(source)) throw sessionChanged();
     diagnoseApiText(path, payload, response.headers.get("content-type"));
     return payload;
   } catch (error) {

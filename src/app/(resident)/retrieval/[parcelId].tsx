@@ -2,11 +2,12 @@ import { ParcelImage } from "@/components/ui/parcel-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button, Card, Skeleton, Typography } from "heroui-native";
 import type { JSX } from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 
 import { GravityIcon } from "@/components/icons/gravity-icon";
+import { ActionError } from "@/components/ui/action-error";
 import { FlowSteps, IncidentAction, ScreenHeader } from "@/components/ui/resident-ui";
 import { parcelApi } from "@/features/parcels/api";
 import type { ParcelDetail } from "@/features/parcels/types";
@@ -25,14 +26,43 @@ export default function RetrievalScreen(): JSX.Element {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  useEffect(() => {
-    void parcelApi
-      .getDetail(id)
-      .then(setParcel)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Không thể tải bưu kiện."))
-      .finally(() => setLoading(false));
+  const [loadError, setLoadError] = useState<{ id: string; message: string } | null>(null);
+  const loadInFlight = useRef<{ id: string } | null>(null);
+  const currentLoadError = loadError?.id === id ? loadError.message : "";
+  const load = useCallback(async () => {
+    if (loadInFlight.current?.id === id) return;
+    const request = { id };
+    loadInFlight.current = request;
+    setLoading(true);
+    try {
+      const current = await parcelApi.getDetail(id);
+      if (loadInFlight.current !== request) return;
+      setParcel(current);
+      setLoadError(null);
+      setError("");
+      setImageFailed(false);
+      setAccessEventId("");
+      setStep("ready");
+    } catch (e) {
+      if (loadInFlight.current !== request) return;
+      setLoadError({ id, message: e instanceof Error ? e.message : "Không thể tải bưu kiện." });
+    } finally {
+      if (loadInFlight.current === request) {
+        loadInFlight.current = null;
+        setLoading(false);
+      }
+    }
   }, [id]);
+  useEffect(() => {
+    const task = setTimeout(() => void load(), 0);
+    return () => {
+      clearTimeout(task);
+      // Ignore an old detail response after changing parcels or leaving the screen.
+      loadInFlight.current = null;
+    };
+  }, [load]);
   const unlock = async () => {
+    if (submitting || loading || currentLoadError || !parcel || parcel.id !== id) return;
     if (parcel?.status === "Removed") {
       setError("Bưu kiện đã được thu hồi khỏi tủ.");
       return;
@@ -60,6 +90,7 @@ export default function RetrievalScreen(): JSX.Element {
     }
   };
   const confirm = async () => {
+    if (submitting || loading || currentLoadError || !parcel || parcel.id !== id) return;
     if (!accessEventId) return;
     setSubmitting(true);
     setError("");
@@ -96,8 +127,8 @@ export default function RetrievalScreen(): JSX.Element {
           }
         />
       </View>
-      {loading ? <Skeleton className="mx-5 mt-6 h-96 rounded-3xl" /> : null}
-      {!loading && parcel ? (
+      {loading && !currentLoadError ? <Skeleton className="mx-5 mt-6 h-96 rounded-3xl" /> : null}
+      {!loading && parcel && parcel.id === id && !currentLoadError ? (
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           contentContainerClassName="flex-grow gap-5 px-5 pb-4 pt-5"
@@ -261,8 +292,10 @@ export default function RetrievalScreen(): JSX.Element {
           )}
         </ScrollView>
       ) : null}
-      {!loading && !parcel ? (
-        <Typography.Paragraph className="mx-5 mt-6 text-danger">{error}</Typography.Paragraph>
+      {currentLoadError ? (
+        <View className="mx-5 mt-6">
+          <ActionError message={currentLoadError} busy={loading} onRetry={() => void load()} />
+        </View>
       ) : null}
     </SafeAreaView>
   );

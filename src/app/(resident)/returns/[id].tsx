@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, AppState, ScrollView, Share, View } from "react-native";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
 import { GravityIcon } from "@/components/icons/gravity-icon";
+import { ActionError } from "@/components/ui/action-error";
 import { FlowSteps, IncidentAction, ScreenHeader } from "@/components/ui/resident-ui";
 import { returnApi } from "@/features/returns/api";
 import type { ReturnRequestItem } from "@/features/returns/types";
@@ -16,30 +17,44 @@ export default function ReturnDetailScreen(): JSX.Element {
   const [item, setItem] = useState<ReturnRequestItem | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<{ id: string; message: string } | null>(null);
   const [codeHidden, setCodeHidden] = useState(false);
   const requestGeneration = useRef(0);
   const cancellationInFlight = useRef(false);
+  const loadInFlight = useRef<{ id: string; generation: number } | null>(null);
+  const currentLoadError = loadError?.id === id ? loadError.message : "";
+  const actionDisabled = busy || loading || Boolean(currentLoadError) || item?.id !== id;
   const load = useCallback(async () => {
-    if (!id || cancellationInFlight.current) return;
-    const generation = requestGeneration.current;
+    if (!id || cancellationInFlight.current || loadInFlight.current?.id === id) return;
+    const request = { id, generation: ++requestGeneration.current };
+    loadInFlight.current = request;
+    setLoading(true);
     try {
       const current = await returnApi.get(id);
-      if (generation !== requestGeneration.current || cancellationInFlight.current) return;
+      if (request.generation !== requestGeneration.current || cancellationInFlight.current) return;
       setItem(current);
+      setLoadError(null);
       setError("");
       setCodeHidden(Boolean(current.cancellation));
     } catch (e) {
-      if (generation !== requestGeneration.current || cancellationInFlight.current) return;
-      setError(e instanceof Error ? e.message : "Không thể tải yêu cầu.");
+      if (request.generation !== requestGeneration.current || cancellationInFlight.current) return;
+      setLoadError({ id, message: e instanceof Error ? e.message : "Không thể tải yêu cầu." });
+    } finally {
+      if (loadInFlight.current === request) {
+        loadInFlight.current = null;
+        setLoading(false);
+      }
     }
   }, [id]);
-  useEffect(() => {
-    const task = setTimeout(() => void load(), 0);
-    return () => clearTimeout(task);
-  }, [load]);
   useFocusEffect(
     useCallback(() => {
       void load();
+      return () => {
+        // Focus handles initial loading too; invalidate late reads on blur, ID change or unmount.
+        requestGeneration.current++;
+        loadInFlight.current = null;
+      };
     }, [load])
   );
   useEffect(() => {
@@ -54,7 +69,7 @@ export default function ReturnDetailScreen(): JSX.Element {
     return () => clearInterval(timer);
   }, [item?.cancellation?.status, load]);
   const cancel = async () => {
-    if (!id || busy) return;
+    if (!id || actionDisabled) return;
     cancellationInFlight.current = true;
     setBusy(true);
     requestGeneration.current++;
@@ -85,7 +100,7 @@ export default function ReturnDetailScreen(): JSX.Element {
       ]
     );
   const run = async (action: "open" | "deposit") => {
-    if (!id) return;
+    if (!id || actionDisabled) return;
     setBusy(true);
     setError("");
     try {
@@ -121,9 +136,11 @@ export default function ReturnDetailScreen(): JSX.Element {
                 : "Gửi đồ vào tủ"
           }
         />
-        {!item ? (
-          <Spinner />
-        ) : (
+        {loading && !currentLoadError ? <Spinner /> : null}
+        {currentLoadError ? (
+          <ActionError message={currentLoadError} busy={loading} onRetry={() => void load()} />
+        ) : null}
+        {item && item.id === id ? (
           <>
             <LockerSupportCard lockerCode={item.lockerCode} reference={item.id} />
             {item.cancellation ? (
@@ -143,7 +160,11 @@ export default function ReturnDetailScreen(): JSX.Element {
                         ? "Shipper đã lấy đồ. Yêu cầu hủy không hoàn tất."
                         : "Quyền lấy đồ trên web đã dừng. Mã cũ và tình trạng đồ trong tủ chưa được xác minh an toàn. Không chia sẻ mã cũ hoặc tự lấy đồ; vui lòng liên hệ người vận hành tủ."}
                   </Typography.Paragraph>
-                  <Button variant="secondary" isDisabled={busy} onPress={() => void load()}>
+                  <Button
+                    variant="secondary"
+                    isDisabled={busy || loading}
+                    onPress={() => void load()}
+                  >
                     <Button.Label>Tải lại trạng thái</Button.Label>
                   </Button>
                   {item.cancellation.status === "PendingVerification" ? (
@@ -172,7 +193,7 @@ export default function ReturnDetailScreen(): JSX.Element {
                     <Typography.Paragraph className="text-muted">
                       Hệ thống sẽ tìm ngăn trống và mở ngay trên tủ đã đăng ký.
                     </Typography.Paragraph>
-                    <Button isDisabled={busy} onPress={() => void run("open")}>
+                    <Button isDisabled={actionDisabled} onPress={() => void run("open")}>
                       <Button.Label>
                         {busy ? "Đang tìm ngăn..." : "Tìm ngăn trống và mở"}
                       </Button.Label>
@@ -192,7 +213,7 @@ export default function ReturnDetailScreen(): JSX.Element {
                     Hãy đặt đồ vào ngăn và đóng cửa.
                   </Typography.Paragraph>
                 </View>
-                <Button isDisabled={busy} onPress={() => void run("deposit")}>
+                <Button isDisabled={actionDisabled} onPress={() => void run("deposit")}>
                   <Button.Label>
                     {busy ? "Đang kiểm tra cửa..." : "Đã đặt đồ và đóng cửa"}
                   </Button.Label>
@@ -221,6 +242,7 @@ export default function ReturnDetailScreen(): JSX.Element {
                     </Typography.Heading>
                     <Button
                       variant="secondary"
+                      isDisabled={actionDisabled}
                       onPress={() =>
                         void Share.share({ message: `Mã lấy đồ Boxora: ${item.pickupCode}` })
                       }
@@ -250,18 +272,18 @@ export default function ReturnDetailScreen(): JSX.Element {
               </Card>
             ) : null}
             {!item.cancellation && item.canCancel ? (
-              <Button variant="secondary" isDisabled={busy} onPress={confirmCancel}>
+              <Button variant="secondary" isDisabled={actionDisabled} onPress={confirmCancel}>
                 <Button.Label>{busy ? "Đang yêu cầu hủy..." : "Hủy yêu cầu trả hàng"}</Button.Label>
               </Button>
             ) : null}
             {codeHidden && !item.cancellation ? (
-              <Button variant="secondary" isDisabled={busy} onPress={() => void load()}>
+              <Button variant="secondary" isDisabled={busy || loading} onPress={() => void load()}>
                 <Button.Label>Kiểm tra lại trạng thái</Button.Label>
               </Button>
             ) : null}
           </>
-        )}
-        {error ? (
+        ) : null}
+        {item?.id === id && error ? (
           <Typography.Paragraph className="text-danger">{error}</Typography.Paragraph>
         ) : null}
       </ScrollView>

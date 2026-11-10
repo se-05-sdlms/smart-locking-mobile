@@ -233,8 +233,12 @@ async function request<T>(
       if (authenticated && source && !isSessionCurrent(source)) throw sessionChanged();
       throw error;
     }
+    // Successful responses also belong to the source login, including empty responses.
+    if (authenticated && source && !isSessionCurrent(source)) throw sessionChanged();
     if (response.status === 204) return undefined as T;
     const payload = (await response.json()) as T;
+    // Reading the body can finish after logout or a different account has signed in.
+    if (authenticated && source && !isSessionCurrent(source)) throw sessionChanged();
     diagnoseApiText(path, payload, response.headers.get("content-type"));
     return payload;
   } catch (error) {

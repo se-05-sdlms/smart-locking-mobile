@@ -276,6 +276,66 @@ const otherSession = {
 };
 const sessionChanged = (error) => error.code === "auth/session_changed";
 
+for (const next of [otherSession, null]) {
+  for (const phase of ["response", "json", "204"]) {
+    test(
+      `late authenticated success during ${phase} is rejected after ${next?.user.id ?? "logout"}`,
+      { timeout: 5000 },
+      async () => {
+        const started = deferred(),
+          released = deferred();
+        const h = harness(async () => {
+          if (phase === "json") {
+            const response = json(renewed);
+            response.json = async () => {
+              started.resolve();
+              await released.promise;
+              return renewed;
+            };
+            return response;
+          }
+          started.resolve();
+          await released.promise;
+          return phase === "204" ? new Response(null, { status: 204 }) : json(renewed);
+        });
+        // A caller must never receive an old AuthSession to persist after changing accounts.
+        const pending = assert.rejects(
+          h.client.apiRequest("/auth/change-password", { method: "POST", authenticated: true }),
+          sessionChanged
+        );
+        await started.promise;
+        await h.setSession(next);
+        released.resolve();
+        await pending;
+        assert.deepEqual(h.session(), next);
+        assert.equal(h.clears(), next ? 0 : 1);
+        assert.equal(h.expirations(), 0);
+      }
+    );
+  }
+}
+
+test("a successful 204 still resolves for the unchanged session", async () => {
+  const h = harness(async () => new Response(null, { status: 204 }));
+  assert.equal(await h.client.apiRequest("/devices", { authenticated: true }), undefined);
+  assert.deepEqual(h.session(), initial);
+});
+
+test("a public success remains usable after the stored session changes", async () => {
+  const started = deferred(),
+    released = deferred();
+  const h = harness(async () => {
+    started.resolve();
+    await released.promise;
+    return json({ ok: true });
+  });
+  const pending = h.client.apiRequest("/public");
+  await started.promise;
+  await h.setSession(otherSession);
+  released.resolve();
+  assert.deepEqual(await pending, { ok: true });
+});
+
 for (const rejected of [false, true]) {
   for (const next of [otherSession, null, { ...initial }]) {
     test(

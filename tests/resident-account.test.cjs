@@ -1,3 +1,4 @@
+/* global __dirname */
 const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const path = require("node:path");
@@ -66,7 +67,9 @@ function authHarness(failingStep) {
   const mod = load("features/auth/auth-context.tsx", {
     react,
     "react/jsx-runtime": { jsx: (_, props) => props },
-    "@/features/account-packages/registration": { subscribeAfterRegistration: async () => "skipped" },
+    "@/features/account-packages/registration": {
+      subscribeAfterRegistration: async () => "skipped",
+    },
     "@/features/account-packages/storage": {},
     "@/features/auth/api": {
       authApi: { logout: step("revoke"), changePassword: step("change", session) },
@@ -98,3 +101,145 @@ test("password change persists the rotated session", async () => {
   await h.auth.changePassword("old", "new");
   assert.deepEqual(h.calls, ["change", "save"]);
 });
+
+function restorationHarness(outcome) {
+  const values = [],
+    effects = [];
+  let start, finish;
+  const started = new Promise((resolve) => {
+    start = resolve;
+  });
+  const response = new Promise((resolve) => {
+    finish = resolve;
+  });
+  class ApiError extends Error {
+    constructor(status, code) {
+      super(code);
+      this.status = status;
+      this.code = code;
+    }
+  }
+  const A = { refreshToken: "A-refresh", user: { id: "A", role: "Resident" } };
+  const B = { refreshToken: "B-refresh", user: { id: "B", role: "Resident" } };
+  let stored = A,
+    revision = 0,
+    clears = 0;
+  const current = (source) => source.revision === revision;
+  const clear = async () => {
+    revision++;
+    stored = null;
+    clears++;
+  };
+  const mod = load("features/auth/auth-context.tsx", {
+    react: {
+      createContext: () => ({ Provider: "Provider" }),
+      useEffect: (effect) => effects.push(effect),
+      useMemo: (fn) => fn(),
+      useState: (initial) => {
+        const index = values.length;
+        values.push(initial);
+        return [
+          initial,
+          (next) => {
+            values[index] = next;
+          },
+        ];
+      },
+      useContext: () => null,
+    },
+    "react/jsx-runtime": { jsx: (_, props) => props },
+    "@/features/account-packages/registration": {},
+    "@/features/account-packages/storage": {},
+    "@/features/auth/api": {
+      authApi: {
+        me: async () => {
+          start();
+          await response;
+          if (outcome !== "success")
+            throw new ApiError(
+              outcome === "unauthorized" ? 401 : outcome === "cancelled" ? 409 : 0,
+              outcome === "cancelled" ? "auth/session_changed" : "test/error"
+            );
+          return A.user;
+        },
+        login: async () => B,
+        logout: async () => {},
+      },
+    },
+    "@/features/auth/storage": {
+      readSession: async () => stored,
+      readSessionSnapshot: async () => ({ revision, session: stored }),
+      isSessionCurrent: current,
+      saveSession: async (next) => {
+        revision++;
+        stored = next;
+      },
+      clearSession: clear,
+      clearSessionIfCurrent: async (source) => {
+        if (!current(source) || stored?.refreshToken !== source.session?.refreshToken) return null;
+        await clear();
+        return revision;
+      },
+    },
+    "@/features/notifications/push": { deactivatePushInstallation: async () => {} },
+    "@/lib/api-client": { ApiError, onSessionExpired: () => () => {} },
+  });
+  const auth = mod.AuthProvider({ children: null }).value;
+  effects[0]();
+  return { auth, started, finish, values, stored: () => stored, clears: () => clears };
+}
+
+for (const outcome of ["success", "network", "unauthorized", "cancelled"]) {
+  test(
+    `old restoration ${outcome} cannot replace or clear the new login's UI`,
+    { timeout: 5000 },
+    async () => {
+      const h = restorationHarness(outcome);
+      await h.started;
+      await h.auth.login("B", "password");
+      h.finish();
+      await new Promise((resolve) => setImmediate(resolve));
+      assert.equal(h.stored().user.id, "B");
+      assert.equal(h.values[1].id, "B");
+      assert.equal(h.values[0], false);
+      assert.equal(h.clears(), 0);
+    }
+  );
+}
+
+test(
+  "restoration finishing after logout cannot resurrect its cached user",
+  { timeout: 5000 },
+  async () => {
+    const h = restorationHarness("success");
+    await h.started;
+    await h.auth.logout();
+    h.finish();
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(h.stored(), null);
+    assert.equal(h.values[1], null);
+  }
+);
+
+for (const outcome of ["success", "network", "unauthorized"]) {
+  test(
+    `unchanged session restoration keeps existing ${outcome} behavior`,
+    { timeout: 5000 },
+    async () => {
+      const h = restorationHarness(outcome);
+      await h.started;
+      h.finish();
+      await new Promise((resolve) => setImmediate(resolve));
+      assert.equal(h.values[0], false);
+      if (outcome === "unauthorized") {
+        assert.equal(h.values[1], null);
+        assert.equal(h.stored(), null);
+        assert.equal(h.clears(), 1);
+      } else {
+        assert.equal(h.values[1].id, "A");
+        assert.equal(h.stored().user.id, "A");
+        assert.equal(h.clears(), 0);
+      }
+    }
+  );
+}

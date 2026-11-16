@@ -59,6 +59,8 @@ export function ResidentHomeContent(): JSX.Element {
 
   useFocusEffect(
     useCallback(() => {
+      // Notification invalidation must rerun this focused load when the revision changes.
+      void dataRevision;
       const task = setTimeout(() => void load(), 0);
       return () => clearTimeout(task);
     }, [dataRevision, load])

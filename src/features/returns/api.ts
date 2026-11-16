@@ -15,12 +15,15 @@ export const returnApi = {
     });
     return result.url;
   },
-  create: (imageUrl: string, note?: string) =>
-    apiRequest<ReturnRequestItem>("/returns", {
+  create: (imageUrl: string, note: string) => {
+    const trimmedNote = note.trim();
+    if (!trimmedNote) return Promise.reject(new Error("Hãy nhập ghi chú về món đồ cần gửi."));
+    return apiRequest<ReturnRequestItem>("/returns", {
       method: "POST",
-      body: JSON.stringify({ imageUrl, note }),
+      body: JSON.stringify({ imageUrl, note: trimmedNote }),
       authenticated: true,
-    }),
+    });
+  },
   getPage: (page = 1) =>
     apiRequest<PageResponse<ReturnRequestItem>>(`/returns?pageNumber=${page}&pageSize=30`, {
       authenticated: true,

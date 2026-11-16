@@ -31,18 +31,24 @@ export function usePackagePlans() {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => {
-    void refresh().catch(() => undefined);
-    return () => {
-      request.current += 1;
-    };
-  }, [dataRevision, refresh]));
+  useFocusEffect(
+    useCallback(() => {
+      // Notification invalidation must rerun this focused load when the revision changes.
+      void dataRevision;
+      void refresh().catch(() => undefined);
+      return () => {
+        request.current += 1;
+      };
+    }, [dataRevision, refresh])
+  );
 
   return {
     plans,
     loading,
     error,
     refresh,
-    reload: () => { void refresh().catch(() => undefined); },
+    reload: () => {
+      void refresh().catch(() => undefined);
+    },
   };
 }

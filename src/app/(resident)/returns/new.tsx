@@ -28,6 +28,7 @@ export default function NewReturnScreen(): JSX.Element {
   const [note, setNote] = useState("");
   const [stage, setStage] = useState<"idle" | "uploading" | "creating">("idle");
   const [photoError, setPhotoError] = useState("");
+  const [noteError, setNoteError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [cameraBusy, setCameraBusy] = useState(false);
   const [cameraBlocked, setCameraBlocked] = useState(false);
@@ -74,10 +75,10 @@ export default function NewReturnScreen(): JSX.Element {
   };
   const create = async () => {
     if (createPending.current || cameraPending.current) return;
-    if (!photo) {
-      setPhotoError("Hãy chụp ảnh món đồ trước khi tìm ngăn trống.");
-      return;
-    }
+    const trimmedNote = note.trim();
+    setNoteError(trimmedNote ? "" : "Hãy nhập ghi chú về món đồ cần gửi.");
+    setPhotoError(photo ? "" : "Hãy chụp ảnh món đồ trước khi tìm ngăn trống.");
+    if (!photo || !trimmedNote) return;
     createPending.current = true;
     setSubmitError("");
     setPhotoError("");
@@ -89,7 +90,7 @@ export default function NewReturnScreen(): JSX.Element {
         uploaded.current = { uri: photo, url };
       }
       setStage("creating");
-      const created = await returnApi.create(url, note);
+      const created = await returnApi.create(url, trimmedNote);
       router.replace({ pathname: "/returns/[id]", params: { id: created.id } });
     } catch (error) {
       setSubmitError(
@@ -162,16 +163,23 @@ export default function NewReturnScreen(): JSX.Element {
               </Button>
             ) : null}
           </View>
-          <TextField>
-            <Label>Ghi chú (tùy chọn)</Label>
+          <TextField isInvalid={!!noteError}>
+            <Label>Ghi chú (bắt buộc)</Label>
             <TextArea
               value={note}
               editable={!saving}
-              onChangeText={setNote}
+              accessibilityLabel="Ghi chú về món đồ, bắt buộc"
+              onChangeText={(value) => {
+                setNote(value);
+                if (value.trim()) setNoteError("");
+              }}
               placeholder="Ghi chú về món đồ..."
               maxLength={200}
             />
             <Description>{note.length}/200 ký tự</Description>
+            <FieldError isInvalid={!!noteError} textProps={{ accessibilityRole: "alert" }}>
+              {noteError}
+            </FieldError>
           </TextField>
           <Surface variant="secondary" className="flex-row items-center gap-3 rounded-xl px-4 py-3">
             <GravityIcon name="building" tone="muted" />

@@ -29,4 +29,7 @@ export type PendingRegistration = {
   registeredLockerId: string;
   // Local preference until registration accepts a package identifier.
   accountPackageId?: string | null;
+  termsVersion: string;
+  privacyVersion: string;
+  consentedAt: string;
 };

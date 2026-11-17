@@ -83,6 +83,34 @@ export default function SettingsScreen(): JSX.Element {
                 <GravityIcon name="chevron-right" size={18} />
               </ListGroup.ItemSuffix>
             </ListGroup.Item>
+            <ListGroup.Item
+              accessibilityRole="button"
+              accessibilityLabel="Điều khoản sử dụng Smart Locking"
+              className="min-h-12"
+              onPress={() => router.push("/legal/terms")}
+            >
+              <ListGroup.ItemContent>
+                <ListGroup.ItemTitle>Điều khoản sử dụng</ListGroup.ItemTitle>
+                <ListGroup.ItemDescription>Smart Locking v1.0</ListGroup.ItemDescription>
+              </ListGroup.ItemContent>
+              <ListGroup.ItemSuffix>
+                <GravityIcon name="chevron-right" size={18} />
+              </ListGroup.ItemSuffix>
+            </ListGroup.Item>
+            <ListGroup.Item
+              accessibilityRole="button"
+              accessibilityLabel="Chính sách bảo mật Smart Locking"
+              className="min-h-12"
+              onPress={() => router.push("/legal/privacy")}
+            >
+              <ListGroup.ItemContent>
+                <ListGroup.ItemTitle>Chính sách bảo mật</ListGroup.ItemTitle>
+                <ListGroup.ItemDescription>Smart Locking v1.0</ListGroup.ItemDescription>
+              </ListGroup.ItemContent>
+              <ListGroup.ItemSuffix>
+                <GravityIcon name="chevron-right" size={18} />
+              </ListGroup.ItemSuffix>
+            </ListGroup.Item>
           </ListGroup>
         </View>
         <View className="gap-2">

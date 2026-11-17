@@ -23,6 +23,9 @@ export const authApi = {
         fullName: payload.fullName,
         registeredLockerId: payload.registeredLockerId,
         otpCode: payload.otpCode,
+        termsVersion: payload.termsVersion,
+        privacyVersion: payload.privacyVersion,
+        consentedAt: payload.consentedAt,
       }),
     }),
   login: (loginIdentifier: string, password: string) =>

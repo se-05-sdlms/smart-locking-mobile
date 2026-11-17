@@ -13,6 +13,7 @@ import type { AccountPackage } from "@/features/account-packages/types";
 import { authApi } from "@/features/auth/api";
 import { useAuth } from "@/features/auth/auth-context";
 import type { RegistrationLocker } from "@/features/auth/types";
+import { LEGAL_VERSION } from "@/features/legal/content";
 
 const normalizePhone = (value: string): string => value.replace(/\s/g, "");
 const isValidPhone = (value: string): boolean => /^0\d{9}$/.test(normalizePhone(value));
@@ -126,6 +127,8 @@ export function RegisterScreen(): JSX.Element {
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [accepted, setAccepted] = useState(false);
+  const [viewedTerms, setViewedTerms] = useState(false);
+  const [viewedPrivacy, setViewedPrivacy] = useState(false);
   const [lockers, setLockers] = useState<RegistrationLocker[]>([]);
   const [locker, setLocker] = useState<{ value: string; label: string }>();
   const [plans, setPlans] = useState<AccountPackage[]>([]);
@@ -199,6 +202,9 @@ export function RegisterScreen(): JSX.Element {
         fullName: fullName.trim(),
         registeredLockerId: locker.value,
         accountPackageId: planId,
+        termsVersion: LEGAL_VERSION,
+        privacyVersion: LEGAL_VERSION,
+        consentedAt: new Date().toISOString(),
       });
       router.push({ pathname: "/verify-otp", params: { phone: phoneNumber, flow: "register" } });
     } catch (submitError) {
@@ -302,10 +308,40 @@ export function RegisterScreen(): JSX.Element {
             ? "Gói trả phí sẽ mở trang thanh toán ngay sau khi đăng ký thành công."
             : "Cần có gói đang hiệu lực để nhận thêm bưu kiện. Bạn có thể đổi hoặc thêm gói trong Tài khoản."}
         </Typography.Paragraph>
-        <Checkbox className="items-start" isSelected={accepted} onSelectedChange={setAccepted}>
+        <View className="gap-2">
+          <LinkButton
+            accessibilityLabel="Đọc điều khoản sử dụng"
+            onPress={() => {
+              setViewedTerms(true);
+              router.push("/legal/terms");
+            }}
+          >
+            <LinkButton.Label className="text-link underline">
+              Đọc điều khoản sử dụng (v{LEGAL_VERSION})
+            </LinkButton.Label>
+          </LinkButton>
+          <LinkButton
+            accessibilityLabel="Đọc chính sách bảo mật"
+            onPress={() => {
+              setViewedPrivacy(true);
+              router.push("/legal/privacy");
+            }}
+          >
+            <LinkButton.Label className="text-link underline">
+              Đọc chính sách bảo mật (v{LEGAL_VERSION})
+            </LinkButton.Label>
+          </LinkButton>
+        </View>
+        <Checkbox
+          className="items-start"
+          isDisabled={!viewedTerms || !viewedPrivacy || submitting}
+          isSelected={accepted}
+          onSelectedChange={setAccepted}
+          accessibilityLabel="Đồng ý với điều khoản sử dụng và chính sách bảo mật"
+        >
           <Checkbox.Indicator />
           <Typography.Paragraph className="flex-1">
-            Tôi đồng ý với điều khoản sử dụng và chính sách bảo mật
+            Tôi đồng ý với điều khoản sử dụng và chính sách bảo mật (đã đọc cả hai tài liệu)
           </Typography.Paragraph>
         </Checkbox>
         {error ? (

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="1024" height="1024">
+  <defs>
+    <linearGradient id="boxora-cube" x1="42" y1="36" x2="86" y2="86" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FB923C"/>
+      <stop offset="1" stop-color="#EA580C"/>
+    </linearGradient>
+  </defs>
+  <path d="M64 36L86 49V75L64 88L42 75V49L64 36Z" fill="url(#boxora-cube)"/>
+  <path d="M64 36V62L86 75V49L64 36Z" fill="#FDBA74" fill-opacity=".9"/>
+  <path d="M64 62V88L42 75V49L64 62Z" fill="#EA580C" fill-opacity=".9"/>
+</svg>

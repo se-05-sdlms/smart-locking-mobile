@@ -1,0 +1,34 @@
+import { router } from "expo-router";
+
+import type { NotificationTarget } from "@/features/notifications/types";
+
+export function openNotificationTarget(target: Partial<NotificationTarget>): void {
+  if (target.parcelId) {
+    router.push(`/parcels/${target.parcelId}`);
+  } else if (target.deliveryRequestId) {
+    router.push({
+      pathname: "/delivery-requests/[id]",
+      params: { id: target.deliveryRequestId },
+    });
+  } else if (target.incidentId) {
+    router.push({ pathname: "/incidents/[id]", params: { id: target.incidentId } });
+  } else if (target.paymentTransactionId) {
+    router.push({ pathname: "/payments/[id]", params: { id: target.paymentTransactionId } });
+  } else if (target.returnRequestId) {
+    router.push({ pathname: "/returns/[id]", params: { id: target.returnRequestId } });
+  }
+}
+
+export function targetFromPushData(data: Record<string, unknown>): Partial<NotificationTarget> {
+  const value = (key: keyof NotificationTarget): string | null => {
+    const raw = data[key];
+    return typeof raw === "string" && raw ? raw : null;
+  };
+  return {
+    parcelId: value("parcelId"),
+    deliveryRequestId: value("deliveryRequestId"),
+    incidentId: value("incidentId"),
+    paymentTransactionId: value("paymentTransactionId"),
+    returnRequestId: value("returnRequestId"),
+  };
+}

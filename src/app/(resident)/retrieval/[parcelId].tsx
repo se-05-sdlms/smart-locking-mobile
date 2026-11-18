@@ -1,0 +1,302 @@
+import { ParcelImage } from "@/components/ui/parcel-image";
+import { router, useLocalSearchParams } from "expo-router";
+import { Button, Card, Skeleton, Typography } from "heroui-native";
+import type { JSX } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ScrollView, View } from "react-native";
+import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
+
+import { GravityIcon } from "@/components/icons/gravity-icon";
+import { ActionError } from "@/components/ui/action-error";
+import { FlowSteps, IncidentAction, ScreenHeader } from "@/components/ui/resident-ui";
+import { parcelApi } from "@/features/parcels/api";
+import type { ParcelDetail } from "@/features/parcels/types";
+import { ApiError } from "@/lib/api-client";
+
+type Step = "ready" | "opened" | "completed";
+const labels = ["Sẵn sàng", "Mở ngăn", "Hoàn tất"];
+
+export default function RetrievalScreen(): JSX.Element {
+  const { parcelId } = useLocalSearchParams<{ parcelId: string }>();
+  const id = String(parcelId);
+  const [parcel, setParcel] = useState<ParcelDetail>();
+  const [accessEventId, setAccessEventId] = useState("");
+  const [imageFailed, setImageFailed] = useState(false);
+  const [step, setStep] = useState<Step>("ready");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState<{ id: string; message: string } | null>(null);
+  const loadInFlight = useRef<{ id: string } | null>(null);
+  const currentLoadError = loadError?.id === id ? loadError.message : "";
+  const load = useCallback(async () => {
+    if (loadInFlight.current?.id === id) return;
+    const request = { id };
+    loadInFlight.current = request;
+    setLoading(true);
+    try {
+      const current = await parcelApi.getDetail(id);
+      if (loadInFlight.current !== request) return;
+      setParcel(current);
+      setLoadError(null);
+      setError("");
+      setImageFailed(false);
+      setAccessEventId("");
+      setStep("ready");
+    } catch (e) {
+      if (loadInFlight.current !== request) return;
+      setLoadError({ id, message: e instanceof Error ? e.message : "Không thể tải bưu kiện." });
+    } finally {
+      if (loadInFlight.current === request) {
+        loadInFlight.current = null;
+        setLoading(false);
+      }
+    }
+  }, [id]);
+  useEffect(() => {
+    const task = setTimeout(() => void load(), 0);
+    return () => {
+      clearTimeout(task);
+      // Ignore an old detail response after changing parcels or leaving the screen.
+      loadInFlight.current = null;
+    };
+  }, [load]);
+  const unlock = async () => {
+    if (submitting || loading || currentLoadError || !parcel || parcel.id !== id) return;
+    if (parcel?.status === "Removed") {
+      setError("Bưu kiện đã được thu hồi khỏi tủ.");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    try {
+      const response = await parcelApi.unlockPickup(id);
+      if (response.result !== "Succeeded")
+        throw new Error(response.failureReason ?? "Không thể mở ngăn.");
+      setAccessEventId(response.accessEventId);
+      setStep("opened");
+    } catch (e) {
+      if (e instanceof ApiError && e.code === "parcel/payment_required") {
+        router.replace({ pathname: "/payment/[parcelId]", params: { parcelId: id } });
+        return;
+      }
+      void parcelApi
+        .getDetail(id)
+        .then(setParcel)
+        .catch(() => {});
+      setError(e instanceof Error ? e.message : "Không thể mở ngăn.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  const confirm = async () => {
+    if (submitting || loading || currentLoadError || !parcel || parcel.id !== id) return;
+    if (!accessEventId) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      const current = await parcelApi.getDetail(id);
+      if (current.status === "Removed") {
+        setParcel(current);
+        throw new Error("Bưu kiện đã được chuyển sang trạng thái thu hồi.");
+      }
+      if (current.status !== "Retrieved") {
+        throw new Error("Hệ thống chưa ghi nhận cửa đã đóng. Vui lòng chờ vài giây rồi thử lại.");
+      }
+      setParcel(current);
+      setStep("completed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Cửa ngăn chưa đóng.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  const active = step === "ready" ? 0 : step === "opened" ? 1 : 2;
+  return (
+    <SafeAreaView className="flex-1 bg-background">
+      <View className="px-5 pt-4">
+        <ScreenHeader
+          title={
+            parcel?.status === "Removed"
+              ? "Kiện hàng đã thu hồi"
+              : step === "ready"
+                ? "Sẵn sàng mở ngăn"
+                : step === "opened"
+                  ? "Ngăn đã mở"
+                  : "Hoàn tất nhận hàng"
+          }
+        />
+      </View>
+      {loading && !currentLoadError ? <Skeleton className="mx-5 mt-6 h-96 rounded-3xl" /> : null}
+      {!loading && parcel && parcel.id === id && !currentLoadError ? (
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerClassName="flex-grow gap-5 px-5 pb-4 pt-5"
+          showsVerticalScrollIndicator={false}
+        >
+          {parcel.status === "Removed" ? (
+            <View className="gap-5">
+              <Card className="border border-warning/30 bg-warning/5">
+                <Card.Body className="gap-3 py-4">
+                  <View className="flex-row items-center gap-2">
+                    <GravityIcon name="alert-circle" tone="warning" size={24} />
+                    <Typography.Heading className="text-lg font-semibold">
+                      Kiện hàng đã được thu hồi
+                    </Typography.Heading>
+                  </View>
+                  <Typography.Paragraph className="text-sm">
+                    Nhân viên vận hành đã chuyển kiện hàng khỏi tủ về địa chỉ thu hồi. Kiện hàng
+                    hiện không còn trong ngăn tủ và không thể mở ngăn để nhận.
+                  </Typography.Paragraph>
+                  <View className="gap-1 rounded-xl bg-background/80 p-3">
+                    <Typography.Paragraph className="text-xs text-muted">
+                      Địa chỉ thu hồi của tủ
+                    </Typography.Paragraph>
+                    <Typography.Paragraph selectable className="text-sm font-medium">
+                      {parcel.lockerRecoveryAddress?.trim()
+                        ? parcel.lockerRecoveryAddress
+                        : "Chưa có thông tin địa chỉ thu hồi"}
+                    </Typography.Paragraph>
+                  </View>
+                </Card.Body>
+              </Card>
+
+              {error ? (
+                <Typography.Paragraph className="text-center text-danger">
+                  {error}
+                </Typography.Paragraph>
+              ) : null}
+
+              <View className="gap-2 pt-2">
+                <Button
+                  onPress={() =>
+                    router.replace({ pathname: "/parcels/[id]", params: { id: parcel.id } })
+                  }
+                >
+                  <Button.Label>Xem chi tiết bưu kiện</Button.Label>
+                </Button>
+                <Button variant="secondary" onPress={() => router.replace("/")}>
+                  <Button.Label>Về trang chủ</Button.Label>
+                </Button>
+                <IncidentAction
+                  onPress={() =>
+                    router.push({ pathname: "/incidents/new", params: { parcelId: parcel.id } })
+                  }
+                />
+              </View>
+            </View>
+          ) : (
+            <>
+              <FlowSteps labels={labels} active={active} />
+              {step === "ready" ? (
+                <>
+                  <Card>
+                    <Card.Body className="flex-row items-center gap-3">
+                      <View className="h-20 w-20 items-center justify-center rounded-2xl bg-accent-soft">
+                        {parcel.parcelImageUrl && !imageFailed ? (
+                          <ParcelImage
+                            uri={parcel.parcelImageUrl}
+                            className="h-20 w-20 rounded-2xl"
+                            onError={() => setImageFailed(true)}
+                          />
+                        ) : (
+                          <GravityIcon name="package" size={36} tone="accent" />
+                        )}
+                      </View>
+                      <View className="flex-1 gap-1">
+                        <Typography.Heading className="text-lg">
+                          {parcel.parcelCode}
+                        </Typography.Heading>
+                        <Typography.Paragraph>{parcel.lockerCode}</Typography.Paragraph>
+                        <Typography.Paragraph className="text-muted">
+                          Ngăn {parcel.compartmentCode}
+                        </Typography.Paragraph>
+                      </View>
+                    </Card.Body>
+                  </Card>
+                  <Card className="bg-accent/5">
+                    <Card.Body className="flex-row items-center gap-3 py-3">
+                      <GravityIcon name="building" tone="accent" />
+                      <Typography.Paragraph className="flex-1">
+                        Hãy đến đúng tủ trước khi mở ngăn.
+                      </Typography.Paragraph>
+                    </Card.Body>
+                  </Card>
+                </>
+              ) : null}
+              {step === "opened" ? (
+                <View className="items-center gap-4">
+                  <View className="w-full items-center justify-center rounded-3xl bg-default py-10">
+                    <GravityIcon name="lock" size={56} tone="success" />
+                  </View>
+                  <Typography.Heading className="text-2xl">
+                    Ngăn {parcel.compartmentCode} đã mở
+                  </Typography.Heading>
+                  <Typography.Paragraph className="text-center text-muted">
+                    Lấy bưu kiện và đóng cửa ngăn tủ.
+                  </Typography.Paragraph>
+                </View>
+              ) : null}
+              {step === "completed" ? (
+                <View className="items-center gap-4 pt-6">
+                  <View className="h-24 w-24 items-center justify-center rounded-full bg-success">
+                    <GravityIcon name="check" size={54} tone="success-foreground" />
+                  </View>
+                  <Typography.Heading className="text-3xl">Đã nhận bưu kiện</Typography.Heading>
+                  <Card className="w-full">
+                    <Card.Body className="items-center gap-1">
+                      <Typography.Heading className="text-lg">
+                        {parcel.parcelCode}
+                      </Typography.Heading>
+                      <Typography.Paragraph className="text-muted">
+                        Ngăn {parcel.compartmentCode} đã được đóng và hoàn tất.
+                      </Typography.Paragraph>
+                    </Card.Body>
+                  </Card>
+                </View>
+              ) : null}
+              {error ? (
+                <Typography.Paragraph className="text-center text-danger">
+                  {error}
+                </Typography.Paragraph>
+              ) : null}
+              <View className="mt-auto gap-1 pt-2">
+                {step === "ready" ? (
+                  <Button isDisabled={submitting} onPress={() => void unlock()}>
+                    <Button.Label>
+                      {submitting ? "Đang mở ngăn..." : `Mở ngăn ${parcel.compartmentCode}`}
+                    </Button.Label>
+                  </Button>
+                ) : null}
+                {step === "opened" ? (
+                  <Button isDisabled={submitting} onPress={() => void confirm()}>
+                    <Button.Label>
+                      {submitting ? "Đang kiểm tra cửa..." : "Đã lấy hàng và đóng cửa"}
+                    </Button.Label>
+                  </Button>
+                ) : null}
+                {step === "completed" ? (
+                  <Button onPress={() => router.replace("/")}>
+                    <Button.Label>Về trang chủ</Button.Label>
+                  </Button>
+                ) : null}
+                {step !== "completed" ? (
+                  <IncidentAction
+                    onPress={() =>
+                      router.push({ pathname: "/incidents/new", params: { parcelId: parcel.id } })
+                    }
+                  />
+                ) : null}
+              </View>
+            </>
+          )}
+        </ScrollView>
+      ) : null}
+      {currentLoadError ? (
+        <View className="mx-5 mt-6">
+          <ActionError message={currentLoadError} busy={loading} onRetry={() => void load()} />
+        </View>
+      ) : null}
+    </SafeAreaView>
+  );
+}

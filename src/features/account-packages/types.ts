@@ -1,0 +1,36 @@
+export type AccountPackage = {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  price: number;
+  durationDays: number;
+  maxActiveParcels: number;
+  isActive: boolean;
+};
+
+export type ResidentSubscription = {
+  id: string;
+  planId: string;
+  planName: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  price: number;
+  externalOrderCode: string | null;
+  paidAt: string | null;
+  planCode?: string | null;
+  durationDays?: number | null;
+  maxActiveParcels?: number | null;
+  requiresBenefitsReconciliation?: boolean;
+};
+
+export type SubscriptionCheckout = {
+  subscriptionId: string;
+  checkoutUrl: string;
+  qrCode?: string | null;
+  orderCode: number;
+  amount: number;
+  // true for a free plan that Backend activated immediately; there is no checkout to open then.
+  activated?: boolean;
+};

@@ -1,4 +1,3 @@
-import * as Linking from "expo-linking";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Button, Card, Skeleton, Typography } from "heroui-native";
 import type { JSX } from "react";
@@ -12,7 +11,9 @@ import { invalidateMobileData } from "@/features/notifications/data-sync";
 import { parcelApi } from "@/features/parcels/api";
 import type { ParcelDetail } from "@/features/parcels/types";
 import { paymentApi } from "@/features/payments/api";
-import { checkoutUrl, paymentState, type PaymentTransaction } from "@/features/payments/types";
+import { paymentState, type PaymentTransaction } from "@/features/payments/types";
+import { usePaymentPolling } from "@/features/payments/use-payment-polling";
+import { VietQr } from "@/features/payments/viet-qr";
 
 export default function PaymentScreen(): JSX.Element {
   const { parcelId } = useLocalSearchParams<{ parcelId: string }>();
@@ -62,10 +63,8 @@ export default function PaymentScreen(): JSX.Element {
       const created = await paymentApi.create(parcel.overdueChargeId);
       transactionId.current = created.id;
       setTransaction(created);
-      if (paymentState(created.status).pending)
-        await Linking.openURL(checkoutUrl(created.checkoutUrl));
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : "Không thể mở PayOS.");
+      setError(failure instanceof Error ? failure.message : "Không thể tạo mã VietQR.");
     } finally {
       pending.current = false;
       setBusy(false);
@@ -73,6 +72,30 @@ export default function PaymentScreen(): JSX.Element {
   };
   const paid = parcel?.overdueChargeStatus === "Paid";
   const state = transaction ? paymentState(transaction.status) : null;
+  const qrExpired = transaction
+    ? Date.now() >= Date.parse(transaction.requestedAt) + 15 * 60_000
+    : false;
+  const pendingId = state?.pending ? transaction?.id : undefined;
+  const checkPayment = useCallback(async () => {
+    if (!pendingId || pending.current) return;
+    pending.current = true;
+    try {
+      const payment = await paymentApi.get(pendingId);
+      setTransaction(payment);
+      setError("");
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Chưa cập nhật được thanh toán.");
+    } finally {
+      pending.current = false;
+    }
+  }, [pendingId]);
+  usePaymentPolling(Boolean(pendingId), checkPayment);
+  const succeededId = state?.success ? transaction?.id : undefined;
+  useFocusEffect(useCallback(() => {
+    if (!succeededId) return;
+    invalidateMobileData();
+    router.replace({ pathname: "/payments/[id]", params: { id: succeededId } });
+  }, [succeededId]));
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView
@@ -97,12 +120,6 @@ export default function PaymentScreen(): JSX.Element {
                   label={paid ? "Đã thanh toán phí" : (state?.label ?? "Chưa thanh toán")}
                   tone={paid ? "success" : (state?.tone ?? "warning")}
                 />
-                {!paid ? (
-                  <Typography.Paragraph className="text-muted">
-                    Quay lại ứng dụng không xác nhận thanh toán. Trạng thái chỉ cập nhật sau xác
-                    nhận của máy chủ.
-                  </Typography.Paragraph>
-                ) : null}
               </Card.Body>
             </Card>
             {paid && (parcel.status === "Stored" || parcel.status === "Overdue") ? (
@@ -115,9 +132,17 @@ export default function PaymentScreen(): JSX.Element {
                 <Button.Label>Tiếp tục nhận hàng</Button.Label>
               </Button>
             ) : null}
-            {!paid && parcel.overdueChargeId && !state?.success ? (
-              <Button isDisabled={busy || !!error} onPress={() => void pay()}>
-                <Button.Label>{busy ? "Đang xử lý..." : "Thanh toán với PayOS"}</Button.Label>
+            {state?.pending && !qrExpired && transaction?.qrCode ? (
+              <VietQr code={transaction.qrCode} amount={transaction.amount} />
+            ) : null}
+            {state?.pending && (qrExpired || !transaction?.qrCode) ? (
+              <Typography.Paragraph className="text-muted">
+                Mã VietQR hiện không khả dụng. Bạn có thể yêu cầu mã mới sau khi giao dịch cũ hết hạn.
+              </Typography.Paragraph>
+            ) : null}
+            {!paid && parcel.overdueChargeId && !state?.success && (qrExpired || !transaction?.qrCode) ? (
+              <Button isDisabled={busy} onPress={() => void pay()}>
+                <Button.Label>{busy ? "Đang xử lý..." : "Hiện mã VietQR"}</Button.Label>
               </Button>
             ) : null}
             {!paid && !parcel.overdueChargeId ? (

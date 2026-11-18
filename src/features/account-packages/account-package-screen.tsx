@@ -1,10 +1,9 @@
 import { ActionError } from "@/components/ui/action-error";
-import * as Linking from "expo-linking";
 import { router, useFocusEffect } from "expo-router";
 import { Button, Skeleton, Spinner, Surface, Typography } from "heroui-native";
 import type { JSX } from "react";
 import { useCallback, useRef, useState } from "react";
-import { Alert, FlatList, View } from "react-native";
+import { Alert, AppState, FlatList, View } from "react-native";
 
 import { ScreenHeader } from "@/components/ui/resident-ui";
 import { SafeAreaView } from "@/components/ui/themed-safe-area-view";
@@ -128,8 +127,12 @@ export function AccountPackageScreen(): JSX.Element {
         }
       };
       void load();
+      const appState = AppState.addEventListener("change", (state) => {
+        if (state === "active") void load();
+      });
       return () => {
         active = false;
+        appState.remove();
       };
     }, [user, dataRevision, revision])
   );
@@ -196,17 +199,17 @@ export function AccountPackageScreen(): JSX.Element {
         return;
       }
       setCheckouts((previous) => ({ ...previous, [payment.subscriptionId]: payment }));
-      if (!/^https?:\/\//i.test(payment.checkoutUrl)) {
-        throw new Error("Đường dẫn thanh toán không hợp lệ.");
+      if (!payment.qrCode?.trim()) {
+        throw new Error("Giao dịch này chưa có mã VietQR. Vui lòng liên hệ hỗ trợ để kiểm tra.");
       }
       if (!Number.isSafeInteger(payment.amount) || payment.amount <= 0) {
         throw new Error("Số tiền thanh toán không hợp lệ.");
       }
-      // Persist before opening the provider; storage failure must not create another checkout.
+      // Persist before navigating so the QR screen can reopen the same checkout.
       await saveSubscriptionCheckout(user.id, payment);
       if (!(await confirmPrice(expectedAmount, payment.amount))) return;
       await savePreferredPackage(user.id, planId).catch(() => undefined);
-      await Linking.openURL(payment.checkoutUrl);
+      router.push({ pathname: "/subscription-payment/[id]", params: { id: payment.subscriptionId } });
     } catch (e) {
       setPaymentError(e instanceof Error ? e.message : "Không thể mở thanh toán gói tài khoản.");
     } finally {

@@ -1,4 +1,4 @@
-import * as Linking from "expo-linking";
+import { router } from "expo-router";
 
 import { accountPackageApi } from "@/features/account-packages/api";
 import { saveSubscriptionCheckout } from "@/features/account-packages/storage";
@@ -9,17 +9,17 @@ export type RegistrationPackageResult = "activated" | "payment-opened" | "skippe
 type Dependencies = {
   subscribe: (planId: string) => Promise<SubscriptionCheckout>;
   saveCheckout: (userId: string, payment: SubscriptionCheckout) => Promise<void>;
-  openUrl: (url: string) => Promise<unknown>;
+  openPayment: (subscriptionId: string) => void;
 };
 
 const defaults: Dependencies = {
   subscribe: accountPackageApi.subscribe,
   saveCheckout: saveSubscriptionCheckout,
-  openUrl: (url) => Linking.openURL(url),
+  openPayment: (id) => router.push({ pathname: "/subscription-payment/[id]", params: { id } }),
 };
 
 const isValidPayment = (payment: SubscriptionCheckout): boolean =>
-  /^https:\/\//i.test(payment.checkoutUrl) &&
+  Boolean(payment.qrCode?.trim()) &&
   Number.isSafeInteger(payment.amount) &&
   payment.amount > 0 &&
   Number.isSafeInteger(payment.orderCode);
@@ -40,9 +40,9 @@ export async function subscribeAfterRegistration(
     const payment = await dependencies.subscribe(planId);
     if (payment.activated) return "activated";
     if (!isValidPayment(payment)) return "failed";
-    // Persist before opening the provider so the package screen can resume without creating a second checkout.
+    // Persist before navigating so the QR screen can reopen the same checkout.
     await dependencies.saveCheckout(userId, payment);
-    await dependencies.openUrl(payment.checkoutUrl);
+    dependencies.openPayment(payment.subscriptionId);
     return "payment-opened";
   } catch {
     return "failed";

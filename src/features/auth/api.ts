@@ -8,10 +8,10 @@ import { apiRequest } from "@/lib/api-client";
 
 export const authApi = {
   getRegistrationLockers: () => apiRequest<RegistrationLocker[]>("/auth/registration-lockers"),
-  requestRegistrationOtp: (phoneNumber: string) =>
+  requestRegistrationOtp: (phoneNumber: string, email: string) =>
     apiRequest<void>("/auth/registration-otp/request", {
       method: "POST",
-      body: JSON.stringify({ phoneNumber }),
+      body: JSON.stringify({ phoneNumber, email }),
     }),
   register: (payload: PendingRegistration & { otpCode: string }) =>
     apiRequest<AuthSession>("/auth/register", {
@@ -19,6 +19,7 @@ export const authApi = {
       // The chosen package is recorded right after registration through /resident-subscriptions/subscribe.
       body: JSON.stringify({
         phoneNumber: payload.phoneNumber,
+        email: payload.email,
         password: payload.password,
         fullName: payload.fullName,
         registeredLockerId: payload.registeredLockerId,

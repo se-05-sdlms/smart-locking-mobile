@@ -124,6 +124,7 @@ export function RegisterScreen(): JSX.Element {
   const { setPendingRegistration } = useAuth();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [accepted, setAccepted] = useState(false);
@@ -178,7 +179,8 @@ export function RegisterScreen(): JSX.Element {
   }, []);
 
   async function submit(): Promise<void> {
-    if (fullName.trim().length < 2 || !isValidPhone(phone) || password.length < 8 || !locker) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (fullName.trim().length < 2 || !isValidPhone(phone) || !/^\S+@\S+\.\S+$/.test(normalizedEmail) || password.length < 8 || !locker) {
       setError("Vui lòng kiểm tra lại thông tin đăng ký.");
       return;
     }
@@ -195,9 +197,10 @@ export function RegisterScreen(): JSX.Element {
     setSubmitting(true);
     try {
       const phoneNumber = normalizePhone(phone);
-      await authApi.requestRegistrationOtp(phoneNumber);
+      await authApi.requestRegistrationOtp(phoneNumber, normalizedEmail);
       setPendingRegistration({
         phoneNumber,
+        email: normalizedEmail,
         password,
         fullName: fullName.trim(),
         registeredLockerId: locker.value,
@@ -206,7 +209,7 @@ export function RegisterScreen(): JSX.Element {
         privacyVersion: LEGAL_VERSION,
         consentedAt: new Date().toISOString(),
       });
-      router.push({ pathname: "/verify-otp", params: { phone: phoneNumber, flow: "register" } });
+      router.push({ pathname: "/verify-otp", params: { destination: normalizedEmail, flow: "register" } });
     } catch (submitError) {
       setError(getErrorMessage(submitError));
       setSubmitting(false);
@@ -217,7 +220,7 @@ export function RegisterScreen(): JSX.Element {
     <AuthScreen
       canGoBack
       title="Tạo tài khoản cư dân"
-      description="Đăng ký bằng số điện thoại của bạn."
+      description="Xác thực bằng email, vẫn cần số điện thoại để nhận diện cư dân."
     >
       <View className="gap-4">
         <AuthField
@@ -241,6 +244,18 @@ export function RegisterScreen(): JSX.Element {
           value={phone}
           onChangeText={setPhone}
           error={phone && !isValidPhone(phone) ? "Số điện thoại phải gồm 10 chữ số." : undefined}
+        />
+        <AuthField
+          label="Email"
+          icon="envelope"
+          placeholder="you@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          returnKeyType="next"
+          value={email}
+          onChangeText={setEmail}
+          error={email && !/^\S+@\S+\.\S+$/.test(email.trim()) ? "Email không hợp lệ." : undefined}
         />
         <AuthField
           label="Mật khẩu"
@@ -361,8 +376,9 @@ export function RegisterScreen(): JSX.Element {
 
 export function VerifyOtpScreen(): JSX.Element {
   const { pendingRegistration, register, setPendingReset } = useAuth();
-  const { phone = "số điện thoại của bạn", flow } = useLocalSearchParams<{
+  const { phone = "số điện thoại của bạn", destination, flow } = useLocalSearchParams<{
     phone?: string;
+    destination?: string;
     flow?: string;
   }>();
   const [otp, setOtp] = useState("");
@@ -410,7 +426,7 @@ export function VerifyOtpScreen(): JSX.Element {
     setMessage("");
     try {
       if (flow === "reset") await authApi.forgotPassword(String(phone));
-      else await authApi.requestRegistrationOtp(String(phone));
+      else if (pendingRegistration) await authApi.requestRegistrationOtp(pendingRegistration.phoneNumber, pendingRegistration.email);
       setMessage("Mã xác thực mới đã được gửi.");
     } catch (resendError) {
       setError(getErrorMessage(resendError));
@@ -421,7 +437,7 @@ export function VerifyOtpScreen(): JSX.Element {
   }
 
   return (
-    <AuthScreen canGoBack title="Xác thực SĐT" description={`Nhập mã đã được gửi đến ${phone}.`}>
+    <AuthScreen canGoBack title={flow === "register" ? "Xác thực email" : "Xác thực SĐT"} description={`Nhập mã đã được gửi đến ${flow === "register" ? destination : phone}.`}>
       <View className="items-center gap-7">
         <InputOTP
           maxLength={6}

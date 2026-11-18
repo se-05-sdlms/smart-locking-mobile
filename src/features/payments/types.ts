@@ -5,6 +5,7 @@ export type PaymentTransaction = {
   currency: string;
   status: 0 | 1 | 2 | 3 | "Pending" | "Success" | "Failed" | "Cancelled";
   checkoutUrl: string | null;
+  qrCode?: string | null;
   requestedAt: string;
   completedAt: string | null;
 };

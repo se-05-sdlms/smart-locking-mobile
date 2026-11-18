@@ -15,7 +15,7 @@ function loadHelper() {
     module,
     exports: module.exports,
     require: (id) => {
-      if (id === "expo-linking") return { openURL: async () => undefined };
+      if (id === "expo-router") return { router: { push: () => undefined } };
       if (id === "@/features/account-packages/api") return { accountPackageApi: { subscribe: async () => ({}) } };
       if (id === "@/features/account-packages/storage") return { saveSubscriptionCheckout: async () => undefined };
       throw new Error(`unexpected import ${id}`);
@@ -27,6 +27,7 @@ function loadHelper() {
 const paid = {
   subscriptionId: "s1",
   checkoutUrl: "https://pay.test/checkout/1",
+  qrCode: "000201-test-vietqr",
   orderCode: 123,
   amount: 50000,
 };
@@ -41,7 +42,7 @@ function deps(overrides = {}) {
         return paid;
       },
       saveCheckout: async (userId, payment) => calls.push(["save", userId, payment.subscriptionId]),
-      openUrl: async (url) => calls.push(["open", url]),
+      openPayment: (id) => calls.push(["open", id]),
       ...overrides,
     },
   };
@@ -74,14 +75,14 @@ test("a paid plan saves the checkout before opening the payment page", async () 
   assert.deepEqual(calls, [
     ["subscribe", "plan-paid"],
     ["save", "u1", "s1"],
-    ["open", paid.checkoutUrl],
+    ["open", paid.subscriptionId],
   ]);
 });
 
 test("an invalid checkout is never opened or saved", async () => {
   const subscribeAfterRegistration = loadHelper();
   for (const bad of [
-    { ...paid, checkoutUrl: "javascript:alert(1)" },
+    { ...paid, qrCode: "" },
     { ...paid, amount: 0 },
     { ...paid, amount: 1.5 },
   ]) {
@@ -96,7 +97,7 @@ test("failures never throw so registration is not affected", async () => {
   const failing = [
     { subscribe: async () => { throw new Error("network"); } },
     { saveCheckout: async () => { throw new Error("storage"); } },
-    { openUrl: async () => { throw new Error("no browser"); } },
+    { openPayment: () => { throw new Error("navigation failed"); } },
   ];
   for (const override of failing) {
     const { deps: d } = deps(override);

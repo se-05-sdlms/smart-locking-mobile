@@ -28,6 +28,7 @@ export type ResidentSubscription = {
 export type SubscriptionCheckout = {
   subscriptionId: string;
   checkoutUrl: string;
+  qrCode?: string | null;
   orderCode: number;
   amount: number;
   // true for a free plan that Backend activated immediately; there is no checkout to open then.

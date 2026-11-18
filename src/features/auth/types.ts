@@ -24,6 +24,7 @@ export type RegistrationLocker = {
 
 export type PendingRegistration = {
   phoneNumber: string;
+  email: string;
   password: string;
   fullName: string;
   registeredLockerId: string;

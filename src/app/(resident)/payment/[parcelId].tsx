@@ -1,7 +1,7 @@
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Button, Card, Skeleton, Typography } from "heroui-native";
 import type { JSX } from "react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, ScrollView } from "react-native";
 import { ActionError } from "@/components/ui/action-error";
 import { ScreenHeader } from "@/components/ui/resident-ui";
@@ -24,6 +24,18 @@ export default function PaymentScreen(): JSX.Element {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    const updateClock = () => {
+      setNow(Date.now());
+    };
+    const initial = setTimeout(updateClock, 0);
+    const timer = setInterval(updateClock, 30_000);
+    return () => {
+      clearTimeout(initial);
+      clearInterval(timer);
+    };
+  }, []);
   const refresh = useCallback(async () => {
     if (pending.current) return;
     pending.current = true;
@@ -73,7 +85,7 @@ export default function PaymentScreen(): JSX.Element {
   const paid = parcel?.overdueChargeStatus === "Paid";
   const state = transaction ? paymentState(transaction.status) : null;
   const qrExpired = transaction
-    ? Date.now() >= Date.parse(transaction.requestedAt) + 15 * 60_000
+    ? (now ?? 0) >= Date.parse(transaction.requestedAt) + 15 * 60_000
     : false;
   const pendingId = state?.pending ? transaction?.id : undefined;
   const checkPayment = useCallback(async () => {
